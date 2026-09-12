@@ -1,0 +1,9 @@
+node_modules/
+dist/
+.env
+*.log
+.DS_Store
+backend/uploads/
+ejemplos/*.resultado*.json
+certs/*.pem
+.claude/settings.local.json

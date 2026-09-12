@@ -1,0 +1,32 @@
+{
+  "name": "notarius-backend",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Backend Notarius 2026 - pipeline notarial con Claude y anonimizacion en memoria",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "node --watch src/server.js",
+    "start": "node src/server.js",
+    "db:init": "node scripts/initDb.js",
+    "check": "node --check src/server.js && node scripts/smokeTest.js"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.125.0",
+    "cors": "^2.8.6",
+    "docx": "^9.7.1",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "helmet": "^8.3.0",
+    "mammoth": "^1.12.2",
+    "mercadopago": "^3.6.1",
+    "multer": "^2.3.0",
+    "mysql2": "^3.24.4",
+    "nodemailer": "^7.0.0",
+    "pdfkit": "^0.20.2",
+    "word-extractor": "^1.0.4",
+    "zod": "^4.6.2"
+  }
+}

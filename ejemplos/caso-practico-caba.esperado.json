@@ -1,0 +1,125 @@
+{
+  "descripcion": "Hallazgos que el estudio de títulos y la validación fiscal/registral deberían detectar sobre ejemplos/caso-practico-caba.docx. Cada hallazgo lista palabras clave; se considera detectado si el informe menciona alguna combinación razonable.",
+  "tipo_acto": "compraventa",
+  "hallazgos": [
+    {
+      "id": "donacion_extrano",
+      "severidad_minima": "alta",
+      "descripcion": "Título antecedente: donación a extraño (2001) con herederos forzosos vivos; acción de reducción no prescripta ni renunciada (art. 2459 CCyC, diez años desde la posesión; art. 2386). Título observable.",
+      "claves": [
+        "donaci",
+        "reducci",
+        "observable",
+        "2459",
+        "herederos forzosos",
+        "legítima",
+        "legitima"
+      ]
+    },
+    {
+      "id": "tracto_interrumpido",
+      "severidad_minima": "alta",
+      "descripcion": "Declaratoria de herederos de 1979 no inscripta y venta de 1987 sin tracto abreviado: interrupción del tracto (art. 15/16 ley 17.801).",
+      "claves": [
+        "tracto",
+        "declaratoria",
+        "17.801",
+        "17801",
+        "inscripta"
+      ]
+    },
+    {
+      "id": "asentimiento_conyugal",
+      "severidad_minima": "alta",
+      "descripcion": "Vendedor casado y el inmueble es sede del hogar conyugal: asentimiento del cónyuge (arts. 456 y 470 CCyC).",
+      "claves": [
+        "asentimiento",
+        "456",
+        "470",
+        "cónyuge",
+        "conyuge",
+        "vivienda familiar",
+        "hogar"
+      ]
+    },
+    {
+      "id": "embargo_caducado",
+      "severidad_minima": "media",
+      "descripcion": "Embargo con toma de razón en agosto de 2019 sin reinscripción: caducidad de pleno derecho a los cinco años (art. 37 ley 17.801). Corresponde solicitar el levantamiento por caducidad o dejar constancia.",
+      "claves": [
+        "caduc",
+        "37",
+        "embargo",
+        "cinco años",
+        "5 años"
+      ]
+    },
+    {
+      "id": "hipoteca_no_cancelada",
+      "severidad_minima": "alta",
+      "descripcion": "Hipoteca del Banco Ciudad con recibo de cancelación pero sin escritura de cancelación ni levantamiento inscripto: debe otorgarse la cancelación e inscribirse antes o simultáneamente.",
+      "claves": [
+        "hipoteca",
+        "cancelaci",
+        "levantamiento"
+      ]
+    },
+    {
+      "id": "inhibiciones_faltante",
+      "severidad_minima": "alta",
+      "descripcion": "No se acompaña certificado de inhibiciones del vendedor (art. 23 ley 17.801).",
+      "claves": [
+        "inhibici"
+      ]
+    },
+    {
+      "id": "expensas_deuda",
+      "severidad_minima": "media",
+      "descripcion": "Deuda de expensas de julio y agosto de 2026: retención o pago previo; obligación propter rem (art. 2049/2050 CCyC).",
+      "claves": [
+        "expensas"
+      ]
+    },
+    {
+      "id": "iti_ganancias",
+      "severidad_minima": "media",
+      "descripcion": "Vendedor persona humana que adquirió antes de 2018: aplica ITI 1,5 % (ley 23.905), salvo reemplazo de vivienda única; no es única vivienda.",
+      "claves": [
+        "ITI",
+        "23.905",
+        "23905",
+        "transferencia de inmuebles",
+        "1,5",
+        "1.5"
+      ]
+    },
+    {
+      "id": "coti",
+      "severidad_minima": "baja",
+      "descripcion": "Precio en USD superior al mínimo vigente: se requiere COTI.",
+      "claves": [
+        "COTI"
+      ]
+    },
+    {
+      "id": "sellos_caba",
+      "severidad_minima": "baja",
+      "descripcion": "Impuesto de sellos CABA sobre el mayor valor entre precio y valuación fiscal; verificar exención vivienda única de la compradora.",
+      "claves": [
+        "sellos"
+      ]
+    },
+    {
+      "id": "uif",
+      "severidad_minima": "baja",
+      "descripcion": "Declaración jurada de licitud y origen de fondos (UIF, Res. 242/2023 para escribanos).",
+      "claves": [
+        "UIF",
+        "licitud",
+        "origen de los fondos",
+        "origen de fondos",
+        "lavado"
+      ]
+    }
+  ]
+}

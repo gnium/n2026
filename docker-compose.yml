@@ -1,0 +1,85 @@
+# Doy Fe - stack completo para pruebas locales
+# Uso:  cp .env.example .env   (opcional: completar ANTHROPIC_API_KEY)
+#       docker compose up --build
+#       abrir http://localhost:8080
+services:
+  db:
+    image: mysql:8.4
+    container_name: notarius-db
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-root}
+      MYSQL_DATABASE: notarius
+      MYSQL_USER: notarius
+      MYSQL_PASSWORD: ${DB_PASSWORD:-notarius}
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    volumes:
+      - ./database:/docker-entrypoint-initdb.d:ro   # crea tablas y seed en el primer arranque
+      - db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-p${DB_ROOT_PASSWORD:-root}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    ports:
+      - "${DB_PORT_HOST:-3307}:3306"   # opcional, para inspeccionar la BD desde la PC
+
+  backend:
+    build: ./backend
+    container_name: notarius-backend
+    environment:
+      PORT: 3001
+      FRONTEND_ORIGIN: http://localhost:${FRONTEND_PORT_HOST:-8080}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      CLAUDE_MODEL: ${CLAUDE_MODEL:-claude-opus-5}
+      CLAUDE_MODE: ${CLAUDE_MODE:-auto}
+      CLAUDE_FALLBACKS: ${CLAUDE_FALLBACKS:-1}
+      LLM_PROVIDER: ${LLM_PROVIDER:-auto}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      GEMINI_MODEL: ${GEMINI_MODEL:-gemini-3.1-pro-preview}
+      LOCAL_LLM_BASE_URL: ${LOCAL_LLM_BASE_URL:-http://host.docker.internal:11434/v1}
+      LOCAL_LLM_MODEL: ${LOCAL_LLM_MODEL:-qwen3:32b}
+      JWT_SECRET: ${JWT_SECRET:-}
+      COOKIE_SECURE: ${COOKIE_SECURE:-0}
+      APP_URL: ${APP_URL:-http://localhost:8080}
+      CODIGO_REGISTRO: ${CODIGO_REGISTRO:-}
+      REGISTRO_ABIERTO: ${REGISTRO_ABIERTO:-0}
+      TRUST_PROXY: "1"
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASS: ${SMTP_PASS:-}
+      SMTP_FROM: ${SMTP_FROM:-Doy Fe <no-responder@localhost>}
+      MP_ACCESS_TOKEN: ${MP_ACCESS_TOKEN:-}
+      MP_WEBHOOK_SECRET: ${MP_WEBHOOK_SECRET:-}
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_USER: notarius
+      DB_PASSWORD: ${DB_PASSWORD:-notarius}
+      DB_NAME: notarius
+      DB_CONNECT_RETRIES: 30
+      SESSION_TTL_MINUTES: ${SESSION_TTL_MINUTES:-30}
+      SESIONES_GUARDADAS_TTL_DIAS: ${SESIONES_GUARDADAS_TTL_DIAS:-7}
+      MAX_FILE_MB: ${MAX_FILE_MB:-15}
+    volumes:
+      - ./ejemplos:/app/ejemplos:ro   # documentos y examenes de prueba
+      - ./certs:/certs:ro             # opcional: ca.pem de un proxy corporativo
+    extra_hosts:
+      - "host.docker.internal:host-gateway"   # para llegar a Ollama/LM Studio corriendo en la Mac
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "${BACKEND_PORT_HOST:-3001}:3001"
+    restart: unless-stopped
+
+  frontend:
+    build: ./frontend
+    container_name: notarius-frontend
+    depends_on:
+      - backend
+    ports:
+      - "${FRONTEND_PORT_HOST:-8080}:80"
+    restart: unless-stopped
+
+volumes:
+  db_data:

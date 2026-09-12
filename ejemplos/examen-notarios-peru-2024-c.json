@@ -1,0 +1,380 @@
+{
+  "fuente": "Examen de Conocimientos - Concurso Público de Méritos para el Acceso a la Función Notarial (Perú). Consejo del Notariado / Universidad de Piura. Domingo 14 de abril de 2024, opción C, con solución.",
+  "url": "https://cdn.www.gob.pe/uploads/document/file/6278681/5521539-examen-de-notarios-abril-2024-opcion-c-con-solucion.pdf",
+  "pais": "Perú",
+  "areas": {
+    "CI": "Derecho civil",
+    "PR": "Derecho procesal civil",
+    "CT": "Derecho constitucional",
+    "LA": "Derecho laboral",
+    "RE": "Derecho registral",
+    "CO": "Derecho comercial y societario",
+    "NO": "Derecho notarial",
+    "MI": "Derecho minero",
+    "AD": "Derecho administrativo y contrataciones",
+    "TR": "Derecho tributario",
+    "PE": "Derecho penal"
+  },
+  "preguntas": [
+    {
+      "n": 1, "codigo": "CI.A.17",
+      "enunciado": "Un poseedor no propietario edificó predio sobre terreno ajeno, cuya propiedad se encontraba inscrita en Registros Públicos a favor de una pareja de esposos con anterioridad al inicio de la construcción. Marque la alternativa correcta:\nI. La pareja propietaria del terreno puede adquirir por accesión lo que se ha edificado sobre él sin la obligación de pagar su valor. Puesto que, el poseedor no propietario ha edificado de mala fe sobre terreno ajeno.\nII. La pareja propietaria del terreno puede exigir la demolición de lo edificado si le causare perjuicio, cuyo costo es asumido por el poseedor no propietario; adicionalmente puede solicitar el pago de una indemnización por daños y perjuicios causados. Puesto que el poseedor no propietario ha edificado de mala fe sobre un terreno ajeno.\nIII. La pareja propietaria del terreno puede adquirir por accesión lo que se ha edificado sobre él debiendo pagar el valor de la edificación. Puesto que, el poseedor no propietario ha edificado de buena fe sobre terreno ajeno.\nIV. El poseedor no propietario puede adquirir por accesión el terreno sobre el cual a edificado el predio, debiendo pagarle a la pareja de esposos su valor. Puesto que, el poseedor no propietario ha edificado de buena fe sobre el terreno ajeno.",
+      "opciones": { "A": "I y II son correctas.", "B": "Solo la alternativa I es correcta.", "C": "III y IV son correctas.", "D": "Solo la alternativa IV es correcta." },
+      "correcta": "A"
+    },
+    {
+      "n": 2, "codigo": "PR.R.7",
+      "enunciado": "Sobre el proceso de comprobación de testamento, es incorrecto afirmar:",
+      "opciones": { "A": "No tiene legitimidad activa para solicitar la comprobación quien haya actuado como testigo en el testamento.", "B": "Las contradicciones en torno a la validez del contenido del testamento serán declaradas inadmisibles.", "C": "Se puede solicitar la comprobación de un testamento ológrafo.", "D": "Puede solicitar la comprobación del testamento una persona que se considere instituido legatario." },
+      "correcta": "B"
+    },
+    {
+      "n": 3, "codigo": "CT.R.2",
+      "enunciado": "Es una garantía constitucional que también persigue la eficacia de los reglamentos:",
+      "opciones": { "A": "La acción de inconstitucionalidad.", "B": "La acción de cumplimiento.", "C": "La acción popular.", "D": "El proceso de competencia." },
+      "correcta": "B"
+    },
+    {
+      "n": 4, "codigo": "CI.E.22",
+      "enunciado": "Respecto a la copropiedad del Código civil, ¿Cuál no es una característica de la copropiedad?",
+      "opciones": { "A": "Asignación de cuotas ideales.", "B": "Unidad de objeto.", "C": "Pluralidad de sujetos.", "D": "La asignación de una parte material del bien a cada uno de los titulares." },
+      "correcta": "D"
+    },
+    {
+      "n": 5, "codigo": "CT.A.3",
+      "enunciado": "No es una atribución asignada al Defensor del Pueblo.",
+      "opciones": { "A": "Defender los derechos constitucionales y fundamentales de la persona y de la comunidad.", "B": "Supervisar el cumplimiento de los deberes de la administración estatal.", "C": "Supervisar la prestación de los servicios públicos a la ciudadanía.", "D": "Fiscalizar la labor de los miembros de la Junta Nacional de Justicia." },
+      "correcta": "D"
+    },
+    {
+      "n": 6, "codigo": "LA.A.1",
+      "enunciado": "Gonzalo trabajó para la notaría Sánchez Sánchez del 01.01.2023 al 31.05.2023. Considerando que Gonzalo es un trabajador a quien se le aplican las normas del Régimen Laboral de la Actividad Privada ¿Qué beneficio recibiría en la liquidación de beneficios sociales por concepto de vacaciones?",
+      "opciones": { "A": "El pago por récord trunco vacacional correspondiente al periodo laborado.", "B": "El pago como adelanto de vacaciones por el periodo laborado ya que no cumplió con trabajar un año completo de servicios.", "C": "No percibirá pago alguno por concepto de vacaciones ya que no ha cumplido con trabajar un año completo de servicios.", "D": "El pago equivalente a 30 días de vacaciones." },
+      "correcta": "A"
+    },
+    {
+      "n": 7, "codigo": "RE.R.14",
+      "enunciado": "Marque la alternativa correcta. Sobre la etapa de presentación del procedimiento registral, cuál es la formalidad de la solicitud de inscripción:",
+      "opciones": { "A": "La solicitud de inscripción se formula por escrito en los formatos aprobados por la Superintendencia Nacional de los Registros Públicos. No se requiere la previa verificación biométrica de la identidad del presentante.", "B": "La solicitud de inscripción se formula por escrito en los formatos aprobados por la Superintendencia Nacional de los Registros Públicos, acompañando copia simple del Documento Nacional de Identidad del presentante, con la constancia de haber sufragado en las últimas elecciones.", "C": "Excepcionalmente, cuando el presentante no sepa o no pueda escribir y firmar, el servidor encargado completará la solicitud. En este caso, el usuario imprimirá su huella digital en el formato de solicitud de inscripción.", "D": "También se requiere la presentación del formato de solicitud de inscripción en el supuesto de presentación masiva de solicitudes de inscripción efectuada por entidades encargadas de programas de titulación, formalización o saneamiento de propiedad." },
+      "correcta": "C"
+    },
+    {
+      "n": 8, "codigo": "CO.A.22",
+      "enunciado": "Marque la opción correcta sobre el cheque:",
+      "opciones": { "A": "El cheque contiene una orden de pago girada por una persona contra quien tiene en su poder fondos por cuenta de dicho girador, que necesariamente es un banco (en el sentido amplio con que usa dicha expresión la Ley de Títulos Valores).", "B": "El cheque es un título valor abstracto, en la medida en que su eficacia obligatoria no depende de la causa que originó su emisión o su transmisión; pero sí resulta imprescindible para esa eficacia una relación de provisión válida entre el librador y el banco librado.", "C": "El cheque es un título cambiario, semejante al pagaré, similitud que permite que el régimen jurídico de este sirva de modelo en muchos aspectos al del cheque.", "D": "Ninguna de las otras opciones es correcta." },
+      "correcta": "A"
+    },
+    {
+      "n": 9, "codigo": "CO.E.17",
+      "enunciado": "Sobre la fusión de sociedades, marque la alternativa correcta:",
+      "opciones": { "A": "No se afecta el capital social de la sociedad absorbente.", "B": "En el procedimiento, basta que el directorio de la sociedad absorbida apruebe el proyecto de fusión.", "C": "Implica necesariamente la liquidación de una de las sociedades.", "D": "Ninguna de las otras alternativas es correcta." },
+      "correcta": "D"
+    },
+    {
+      "n": 10, "codigo": "RE.E.7",
+      "enunciado": "El siguiente principio registral opera en beneficio de cualquier tercero que, de buena fe y a título oneroso, adquiere un derecho de aquel que ostenta la legitimación dispositiva de acuerdo a lo publicado por el registro. Además, la protección que materializa convierte en inatacable el derecho del tercero. Se refiere al:",
+      "opciones": { "A": "Principio de legitimación, relacionado con la seguridad estática del registro.", "B": "Principio del tercero registral de buena fe.", "C": "Principio de buena fe registral.", "D": "Ninguna de las opciones son correctas." },
+      "correcta": "C"
+    },
+    {
+      "n": 11, "codigo": "NO.A.33",
+      "enunciado": "Marque la alternativa correcta: Con respecto a los casos de suplantación de identidad o falsificación:",
+      "opciones": { "A": "El notario es competente para resolver las solicitudes de cancelación de asientos registrales por presunta suplantación de identidad o falsificación de documentos notariales, jurisdiccionales o administrativos, siempre que estén acreditados con algunos de los documentos señalados en la legislación de prevención contra el fraude.", "B": "La solicitud de cancelación de asiento registral sólo es presentada ante los Registros Públicos por el presentante.", "C": "En caso de que se disponga la cancelación del asiento registral, esta se realiza bajo exclusiva responsabilidad del notario que emitió alguno de los documentos señalados en la legislación de prevención contra el fraude.", "D": "La decisión del jefe zonal de la Oficina Registral de la Superintendencia Nacional de los Registros Públicos de disponer la cancelación de un asiento registral es recurrible en sede administrativa ante el Superintendente Nacional." },
+      "correcta": "C"
+    },
+    {
+      "n": 12, "codigo": "CI.R.32",
+      "enunciado": "Sobre las arras en nuestro Código Civil, marque la alternativa correcta:",
+      "opciones": { "A": "La ley establece que la entrega de arras confirmatorias importa siempre la conclusión del contrato.", "B": "Si la parte que recibió las arras es afectada por el incumplimiento de su contraparte, puede dejar sin efecto el contrato y conservar las arras incluso si dicho incumplimiento se debió a un caso fortuito o fuerza mayor.", "C": "Nuestro Código Civil no regula la posibilidad de que, si el que recibió las arras cumplió con su prestación, éste impute las arras recibidas a su derecho de crédito.", "D": "Ninguna de las otras alternativas es correcta." },
+      "correcta": "A"
+    },
+    {
+      "n": 13, "codigo": "CO.R.6",
+      "enunciado": "La Ley General de Sociedades reserva la condición de fundadores de la sociedad anónima a:",
+      "opciones": { "A": "En caso de la constitución simultánea de la sociedad a quiénes suscriben el programa de fundación.", "B": "En el caso de la constitución de la sociedad por oferta a terceros, a quiénes la asamblea de suscriptores encarga el otorgamiento de la escritura pública.", "C": "En el caso de la constitución simultánea de la sociedad a quienes otorgan la escritura pública de fundación y suscriben todas las acciones.", "D": "En el caso de la constitución por oferta a terceros serán fundadores únicamente quiénes suscriban más del 50% de las acciones creadas en el programa de fundación." },
+      "correcta": "C"
+    },
+    {
+      "n": 14, "codigo": "MI.R.4",
+      "enunciado": "Sobre las reglas generales aplicables a los contratos mineros escoja la alternativa jurídicamente correcta:",
+      "opciones": { "A": "Sólo deben inscribirse registralmente aquellos que contengan un derecho real.", "B": "No pueden celebrarse contratos mineros en el extranjero y menos que éstos tengan efectos en territorio nacional.", "C": "Los contratos mineros pueden celebrarse en el extranjero sin necesidad de otorgamiento o elevación a escritura pública.", "D": "Todas las afirmaciones anteriores son jurídicamente falsas." },
+      "correcta": "D"
+    },
+    {
+      "n": 15, "codigo": "AD.R.12",
+      "enunciado": "Sobre las normas municipales, marque la alternativa incorrecta:",
+      "opciones": { "A": "Las ordenanzas en materia tributaria expedidas por las municipalidades distritales deben ser ratificadas por las municipalidades provinciales de su circunscripción para su vigencia.", "B": "Toda ordenanza municipal debe ser publicada, para su vigencia, en el Diario Oficial El Peruano.", "C": "Los concejos municipales ejercen sus funciones de gobierno mediante la aprobación de ordenanzas y acuerdos.", "D": "Los decretos de alcaldía establecen normas reglamentarias y de aplicación de las ordenanzas." },
+      "correcta": "B"
+    },
+    {
+      "n": 16, "codigo": "RE.A.35",
+      "enunciado": "Sobre la empresa individual de responsabilidad limitada (EIRL), marque la opción correcta:",
+      "opciones": { "A": "El fallecimiento del titular de la empresa individual de responsabilidad limitada deberá inscribirse en el Registro Mercantil mediante la presentación de la partida de defunción respectiva.", "B": "El fallecimiento del titular de la empresa individual de responsabilidad limitada origina la extinción de la EIRL.", "C": "El establecimiento de la sucursal será inscrito en el Registro Mercantil del lugar del domicilio del titular.", "D": "El Titular no puede asumir el cargo de Gerente." },
+      "correcta": "A"
+    },
+    {
+      "n": 17, "codigo": "NO.R.11",
+      "enunciado": "En relación a los instrumentos públicos extra-protocolares, marque la alternativa correcta:",
+      "opciones": { "A": "Son aquellos que el notario, por mandato de la ley o a solicitud de parte, extiende o autoriza en ejercicio de su función, dentro de los límites de su competencia y con las formalidades establecidas por los particulares.", "B": "Son instrumentos públicos extra-protocolares las actas y demás certificaciones notariales que se refieren a actos, hechos o circunstancias que presencie o le conste al notario por razón de su función.", "C": "Son instrumentos públicos extra-protocolares las escrituras públicas.", "D": "Ninguna de las alternativas es correcta." },
+      "correcta": "B"
+    },
+    {
+      "n": 18, "codigo": "CI.R.37",
+      "enunciado": "En el contrato de hospedaje, respecto al plazo para que el huésped comunique al hospedante sobre la sustracción, pérdida o deterioro de los bienes que introdujo en el establecimiento, marque la alternativa correcta:",
+      "opciones": { "A": "El plazo es de 5 días contados desde la pérdida o deterioro de los bienes.", "B": "El plazo es de 8 días contados desde la pérdida o deterioro de los bienes.", "C": "No se ha establecido un plazo determinado, pero la comunicación debe darse en cuanto el huésped tome conocimiento de la sustracción, pérdida o deterioro de los bienes.", "D": "Ninguna de las alternativas anteriores es correcta." },
+      "correcta": "C"
+    },
+    {
+      "n": 19, "codigo": "NO.A.41",
+      "enunciado": "Marque la alternativa correcta: Sobre el uso del sistema biométrico en el proceso de identificación del otorgantes y/o intervinientes:",
+      "opciones": { "A": "Cuando en el distrito donde se ubica el oficio notarial no se tenga acceso a internet, el notario deberá recurrir a otros documentos y/o la intervención de testigos que garanticen una adecuada identificación.", "B": "La obligación de utilizar el sistema de comparación biométrica de huellas dactilares es de aplicación para extranjeros residentes o no en el país, sin embargo el notario accederá además a la información de la base de datos del registro de carnés de extranjería, pasaportes y control migratorio de ingreso de extranjeros que deberá poner a disposición del notario la Superintendencia Nacional de Migraciones.", "C": "Excepcionalmente y por razón justificada, el notario podrá dar fe de conocimiento o de identidad sin necesidad de utilizar la comparación biométrica de las huellas dactilares. En ningún caso el notario incurrirá en responsabilidad cuando exista suplantación de la identidad.", "D": "La obligación de utilizar el sistema de comparación biométrica de huellas dactilares no será exigible cuando el notario ya hubiera efectuado en otros instrumentos notariales extendidos en su oficio notarial, la verificación por comparación biométrica de la identidad del compareciente o interviniente." },
+      "correcta": "D"
+    },
+    {
+      "n": 20, "codigo": "TR.E.9",
+      "enunciado": "Un dependiente de su notaria no tiene clara la obligación de requerir los pagos efectivos de algunos impuestos respecto a la transferencia de un predio urbano. No sabe que fuentes normativas revisar, que requerir a los usuarios del servicio notarial y cómo afrontar este problema jurídico, a fin de evitar posibles contingencias con la SUNAT u otras entidades administrativas. Usted debe guiarlo y ordenar una actuación correcta de cara al régimen tributario vigente. Escoja la alternativa correcta para evitar errores en las respectivas actuaciones notariales: I. Sólo debe revisarse la ley de tributación municipal. II. La solución jurídica de esta operación inmobiliaria se encuentra exclusivamente en el Código Tributario. III. En la actualidad, se debe requerir y acreditar previamente los pagos efectivos de los impuestos prediales y de alcabala por parte de los usuarios de los servicios notariales, salvo ciertas inafectaciones.",
+      "opciones": { "A": "Solo la actuación II.", "B": "Solo la actuación I.", "C": "Solo la actuación III.", "D": "Las actuaciones I y III son opciones válidas para plantear una solución jurídica válida en su notaria." },
+      "correcta": "D"
+    },
+    {
+      "n": 21, "codigo": "TR.R.2",
+      "enunciado": "La doctrina jurisprudencial de la Corte Suprema de la República ha establecido que las normas legales de presupuesto público o de crédito suplementario puedan establecer reglas o disposiciones tributarias. Sobre esta afirmación se puede indicar que:",
+      "opciones": { "A": "Es una afirmación parcialmente falsa.", "B": "Es una afirmación completamente verdadera.", "C": "Es una afirmación que no toma en cuenta los distintos pronunciamientos de la judicatura contencioso-administrativo.", "D": "Es una afirmación contraria al Código Tributario, al principio de legalidad y jurídicamente falsa." },
+      "correcta": "D"
+    },
+    {
+      "n": 22, "codigo": "CT.A.27",
+      "enunciado": "José ha solicitado a la Municipalidad de Piura que se le proporcione una relación de todos los procesos laborales, previsionales, civiles, penales, constitucionales, contencioso-administrativo iniciados por la referida Municipalidad, clasificados en procesos en trámite y culminados, en procesos ganados o perdidos; así como la relación de los distintos procesos en los que la Municipalidad haya sido demandada o denunciada, con la separación de los procesos en trámite y finalizados, así como los procesos ganados y los perdidos. La información solicitada abarca el periodo de 1 de enero de 2010 al 19 de julio de 2023; \"con la respectiva supresión de la información de carácter privado y que solo se le remita la información de carácter público\". La Municipalidad referida no ha entregado la información solicitada argumentando que el artículo 13 de la Ley de Transparencia y Acceso a la Información Pública señala \"tampoco permite que los solicitantes exijan a las entidades que efectúen evaluaciones o análisis de la información que posean\". Marque la afirmación correcta:",
+      "opciones": { "A": "La negativa en la entrega de la información solicitada no vulnera el derecho de acceso a la información pública porque esa misma información está a disposición libre y gratuita de los administrados en la Web del Poder Judicial y del Ministerio Público.", "B": "La negativa en la entrega de la información solicitada no vulnera el derecho de acceso a la información pública porque la información solicitada no tiene relevancia pública decisiva para el ejercicio razonable del poder público, que en definitiva es lo que se persigue con el derecho de acceso a información pública.", "C": "La negativa en la entrega de la información solicitada no vulnera el derecho de acceso a la información pública porque la solicitud implica la creación o elaboración del listado solicitado en distintos apartados, y también implica la evaluación y análisis de información, como, por ejemplo, la que separa la información privada de la pública.", "D": "La negativa en la entrega de la información solicitada no vulnera el derecho de acceso a la información pública porque su identificación, procesamiento y ordenación supone un alto costo para la dependencia administrativa municipal, por lo que la negativa en la entrega está justificada." },
+      "correcta": "C"
+    },
+    {
+      "n": 23, "codigo": "CO.A.19",
+      "enunciado": "Marque la opción que contenga ordenados de mayor a menor facilidad circulatoria los mecanismos de transmisión de un derecho documentado en un título valor:",
+      "opciones": { "A": "Simple tradición - endoso - cesión de derechos.", "B": "Simple tradición - cesión de derechos – endoso.", "C": "Endoso - simple tradición - cesión de derechos.", "D": "Cesión de derechos - simple tradición – endoso." },
+      "correcta": "A"
+    },
+    {
+      "n": 24, "codigo": "CT.E.25",
+      "enunciado": "El Artículo 70 de la Constitución dice que \"A nadie puede privarse de su propiedad sino, exclusivamente, por causa de seguridad nacional o necesidad pública, declarada por ley, y previo pago en efectivo de indemnización justipreciada que incluya compensación por el eventual perjuicio\". Por tanto, una expropiación: I. No puede pagarse con bonos. II. No puede efectuarse mediante decreto supremo. III. Puede someterse a arbitraje. Marque la respuesta correcta.",
+      "opciones": { "A": "Sólo I es verdadera.", "B": "Sólo II es verdadera.", "C": "Sólo III es verdadera.", "D": "Todas las afirmaciones son verdaderas." },
+      "correcta": "D"
+    },
+    {
+      "n": 25, "codigo": "CI.R.36",
+      "enunciado": "Seleccione la opción correcta: En el suministro periódico, el precio se abona:",
+      "opciones": { "A": "En el momento de entrega del bien en el domicilio del acreedor.", "B": "En el acto de perfeccionamiento del contrato.", "C": "En el acto de las prestaciones singulares y en proporción a cada una de ellas.", "D": "En el acto del perfeccionamiento del contrato y en el monto fijo pactado con anticipación." },
+      "correcta": "C"
+    },
+    {
+      "n": 26, "codigo": "NO.E.22",
+      "enunciado": "Respecto al sistema del notariado administrativo, marque la opción incorrecta:",
+      "opciones": { "A": "El notario es un empleado público y, por ello, se le denomina Notario del Estado.", "B": "Entre los países que aplican este sistema se encuentran, Estados Unidos, Inglaterra y Suecia.", "C": "En este sistema, el documento notarial no tiene ninguna ventaja sobre el documento privado.", "D": "El notario es dependiente del Estado y, como tal, ejerce otras funciones." },
+      "correcta": "B"
+    },
+    {
+      "n": 27, "codigo": "NO.R.28",
+      "enunciado": "Sobre la rectificación de partidas. Marque la respuesta correcta:",
+      "opciones": { "A": "No es posible rectificar las partidas porque se trata de documentos públicos.", "B": "Solo es posible rectificar errores u omisiones de nombre, pero nunca de apellidos.", "C": "El notario puede tramitar la solicitud rectificar los errores u omisiones de nombre, apellidos, fecha de nacimiento, de matrimonio, defunción u otros que resulten evidente del tenor de la propia partida o de otros documentos probatorios.", "D": "El notario también puede tramitar la solicitud para cambiar el nombre a la persona o sus apellidos así no surja de un error evidente." },
+      "correcta": "C"
+    },
+    {
+      "n": 28, "codigo": "CI.R.28",
+      "enunciado": "Sobre la cláusula penal, marque la alternativa correcta:",
+      "opciones": { "A": "La cláusula penal solo puede ser estipulada conjuntamente con la obligación. No puede convenirse por acto posterior.", "B": "La nulidad de la cláusula penal origina la nulidad de la obligación principal.", "C": "Si el deudor fallece, cada uno de sus herederos está obligado a satisfacer la pena en proporción a su parte, siempre que tanto la cláusula penal como la obligación principal sean divisibles.", "D": "Cuando la cláusula penal se estipula para el caso de mora, el acreedor tiene derecho a exigir, además de la penalidad, el cumplimiento de la obligación." },
+      "correcta": "D"
+    },
+    {
+      "n": 29, "codigo": "PE.E.10",
+      "enunciado": "Sobre el proceso de pérdida de dominio, ¿Cuál de las siguientes afirmaciones es correcta?",
+      "opciones": { "A": "Siempre es competente el juez de paz letrado.", "B": "Es un presupuesto para su procedencia cuando se trate de bienes declarados en abandono o no reclamados y se tenga información suficiente respecto a que los mismos guardan relación directa o indirecta con una actividad ilícita.", "C": "Si se encuentran bienes en distintos distritos judiciales, es competente el Juez del distrito judicial en donde se la tercera indagación a cargo del Ministerio Público.", "D": "Está prohibida la ayuda de la policía al Ministerio público." },
+      "correcta": "B"
+    },
+    {
+      "n": 30, "codigo": "CI.A.22",
+      "enunciado": "José vende a Jorge un auto Nissan del año 2020, identificado con su número de chasis y de placa de rodaje. Ambos firman el contrato de compraventa en documento privado de fecha 16/03/2022 y pactan que el auto se entregará al transcurrir cinco meses desde la firma. Mientras transcurría el plazo, José da en arrendamiento el auto a Sandra, para lo cual firman un contrato de arrendamiento de fecha 18/04/2022, entregándole el auto ese mismo día. Finalmente, José celebra con Marco un contrato de comodato, para lo cual se otorga escritura pública de fecha 16/07/2022 y acuerdan que el auto será entregado en dos días. Ante el reclamo de los tres acreedores de José, según las normas del Código Civil, ¿quién tiene preferencia sobre el auto?",
+      "opciones": { "A": "Jorge", "B": "Sandra", "C": "Marco", "D": "Ninguno de los tres." },
+      "correcta": "B"
+    },
+    {
+      "n": 31, "codigo": "RE.E.13",
+      "enunciado": "Marque la respuesta correcta. Según la Ley N° 26366 – Crean el Sistema Nacional y la superintendencia de los Registros Públicos, hay unos requisitos para llegar a ser registrador. En efecto:",
+      "opciones": { "A": "Un extranjero podría acceder a ser registrador.", "B": "Un abogado colegiado inhábil puede acceder al cargo de registrador.", "C": "Se debe haber aprobado el concurso público de méritos supervisado por la Sunarp.", "D": "No necesariamente se debe ser abogado para llegar a ser registrador público." },
+      "correcta": "C"
+    },
+    {
+      "n": 32, "codigo": "RE.R.16",
+      "enunciado": "El procedimiento registral termina con:",
+      "opciones": { "A": "La presentación del título.", "B": "Con el desistimiento de la rogatoria.", "C": "La tacha por prescripción del plazo de vigencia del asiento de presentación.", "D": "La inscripción." },
+      "correcta": "D"
+    },
+    {
+      "n": 33, "codigo": "RE.A.44",
+      "enunciado": "Acerca del archivo registral, su conservación y los documentos que lo conforman, marque la opción correcta:",
+      "opciones": { "A": "Si el presentante de los documentos indebidamente incorporados al archivo registral solicita su devolución, el registrador, de considerar procedente el pedido, procederá a la devolución, previa emisión de una resolución que declare que los documentos no forman parte del archivo registral.", "B": "Forman parte del archivo registral exclusivamente los índices y los asientos de presentación que consten en soporte papel.", "C": "Los informes técnicos y demás documentos expedidos para su emisión no forman parte del archivo registral.", "D": "El personal responsable del Registro no podrá mantener en reserva la información contenida en el archivo registral salvo las prohibiciones expresas establecidas en los Reglamentos del Registro." },
+      "correcta": "D"
+    },
+    {
+      "n": 34, "codigo": "AD.A.3",
+      "enunciado": "De acuerdo al TUO de la Ley de Contrataciones del Estado, ¿cuál de los siguientes sujetos está impedido de participar en el proceso de contratación con el Estado que se indica en cada alternativa?",
+      "opciones": { "A": "Un primo hermano del alcalde provincial de Trujillo en un concurso público convocado por la Municipalidad Distrital de Laredo (distrito ubicado en la provincia de Trujillo).", "B": "Un consejero regional del Gobierno Regional de Loreto en una licitación pública convocada por la Municipalidad Metropolitana de Lima.", "C": "Un congresista de la República cuyo cargo finalizó el 27 de julio de 2022 en un concurso público convocado por el Gobierno Regional de Piura el 3 de marzo de 2023.", "D": "Ninguno de los sujetos señalados en las otras alternativas está impedido de participar en el indicado proceso de contratación con el Estado." },
+      "correcta": "C"
+    },
+    {
+      "n": 35, "codigo": "PR.E.8",
+      "enunciado": "Sobre el proceso de comprobación de testamento, señale la alternativa incorrecta:",
+      "opciones": { "A": "Como en cualquier otro proceso civil, en este proceso rige el principio de libertad de prueba, sin ninguna limitación.", "B": "En este tipo de proceso no se puede cuestionar la validez del contenido del testamento.", "C": "No tiene legitimidad activa en este proceso la persona que tenga en su poder un testamento cerrado.", "D": "La resolución en donde el Juez considera que el testamento es auténtico y que cumple con los requisitos formales no prejuzga sobre la validez formal del testamento o sobre el contenido de las disposiciones testamentarias." },
+      "correcta": "A"
+    },
+    {
+      "n": 36, "codigo": "CI.E.18",
+      "enunciado": "Respecto a la exclusión por indignidad del heredero o legatario, ¿cuál de las siguientes afirmaciones es correcta?:",
+      "opciones": { "A": "Se produce de pleno derecho por la gravedad de los hechos.", "B": "Debe ser declarada por sentencia y la acción prescribe al año de haber entrado el indigno en posesión de la herencia o del legado.", "C": "La demanda de indignidad será tramitada como proceso de conocimiento.", "D": "La demanda de indignidad será tramitada como proceso abreviado." },
+      "correcta": "B"
+    },
+    {
+      "n": 37, "codigo": "CO.E.18",
+      "enunciado": "En los procesos de fusión, es necesario definir una fecha en la cual cesan los derechos y obligaciones de las sociedades que se extinguirán en virtud de dicho proceso. ¿Qué criterio adopta la Ley General de Sociedades en relación a este asunto?",
+      "opciones": { "A": "La fecha es el día siguiente de producida la inscripción de la escritura pública fusión en el registro.", "B": "Es la fecha en la cual se adoptan los acuerdos de fusión en las respectivas juntas de accionistas o de socios.", "C": "Es la fecha en la cual se cumple el plazo de 10 (diez) días para ejercer el derecho de separación por parte de los socios.", "D": "Es la fecha de entrada en vigencia de la fusión, según consta en los acuerdos de fusión." },
+      "correcta": "D"
+    },
+    {
+      "n": 38, "codigo": "MI.A.1",
+      "enunciado": "Sobre las concesiones mineras que se inscriben en el Registro de Derechos Mineros seleccione la alternativa jurídicamente correcta:",
+      "opciones": { "A": "Los actos administrativos de otorgamiento de una concesión minera se inscriben directamente, sin ninguna revisión adicional de los contenidos o formas de presentación documentaria de los primeros.", "B": "Los actos administrativos de otorgamiento de una concesión minera necesitan ser elevados a escritura pública.", "C": "Para inscribir una concesión minera sólo hace falta mostrar una copia de la publicación electrónica o física de la respectiva resolución administrativa en el diario oficial El Peruano.", "D": "Todas las anteriores alternativas son jurídicamente falsas." },
+      "correcta": "D"
+    },
+    {
+      "n": 39, "codigo": "CI.A.41",
+      "enunciado": "Holga abandonó el hotel Buenavista el 29 de diciembre del año 2022, sin pagar algunos de los servicios brindados por el hotel. Le prometió al hospedante, repetidas veces, que le pagaría lo adeudado. Finalmente, no realizó el pago ¿Cuándo caduca el crédito del hospedante según el Código Civil peruano?",
+      "opciones": { "A": "El 29 de junio de 2023, festividad de San Pedro y San Pablo.", "B": "El 30 de junio de 2023, día de la ginecología y obstetricia peruana.", "C": "El 1 de julio de 2023, día del amigo.", "D": "El 28 de junio de 2023, día nacional del cebiche." },
+      "correcta": "A"
+    },
+    {
+      "n": 40, "codigo": "NO.E.3",
+      "enunciado": "Sobre la inscripción del testamento, marque lo correcto:",
+      "opciones": { "A": "No es posible la revocatoria de un testamento una vez que se ha inscrito.", "B": "Sí es posible la revocatoria una vez hecha la inscripción.", "C": "El notario solicitará la inscripción del testamento en escritura pública al registro de testamentos que corresponda, sin necesidad de ningún parte.", "D": "El parte a través del cual se pide la inscripción del testamento puede contener la información que el notario crea conveniente." },
+      "correcta": "B"
+    },
+    {
+      "n": 41, "codigo": "PE.R.1",
+      "enunciado": "Todas las penas limitativas de derechos son:",
+      "opciones": { "A": "Prestación de servicios a la comunidad; limitación de días libres e inhabilitación.", "B": "La vigilancia electrónica y la expulsión del país.", "C": "La multa y la inhabilitación.", "D": "La reparación civil y la limitación de días libres." },
+      "correcta": "A"
+    },
+    {
+      "n": 42, "codigo": "CI.E.25",
+      "enunciado": "Acerca de la hipoteca inmobiliaria, señale la opción correcta:",
+      "opciones": { "A": "Recae sobre bienes muebles e inmuebles.", "B": "Limita el poder dispositivo del propietario.", "C": "Los bienes quedan en poder del hipotecante, éste continúa utilizándolos y sirviéndose de ellos.", "D": "El hipotecante no puede explotar los bienes para obtener frutos y rentas." },
+      "correcta": "C"
+    },
+    {
+      "n": 43, "codigo": "NO.E.10",
+      "enunciado": "Sobre el registro testamento cerrado, marque la respuesta correcta:",
+      "opciones": { "A": "No es posible otorgar un testamento cerrado.", "B": "No es posible la revocatoria de un testamento cerrado", "C": "Tratándose de un testamento cerrado el notario transcribirá al registro de testamentos que corresponda, copia literal del acta transcrita en su registro, con indicación de la foja donde corre.", "D": "Sí es posible la revocatoria de un testamento en sobre cerrado, pero no es necesario transcribirla en ningún registro de testamentos." },
+      "correcta": "C"
+    },
+    {
+      "n": 44, "codigo": "CT.R.7",
+      "enunciado": "Se entiende que la Constitución peruana es un texto rígido:",
+      "opciones": { "A": "Por carecer de un procedimiento de reforma.", "B": "Porque se reforma a través de una ley ordinaria.", "C": "Porque tiene un complejo procedimiento para su reforma distinto al procedimiento para aprobar una ley ordinaria.", "D": "Por ser una Constitución que no cambia con el tiempo." },
+      "correcta": "C"
+    },
+    {
+      "n": 45, "codigo": "CT.E.14",
+      "enunciado": "La naturaleza de la teoría del poder constituyente genuino, es decir, aquél que surge en una comunidad política producto de una revolución, posee una característica que lo distingue:",
+      "opciones": { "A": "Subsidiario.", "B": "Complementario.", "C": "Originario.", "D": "Residual." },
+      "correcta": "C"
+    },
+    {
+      "n": 46, "codigo": "CI.E.42",
+      "enunciado": "El beneficio de excusión en el contrato de fianza, marque la alternativa correcta:",
+      "opciones": { "A": "Es un beneficio que se otorga a favor del acreedor.", "B": "Es un beneficio otorgado al deudor y que es opuesto al acreedor una vez que éste le requiera el pago de manera judicial o extrajudicial.", "C": "Es un beneficio otorgado al fiador por el cual exige al acreedor el agotamiento de los recursos de cobranza contra el deudor.", "D": "La opción a) y b) son verdaderas." },
+      "correcta": "C"
+    },
+    {
+      "n": 47, "codigo": "RE.A.21",
+      "enunciado": "Marque la opción correcta: Mediante compraventa que cuenta con fecha cierta el 01.10.2007 se celebró un contrato de compraventa en el que la vendedora actuó mediante representante según poder con facultades suficientes otorgado en 1995 que fue inscrito en el Registro de Mandatos y Poderes. El parte notarial derivado de la escritura pública de este acto de compraventa ingresó al registro el 23.10.2007, misma fecha de cierre del proceso de firmas de la escritura. El 04.10.2007 ingresó al mismo Registro la escritura pública con la que la poderdante revocó el poder otorgado a la apoderada con el que se celebró la compraventa.",
+      "opciones": { "A": "El comprador resulta protegido en su adquisición por desconocer la extinción del poder de la representante de la vendedora a la fecha de la celebración del contrato.", "B": "El comprador no resulta protegido en su adquisición por conocer la extinción del poder de la representante de la vendedora a la fecha del proceso de cierre de firmas de la escritura pública.", "C": "Desde el Derecho civil, el poder requiere estar vigente a la fecha de la escritura pública de transferencia, en aplicación del art. 2038 del Código civil.", "D": "Desde el Derecho registral, el poder requiere estar vigente a la fecha de la escritura pública de transferencia, en aplicación del art. 2038 del Código civil." },
+      "correcta": "A"
+    },
+    {
+      "n": 48, "codigo": "CT.E.23",
+      "enunciado": "La Constitución reconoce unas garantías a los parlamentarios para el ejercicio de su función representativa y fiscalizadora. Una de ellas es la inviolabilidad parlamentaria. Un análisis sobre el contenido de esta institución nos permite afirmar que se trata de una garantía que:",
+      "opciones": { "A": "Hace al mandato legislativo irrenunciable.", "B": "Hace irresponsable al Congresista ante autoridad y órgano jurisdiccional por las opiniones y votos que emiten en el ejercicio de sus funciones.", "C": "Prohíbe procesar y apresar al Congresista sin previa autorización del Congreso o de la Comisión Permanente, desde que son elegidos hasta un mes después de haber cesado en sus funciones.", "D": "Impide a los congresistas representar a la Nación, pues no están sujetos a mandato imperativo ni a interpelación." },
+      "correcta": "B"
+    },
+    {
+      "n": 49, "codigo": "CO.R.11",
+      "enunciado": "Sobre la sociedad colectiva, marque la alternativa correcta:",
+      "opciones": { "A": "La sociedad colectiva puede tener duración determinada o indeterminada.", "B": "En la sociedad colectiva, todos los socios responden por las deudas sociales en forma solidaria e ilimitada, incluso aquellos que no participen efectivamente en la administración de la sociedad.", "C": "No es necesario incluir el nombre de por lo menos un socio en la razón social de la sociedad colectiva.", "D": "Ninguna de las otras alternativas es correcta." },
+      "correcta": "B"
+    },
+    {
+      "n": 50, "codigo": "PR.A.15",
+      "enunciado": "A Sebastian de 55 años y soltero, le diagnostican cáncer de páncreas en un estado muy avanzado. Es por ello que decide hacer un testamento ológrafo y en un sobre sellado se lo entrega a uno de sus tres hermanos, Adrián. Meses después de haber realizado su testamento, Sebastian lamentablemente fallece. Después de su fallecimiento, Adrián, decide iniciar un proceso de comprobación de testamento para poner en orden las cosas de su hermano fallecido, para lo cual, además de adjuntar el sobre cerrado que contiene el testamento ológrafo, indica el nombre y domicilio de todos los hermanos de Sebastian, ya que ellos serían sus herederos. La solicitud fue admitida y cuando el Juez abre el sobre que contiene el testamento ológrafo y da lectura del mismo toman conocimiento que Sebastian tiene un hijo de 6 años llamado Lucas. Responda la alternativa correcta:",
+      "opciones": { "A": "El juez declarará improcedente la solicitud de comprobación de testamento presentada por Adrián, puesto que él no tiene legitimidad para solicitar la comprobación de testamento de su hermano.", "B": "El juez declarará improcedente la demanda puesto que al proceso no está incorporado Lucas, uno de los sucesores forzosos de Sebastián.", "C": "El juez requerirá al solicitante (Adrian) que indique al Juzgado la dirección de Lucas, en un corto plazo. Si el solicitante ignora la dirección o no responde el requerimiento del Juez dentro del plazo indicado, el Juez notificará a Lucas por edictos.", "D": "El juez declarará nulo todo lo actuado, hasta el emplazamiento y ordenará que se notifique a Lucas con la solicitud de comprobación de testamento." },
+      "correcta": "C"
+    },
+    {
+      "n": 51, "codigo": "NO.R.5",
+      "enunciado": "Son prohibiciones al notario, marque la alternativa correcta:",
+      "opciones": { "A": "Iniciar su función dentro de los 30 días siguientes a su incorporación.", "B": "El ejercicio de la abogacía, excepto en causa propia, de su cónyuge o de determinados parientes determinados por el Decreto Legislativo 1049.", "C": "Aceptar y brindar las facilidades para las visitas de Inspección que disponga el colegio de notarios.", "D": "Todas las opciones son correctas." },
+      "correcta": "B"
+    },
+    {
+      "n": 52, "codigo": "NO.A.3",
+      "enunciado": "Sobre el Notario y la contratación electrónica, marque la alternativa correcta:",
+      "opciones": { "A": "Las instituciones privadas pueden rechazar los documentos firmados digitalmente.", "B": "La firma electrónica no tiene la misma validez y eficacia jurídica que una firma manuscrita u otra análoga que conlleve manifestación de voluntad.", "C": "Sólo los símbolos basados en medios electrónicos establecidos por el legislador para ser utilizados o adoptados por una parte con la intención precisa de vincularse o autenticar un documento son firma electrónica.", "D": "La muerte del titular de la firma digital obliga a que la entidad de certificación revoque el certificado digital." },
+      "correcta": "D"
+    },
+    {
+      "n": 53, "codigo": "CI.A.33",
+      "enunciado": "José López y Mariano Díaz han celebrado un contrato de arrendamiento de un bien inmueble, de propiedad de José. Dentro de las cláusulas pactadas se ha establecido que el uso que Mariano destinará al bien es el de casa habitación. Un mes después de celebrar el contrato, don Mariano decide abrir un pub-dicoteca en la casa objeto del arrendamiento. En este caso el contrato estaría sujeto a, marque la alternativa correcta:",
+      "opciones": { "A": "Nulidad.", "B": "Rescisión.", "C": "Anulabilidad.", "D": "Resolución." },
+      "correcta": "D"
+    },
+    {
+      "n": 54, "codigo": "PR.A.9",
+      "enunciado": "Mariana celebra un contrato de mutuo con Alejandro, en virtud del cual Mariana recibe S/. 59,000.00 y se compromete a devolverlos. Como llega la fecha de pago y Mariana no cumple con devolver lo que se comprometió, Alejandro la demanda por incumplimiento de contrato. En la demanda Alejandro adjunta una copia legalizada del contrato de mutuo y alega que el original lo perdió y lo único que tiene es esa copia legalizada. Notificada con la demanda, Mariana niega la celebración del contrato y cuestiona la copia legalizada del contrato presentado por Alejandro alegando que ese documento es falso y que ella no ha firmado ese documento. Señale la alternativa correcta:",
+      "opciones": { "A": "La fotocopia legalizada no puede ser considerado como documento privado.", "B": "La fotocopia puede ser considerado como documento público porque ha sido presentado ante notario para su legalización.", "C": "La fotocopia, como medio probatorio, puede ser cuestionado mediante una oposición.", "D": "La fotocopia, como medio probatorio, puede ser cuestionado mediante una tacha." },
+      "correcta": "D"
+    },
+    {
+      "n": 55, "codigo": "NO.A.29",
+      "enunciado": "Marque la alternativa correcta: Sobre la formulación de oposición en el procedimiento de inscripción registral en trámite:",
+      "opciones": { "A": "Formulada la oposición al título presentado debidamente sustentada con alguno de los documentos a que se refiere la ley de prevención del fraude, las instancias registrales bajo responsabilidad, previa calificación y verificación, proceden a la inscripción del título.", "B": "La persona que denuncie la falsificación de documentos ante la Policía Nacional del Perú con cualquiera de los documentos a que se refiere la ley de prevención del fraude, solicitará que esta denuncia se ponga en conocimiento del registrador o del tribunal registral para que, de ser pertinente, se realice la tacha por falsedad documentaria prevista en el Reglamento General de los Registros Públicos.", "C": "Autoridad o funcionario legitimado es el notario, cónsul, juez, funcionario público o árbitro, quienes están legitimados para solicitar la oposición al procedimiento de inscripción registral en trámite por suplantación de identidad o falsificación de documento.", "D": "En el caso de la oposición de inscripción registral, si el notario no se pronuncia sobre la denuncia en el plazo máximo de cinco (5) días hábiles contados desde el día siguiente de su presentación, el interesado puede interponer denuncia con él en el Ministerio Público." },
+      "correcta": "C"
+    },
+    {
+      "n": 56, "codigo": "AD.E.11",
+      "enunciado": "Sobre los medios de solución de controversias en materia de contratación con el Estado, son afirmaciones correctas: I. El inicio del procedimiento de solución de controversias suspende las obligaciones contractuales, salvo que la Entidad disponga lo contrario. II. Los vicios ocultos en bienes, servicios u obras pueden ser objeto de controversia incluso después del pago final. III. Todos los miembros de un tribunal arbitral deben ser necesariamente abogados.",
+      "opciones": { "A": "Sólo I y III.", "B": "Sólo I y II.", "C": "Sólo II.", "D": "Todos." },
+      "correcta": "C"
+    },
+    {
+      "n": 57, "codigo": "AD.R.14",
+      "enunciado": "En materia de contrataciones con el Estado, marque la alternativa correcta:",
+      "opciones": { "A": "El orden de preferencia normativa en la aplicación del derecho en materia de controversias sobre el contrato es el siguiente: la Constitución Política del Perú, la Ley de Contrataciones del Estado y su reglamento, las normas de derecho público y las normas de derecho privado. Se trata de un orden de preferencia obligatorio.", "B": "El inicio del procedimiento de solución de controversias sobre el contrato suspende las obligaciones contractuales de las partes.", "C": "Luego del pago final, las controversias solo pueden estar referidas a nulidad del contrato, vicios ocultos en bienes, servicios u obras y a las obligaciones previstas en el contrato que deban cumplirse con posterioridad al pago final.", "D": "En materia de controversias, el arbitraje es de derecho y debe ser resuelto por un tribunal arbitral integrado por tres (3) miembros." },
+      "correcta": "A"
+    },
+    {
+      "n": 58, "codigo": "CT.A.30",
+      "enunciado": "Azanca Meza García es una persona enferma de VIH/SIDA y de cáncer de tiroides, y de muy escasos recursos económicos. Ella ha solicitado al Ministerio de salud atención médica integral, que consiste en a) la provisión constante de medicamentos necesarios para el tratamiento del VIH/SIDA, y b) la realización de exámenes periódicos, así como las pruebas de CD4 y carga viral, ambos a solicitud del médico tratante y/o cuando la necesidad de urgencia lo requiera. El Ministerio de Salud le ha negado el tratamiento solicitado porque el derecho a la salud es un derecho programático que, en virtud de la Undécima disposición final y transitoria, se aplica progresivamente. Consecuentemente:",
+      "opciones": { "A": "Acierta el Ministerio de salud, porque el derecho a la salud se aplica progresivamente, según el Estado cuente con los recursos económicos exigidos. Por lo que quien decide si se encuentra en condiciones de entregar un tratamiento u otro es el propio Estado, en este caso, a través del Ministerio de salud.", "B": "Acierta el Ministerio de salud porque en realidad los derechos sociales solo de modo impropio son derechos fundamentales, por lo que no son exigibles ni judicializable su incumplimiento.", "C": "El Ministerio de salud ha vulnerado el derecho a la salud de Azanca Meza debido a que el derecho fundamental a la salud exige el cumplimiento de prestaciones mínimas o esenciales que aseguren el derecho a la vida ante situaciones de riesgo de muerte.", "D": "El Ministerio de la salud ha vulnerado el derecho a la salud de Azanca Meza debido a que los derechos sociales dan derecho a toda prestación cualquiera que sea, con la única condición que sea idónea para conseguir la satisfacción de necesidades sociales de las personas a fin de mejorar su calidad de vida." },
+      "correcta": "C"
+    },
+    {
+      "n": 59, "codigo": "LA.R.10",
+      "enunciado": "Sobre el periodo de prueba. Seleccione la respuesta correcta:",
+      "opciones": { "A": "En los contratos sujetos a modalidad -contratos laborales temporales- no puede pactarse un periodo de prueba mayor a tres meses.", "B": "Durante el periodo de prueba no existe protección contra el despido arbitrario, incluso si se trata de una trabajadora gestante o en periodo de lactancia.", "C": "En los contratos a tiempo parcial no puede pactarse un periodo de prueba mayor a tres meses.", "D": "Puede pactarse por escrito un periodo de prueba de hasta 6 meses en total en el caso de trabajadores calificados o de confianza." },
+      "correcta": "D"
+    },
+    {
+      "n": 60, "codigo": "NO.R.32",
+      "enunciado": "Sobre la calificación registral de los instrumentos notariales extendidos en el \"Registro Notarial de garantías y otras afectaciones sobre bienes muebles\", marque la respuesta correcta:",
+      "opciones": { "A": "No está sujeta a plazos.", "B": "La calificación de los pactos especiales va a implicar necesariamente una evaluación del acto constitutivo o generador del acto inscribible.", "C": "Se aplican plazos y alcances de la calificación registral previstos por el art. 36 de la Ley de Garantía Mobiliaria.", "D": "Está sujeta a los plazos que convencionalmente determinen las partes." },
+      "correcta": "C"
+    }
+  ]
+}

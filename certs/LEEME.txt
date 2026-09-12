@@ -1,0 +1,3 @@
+# Certificados de autoridades adicionales (opcional).
+# Si la red tiene un proxy de seguridad que reemplaza certificados TLS, guardar aqui su CA como ca.pem.
+# El backend en Docker la carga automaticamente (NODE_EXTRA_CA_CERTS).
