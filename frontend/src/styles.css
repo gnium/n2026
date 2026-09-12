@@ -294,7 +294,7 @@ button.estado-servidor:hover { border-color: currentColor; }
 .campo { display: flex; flex-direction: column; gap: var(--s2); }
 .campo-titulo { font-weight: 500; font-size: var(--t-sm); color: var(--ink); }
 .campo-titulo small { font-weight: 400; color: var(--ink-3); }
-input[type="text"], input[type="email"], input[type="password"], input[type="url"], input[type="number"], input[type="date"], input[type="time"], input[type="search"], select, textarea {
+input[type="text"], input[type="email"], input[type="password"], input[type="url"], input[type="number"], input[type="tel"], input[type="date"], input[type="time"], input[type="search"], select, textarea {
   font: inherit; font-size: var(--t-sm); color: var(--ink);
   background: var(--surface); border: 1px solid var(--border-strong); border-radius: var(--radius-s);
   padding: 9px 12px; min-height: 40px; width: 100%;
