@@ -3,6 +3,7 @@ import { api } from "../api.js";
 import Icono from "./Iconos.jsx";
 import { fechaCorta } from "./Expedientes.jsx";
 import { formatoMonto } from "./PresupuestoModal.jsx";
+import UifLegajo from "./UifLegajo.jsx";
 
 const VACIO = { tipo: "persona", nombre: "", documento: "", cuit: "", domicilio: "", telefono: "", email: "", estadoCivil: "", estadoCivilObs: "", nacionalidad: "", observaciones: "" };
 // Estados civiles del Código Civil y Comercial; la unión convivencial (arts. 509 y ss.) importa para el asentimiento del art. 522.
@@ -16,6 +17,9 @@ export default function Clientes({ onAbrirExpediente }) {
   const [lista, setLista] = useState(null);
   const [detalle, setDetalle] = useState(null);
   const [formulario, setFormulario] = useState(null);
+  const [saldo, setSaldo] = useState([]);
+  const [legajo, setLegajo] = useState(null);
+  const [legajoAbierto, setLegajoAbierto] = useState(false);
   const [error, setError] = useState(null);
   const [aviso, setAviso] = useState(null);
   const dialogo = useRef(null);
@@ -48,7 +52,10 @@ export default function Clientes({ onAbrirExpediente }) {
   const abrirDetalle = async (id) => {
     setError(null);
     try {
-      setDetalle(await api.clienteObtener(id));
+      const [d, s, l] = await Promise.all([api.clienteObtener(id), api.movimientosSaldo(id).catch(() => []), api.uifLegajo(id).catch(() => null)]);
+      setDetalle(d);
+      setSaldo(s);
+      setLegajo(l);
       setTimeout(() => document.getElementById("cli-titulo")?.focus(), 50);
     } catch (e) {
       setError(e.message);
@@ -135,8 +142,13 @@ export default function Clientes({ onAbrirExpediente }) {
               <h3 id="cli-titulo" tabIndex={-1}>{detalle.nombre} <span className="etiqueta">{detalle.tipo}</span></h3>
               <p className="nota">{[detalle.tipo === "sociedad" ? null : detalle.documento && `DNI ${detalle.documento}`, detalle.cuit && `CUIT ${detalle.cuit}`, detalle.domicilio, detalle.telefono, detalle.email, estadoCivilTexto(detalle), detalle.nacionalidad].filter(Boolean).join(" · ") || (detalle.datosLegibles ? "Sin datos de contacto." : "Los datos cifrados no se pudieron leer (¿cambió JWT_SECRET?).")}</p>
               {detalle.observaciones && <p className="nota">{detalle.observaciones}</p>}
+              <p className="nota">
+                {saldo.length ? saldo.map((s) => <span key={s.moneda} className={`saldo ${s.saldo > 0 ? "positivo" : ""}`}>Saldo {s.moneda}: {formatoMonto(s.saldo, s.moneda)}{s.saldo > 0 ? " pendiente" : ""} · </span>) : "Sin movimientos en cuenta corriente · "}
+                {legajo && (legajo.existe ? <>Legajo UIF: <span className={`etiqueta riesgo-${legajo.nivelRiesgo}`}>riesgo {legajo.nivelRiesgo}</span>{legajo.vencido ? <span className="etiqueta riesgo-alto">revisión vencida</span> : ` · revisión ${fechaCorta(legajo.proximaRevision)}`}</> : "Sin legajo UIF")}
+              </p>
             </div>
             <div className="acciones">
+              <button type="button" className="boton chico" onClick={() => setLegajoAbierto(true)}><Icono nombre="escudo" tamano={14} /> Legajo UIF</button>
               <button type="button" className="boton chico" onClick={() => setFormulario({ ...VACIO, ...detalle, expedientes: undefined, presupuestos: undefined })}>Editar</button>
               <button type="button" className="boton chico" onClick={() => borrar(detalle.id)}><Icono nombre="basura" tamano={14} /> Borrar</button>
               <button type="button" className="boton discreto chico" aria-label="Cerrar detalle" onClick={() => setDetalle(null)}><Icono nombre="cruz" tamano={14} /></button>
@@ -170,6 +182,8 @@ export default function Clientes({ onAbrirExpediente }) {
           )}
         </div>
       )}
+
+      <UifLegajo abierto={legajoAbierto} clienteId={detalle?.id} onCerrar={() => setLegajoAbierto(false)} onGuardado={(l) => { setLegajo(l); setAviso("Legajo UIF guardado."); }} />
 
       <dialog ref={dialogo} className="modal" aria-labelledby="cliente-form-titulo" onClose={() => setFormulario(null)} onClick={(e) => e.target === dialogo.current && setFormulario(null)}>
         {formulario && (

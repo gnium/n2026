@@ -16,6 +16,10 @@ import Notas from "./components/Notas.jsx";
 import BibliotecaModelos from "./components/BibliotecaModelos.jsx";
 import Clientes from "./components/Clientes.jsx";
 import Expedientes from "./components/Expedientes.jsx";
+import Caja from "./components/Caja.jsx";
+import Comprobantes from "./components/Comprobantes.jsx";
+import Uif from "./components/Uif.jsx";
+import ParametrosUif from "./components/ParametrosUif.jsx";
 import TemaToggle from "./components/TemaToggle.jsx";
 import Icono from "./components/Iconos.jsx";
 import { api } from "./api.js";
@@ -33,6 +37,9 @@ const NAV = [
       { clave: "principal", texto: "Redactar", icono: "pluma" },
       { clave: "expedientes", texto: "Expedientes", icono: "carpeta" },
       { clave: "clientes", texto: "Clientes", icono: "personas" },
+      { clave: "caja", texto: "Caja", icono: "caja" },
+      { clave: "comprobantes", texto: "Comprobantes", icono: "factura" },
+      { clave: "uif", texto: "UIF", icono: "escudo" },
       { clave: "agenda", texto: "Agenda", icono: "calendario" },
       { clave: "notas", texto: "Notas", icono: "nota" },
       { clave: "biblioteca", texto: "Biblioteca de modelos", icono: "biblioteca" },
@@ -288,6 +295,9 @@ export default function App() {
   const pantallaSimple = {
     expedientes: <Expedientes inicialId={expedienteAbierto} onConsumirInicial={() => setExpedienteAbierto(null)} />,
     clientes: <Clientes onAbrirExpediente={abrirExpediente} />,
+    caja: <Caja />,
+    comprobantes: <Comprobantes />,
+    uif: <Uif onAbrirExpediente={abrirExpediente} esAdmin={usuario.esAdmin} />,
     agenda: <Agenda />,
     notas: <Notas />,
     biblioteca: <BibliotecaModelos />,
@@ -352,6 +362,7 @@ export default function App() {
             <div className="principal una-columna">
               <section className="columna" aria-label="Configuración">
                 <Configuracion onCambio={recargarSalud} />
+                <ParametrosUif />
                 <PlanesFacturacion />
               </section>
             </div>

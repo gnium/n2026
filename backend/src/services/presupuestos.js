@@ -3,8 +3,10 @@
  * nombre del cliente no se copia: se lee del cliente al listar o al generar el PDF.
  */
 import { pool } from "../config/db.js";
+import { hoyLocal } from "../utils/fechas.js";
 import { descifrar } from "../utils/cifrado.js";
 import { AppError } from "../utils/errores.js";
+import { cargoDesdePresupuesto, quitarCargoDePresupuesto } from "./movimientos.js";
 
 const MONEDAS = new Set(["ARS", "USD"]);
 const ESTADOS = new Set(["borrador", "enviado", "aceptado", "rechazado"]);
@@ -87,7 +89,7 @@ export async function crear(usuarioId, datos) {
   const base = {
     usuarioId,
     ...vinculos,
-    fecha: datos.fecha || new Date().toISOString().slice(0, 10),
+    fecha: datos.fecha || hoyLocal(),
     moneda: datos.moneda || "ARS",
     items: JSON.stringify(items),
     total: total.toFixed(2),
@@ -118,7 +120,7 @@ export async function actualizar(usuarioId, id, datos) {
   const [r] = await pool.query(
     `UPDATE presupuestos SET expediente_id = :expedienteId, cliente_id = :clienteId, fecha = :fecha, moneda = :moneda, items = :items, total = :total, validez_dias = :validezDias, notas = :notas
       WHERE id = :id AND usuario_id = :usuarioId`,
-    { id, usuarioId, ...vinculos, fecha: datos.fecha || new Date().toISOString().slice(0, 10), moneda: datos.moneda || "ARS", items: JSON.stringify(items), total: total.toFixed(2), validezDias: datos.validezDias ?? 15, notas: datos.notas?.trim().slice(0, 500) || null },
+    { id, usuarioId, ...vinculos, fecha: datos.fecha || hoyLocal(), moneda: datos.moneda || "ARS", items: JSON.stringify(items), total: total.toFixed(2), validezDias: datos.validezDias ?? 15, notas: datos.notas?.trim().slice(0, 500) || null },
   );
   if (r.affectedRows === 0) throw new AppError("NO_ENCONTRADO", "El presupuesto no existe.", 404);
   return obtener(usuarioId, id);
@@ -128,7 +130,11 @@ export async function actualizarEstado(usuarioId, id, estado) {
   if (!ESTADOS.has(estado)) throw new AppError("DATOS_INVALIDOS", `estado debe ser: ${[...ESTADOS].join(", ")}.`, 400);
   const [r] = await pool.query("UPDATE presupuestos SET estado = ? WHERE id = ? AND usuario_id = ?", [estado, id, usuarioId]);
   if (r.affectedRows === 0) throw new AppError("NO_ENCONTRADO", "El presupuesto no existe.", 404);
-  return obtener(usuarioId, id);
+  const p = await obtener(usuarioId, id);
+  // Cuenta corriente: un presupuesto aceptado es un cargo; si deja de estarlo, el cargo se retira (salvo que ya lo reemplace un comprobante).
+  if (estado === "aceptado") await cargoDesdePresupuesto(usuarioId, p);
+  else await quitarCargoDePresupuesto(usuarioId, id);
+  return p;
 }
 
 export async function borrar(usuarioId, id) {

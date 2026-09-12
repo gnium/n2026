@@ -134,6 +134,14 @@ export const EsquemaCertificacion = z.object({
   notas_para_escribana: z.array(texto),
 });
 
+/** Recaudos UIF por expediente (no forma parte del pipeline: lo usa services/uifIA.js). */
+export const EsquemaUifRecaudos = z.object({
+  nivel_diligencia_sugerido: z.enum(["simplificada", "media", "reforzada"]),
+  fundamento_diligencia: z.string(),
+  recaudos: z.array(z.object({ item: z.string(), fundamento: z.string(), obligatorio: z.boolean() })),
+  alertas: z.array(z.string()),
+});
+
 export const ESQUEMAS = {
   extractor_antecedentes: EsquemaExtractor,
   analista_estudio_titulos: EsquemaAnalista,

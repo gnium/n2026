@@ -66,6 +66,28 @@ Las tablas `clientes`, `expedientes`, `expediente_partes`, `tareas` y `presupues
 
 Camino de lectura de sesión nuevo: `POST /api/expedientes/:id/tareas/desde-sesion/:sesionId` lee `checklist_previo_firma` y `requisitos_previos` de una sesión viva. Ambos son texto producido sobre datos anonimizados, sin nombres ni identificadores; no se lee `sesion.mapa`. Para prellenar clientes a partir de los comparecientes se reutiliza `GET /api/protocolo/desde-sesion/:sesionId`, que ya existía.
 
+## Cumplimiento y caja: comprobantes, cuenta corriente, UIF y ARCA
+
+Las tablas de `database/11_caja_comprobantes_uif.sql` cubren dos obligaciones recurrentes de la escribanía: cobrar (cuenta corriente, comprobantes, factura electrónica) y cumplir con la UIF (legajo del cliente, recaudos por expediente, reportes). Ninguna de ellas toca el pipeline: la garantía de anonimización se mantiene. El mapa de datos:
+
+| Campo | Tabla | Cómo se guarda | Propósito | Retención y borrado |
+|---|---|---|---|---|
+| `datos_cifrado` (actividad económica, origen de fondos, detalle PEP, nacionalidad, beneficiarios finales, observaciones) | `uif_legajos` | **Cifrado**, contexto `"uif"` | Debida diligencia del cliente (Res. UIF 242/2023) | Se borra con el cliente (`ON DELETE CASCADE`) |
+| `nivel_riesgo`, `diligencia`, `es_pep`, `jurisdiccion_riesgo`, `actualizado_en`, `proxima_revision` | `uif_legajos` | Texto plano | Alertas de legajo vencido y filtros; no identifican a nadie sin la fila de `clientes` | Se borran con el cliente |
+| `documentacion` | `uif_legajos` | JSON en claro | Checklist de documentos presentados: solo el nombre del documento, si se presentó y cuándo. **No** se guardan números ni copias | Se borra con el cliente |
+| `actividad`, `monto`, `moneda`, `supera_umbral`, `recaudos`, `alertas`, `notas` | `uif_expedientes` | Texto plano | Recaudos por expediente y umbral. El texto de los recaudos lo produce la IA a partir de una entrada **sin nombres ni identificadores** (ver abajo) | Se borra con el expediente |
+| `tipo`, `periodo`, `fecha`, `referencia`, `notas` | `uif_eventos` | Texto plano | Constancia de reportes sistemáticos, ROS, autoevaluación, capacitación | No se borra con el expediente (`SET NULL`): es la prueba de cumplimiento de la cuenta |
+| `receptor_cifrado` (nombre, documento o CUIT, domicilio, condición IVA del receptor al emitir) | `comprobantes` | **Cifrado**, contexto `"comprobante"` | Snapshot para reimprimir el PDF aunque el cliente cambie o se borre | Se conserva al borrar el cliente (`cliente_id = NULL`). Un comprobante emitido no se borra: se anula con motivo |
+| `items`, `total`, `moneda`, `numero`, `cae`, `arca_resultado` | `comprobantes` | Texto plano | Numeración correlativa por tipo y punto de venta, CSV para el contador, CAE de ARCA | Igual que el anterior |
+| `concepto`, `monto`, `medio_pago`, `referencia` | `movimientos` | Texto plano | Cuenta corriente por cliente. El concepto lo escribe la escribana o es el número del comprobante/presupuesto | `cliente_id` es obligatorio: los movimientos se borran con el cliente |
+| `arca_cert_cifrado`, `arca_clave_cifrado` | `configuracion_fiscal` | **Cifrado**, contexto `"fiscal"` | Certificado y clave privada para WSAA/WSFEv1. La API nunca los devuelve: solo "cargado el …" | Se borran con `DELETE /api/configuracion-fiscal/credenciales` o al borrar la cuenta |
+| `cuit`, `razon_social`, `domicilio_fiscal`, `condicion_iva`, `punto_venta` | `configuracion_fiscal` | Texto plano | Encabezado de los comprobantes; datos públicos del emisor | Con la cuenta |
+| `uif_smvm_ars`, `uif_umbral_smvm` | `configuracion` | Texto plano | Parámetros del umbral, editables por la administradora. **Orientativos**: no son la norma | — |
+
+**Recaudos con IA (skill `uif_recaudos`)**: la entrada que se envía al proveedor lleva solo tipo de acto, actividad UIF, monto y moneda, si supera el umbral, y por cada parte su rol, tipo (persona/sociedad), nivel de riesgo, diligencia, si es PEP, si hay jurisdicción de riesgo y si el legajo está vencido. La nacionalidad, la actividad económica y el origen de fondos pasan por `presanear` (el mismo anonimizador del pipeline) antes de salir. Nunca se envían nombre, documento, CUIT, domicilio ni beneficiarios finales. La ejecución queda en `ejecuciones`/`ejecuciones_skills` con su costo, sin la entrada ni la salida.
+
+**ARCA**: la comunicación con `wsaa`/`wsfev1` lleva CUIT del emisor, tipo y número de documento del receptor e importes, que es exactamente lo que la factura electrónica exige. No pasa por ningún proveedor de IA. El ticket de acceso (TA) se cachea en memoria del proceso por cuenta y entorno hasta 10 minutos antes de vencer.
+
 ## Qué queda en MySQL después de una ejecución
 
 Ejemplo real de una fila de `ejecuciones`:

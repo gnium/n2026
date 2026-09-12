@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import { api } from "../api.js";
 import Icono from "./Iconos.jsx";
 import PresupuestoModal, { enlaceWhatsApp, formatoMonto } from "./PresupuestoModal.jsx";
+import ComprobanteModal from "./ComprobanteModal.jsx";
+import UifExpediente from "./UifExpediente.jsx";
 
 const TIPOS_ACTO = ["compraventa", "donacion", "hipoteca", "permuta", "cesion", "sucesion", "poder", "certificacion_firmas", "otro"];
 const ESTADOS = [["abierto", "Abierto"], ["en_firma", "En firma"], ["cerrado", "Cerrado"], ["archivado", "Archivado"]];
@@ -24,6 +26,9 @@ export default function Expedientes({ inicialId = null, onConsumirInicial }) {
   const [nuevaTarea, setNuevaTarea] = useState("");
   const [nuevaParte, setNuevaParte] = useState({ clienteId: "", rol: "" });
   const [presupuesto, setPresupuesto] = useState(null); // { abierto, presupuesto? }
+  const [comprobante, setComprobante] = useState(null); // { abierto, presupuesto? }
+  const [comprobantes, setComprobantes] = useState([]);
+  const [configFiscal, setConfigFiscal] = useState(null);
   const [error, setError] = useState(null);
   const [aviso, setAviso] = useState(null);
   const dialogo = useRef(null);
@@ -39,7 +44,9 @@ export default function Expedientes({ inicialId = null, onConsumirInicial }) {
   const cargarDetalle = async (id, enfocar = true) => {
     setError(null);
     try {
-      setDetalle(await api.expedienteObtener(id));
+      const [d, cs] = await Promise.all([api.expedienteObtener(id), api.comprobantesListar({ expedienteId: id }).catch(() => [])]);
+      setDetalle(d);
+      setComprobantes(cs);
       if (enfocar) setTimeout(() => document.getElementById("exp-titulo")?.focus(), 50);
     } catch (e) {
       setError(e.message);
@@ -53,6 +60,7 @@ export default function Expedientes({ inicialId = null, onConsumirInicial }) {
 
   useEffect(() => {
     api.clientesListar().then(setClientes).catch(() => setClientes([]));
+    api.configuracionFiscal().then(setConfigFiscal).catch(() => setConfigFiscal({ arcaEntorno: "apagado" }));
   }, []);
 
   useEffect(() => {
@@ -265,6 +273,7 @@ export default function Expedientes({ inicialId = null, onConsumirInicial }) {
                           <div className="acciones">
                             <a className="enlace" href={api.presupuestoUrlPdf(p.id)} download aria-label={`Descargar PDF del presupuesto ${p.numero}`}>PDF</a>
                             <a className="enlace" href={enlaceWhatsApp({ ...p, validezDias: p.validezDias ?? 15 }, clientes.find((c) => c.id === p.clienteId))} target="_blank" rel="noreferrer" aria-label={`Enviar por WhatsApp el presupuesto ${p.numero}`}>WhatsApp</a>
+                            {p.estado === "aceptado" && <button type="button" className="enlace" aria-label={`Emitir comprobante del presupuesto ${p.numero}`} onClick={async () => { try { setComprobante({ abierto: true, presupuesto: await api.presupuestoObtener(p.id) }); } catch (e) { setError(e.message); } }}>facturar</button>}
                             <button type="button" className="enlace" aria-label={`Editar presupuesto ${p.numero}`} onClick={async () => { try { setPresupuesto({ abierto: true, presupuesto: await api.presupuestoObtener(p.id) }); } catch (e) { setError(e.message); } }}>editar</button>
                             <button type="button" className="enlace" aria-label={`Borrar presupuesto ${p.numero}`} onClick={() => window.confirm(`¿Borrar el presupuesto N° ${p.numero}?`) && accion(() => api.presupuestoBorrar(p.id), `Presupuesto N° ${p.numero} borrado.`)}>borrar</button>
                           </div>
@@ -276,8 +285,46 @@ export default function Expedientes({ inicialId = null, onConsumirInicial }) {
               </div>
             )}
           </section>
+
+          <section className="bloque">
+            <div className="protocolo-cabecera">
+              <h4>Comprobantes</h4>
+              <button type="button" className="boton chico" onClick={() => setComprobante({ abierto: true, presupuesto: { expedienteId: detalle.id, clienteId: detalle.partes[0]?.clienteId || "" } })}><Icono nombre="mas" tamano={14} /> Emitir comprobante</button>
+            </div>
+            {comprobantes.length === 0 ? <p className="vacio">Sin comprobantes.</p> : (
+              <div className="tabla-scroll">
+                <table>
+                  <thead><tr><th scope="col">Fecha</th><th scope="col">Comprobante</th><th scope="col">Receptor</th><th scope="col" className="num">Total</th><th scope="col">Estado</th><th scope="col"><span className="sr-only">Acciones</span></th></tr></thead>
+                  <tbody>
+                    {comprobantes.map((c) => (
+                      <tr key={c.id}>
+                        <td>{fechaCorta(c.fecha)}</td>
+                        <td>{c.tipoNombre} <span className="mono">{c.numeroCompleto}</span>{c.cae && <span className="nota"> · CAE {c.cae}</span>}</td>
+                        <td>{c.receptorNombre || "—"}</td>
+                        <td className="num">{formatoMonto(c.total, c.moneda)}</td>
+                        <td><span className={`etiqueta ${c.estado === "emitido" ? "ok" : ""}`}>{c.estado}</span></td>
+                        <td><a className="enlace" href={api.comprobanteUrlPdf(c.id)} download aria-label={`Descargar PDF de ${c.tipoNombre} ${c.numeroCompleto}`}>PDF</a></td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </section>
+
+          <UifExpediente expedienteId={detalle.id} />
         </div>
       )}
+
+      <ComprobanteModal
+        abierto={Boolean(comprobante?.abierto)}
+        presupuesto={comprobante?.presupuesto || null}
+        clientes={clientesDelExpediente.length ? clientesDelExpediente : clientes}
+        expedientes={detalle ? [{ id: detalle.id, caratula: detalle.caratula }] : []}
+        config={configFiscal}
+        onCerrar={() => setComprobante(null)}
+        onEmitido={() => refrescar()}
+      />
 
       <dialog ref={dialogo} className="modal" aria-labelledby="expediente-form-titulo" onClose={() => setFormulario(null)} onClick={(e) => e.target === dialogo.current && setFormulario(null)}>
         {formulario && (

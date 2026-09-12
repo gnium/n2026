@@ -162,4 +162,41 @@ export const api = {
   presupuestoEstado: (id, estado) => json("PATCH", `/presupuestos/${id}/estado`, { estado }),
   presupuestoBorrar: (id) => fetch(`${BASE}/presupuestos/${id}`, { method: "DELETE" }).then(manejar),
   presupuestoUrlPdf: (id) => `${BASE}/presupuestos/${id}/pdf`,
+
+  // --- caja (cuenta corriente) ---
+  movimientosListar: (f = {}) => fetch(`${BASE}/movimientos?${new URLSearchParams(Object.fromEntries(Object.entries(f).filter(([, v]) => v)))}`).then(manejar),
+  movimientosResumen: (f = {}) => fetch(`${BASE}/movimientos/resumen?${new URLSearchParams(Object.fromEntries(Object.entries(f).filter(([, v]) => v)))}`).then(manejar),
+  movimientosSaldo: (clienteId) => fetch(`${BASE}/movimientos/saldo/${clienteId}`).then(manejar),
+  movimientosUrlCsv: (f = {}) => `${BASE}/movimientos/csv?${new URLSearchParams(Object.fromEntries(Object.entries(f).filter(([, v]) => v)))}`,
+  pagoRegistrar: (datos) => json("POST", "/movimientos/pagos", datos),
+  cargoCrear: (datos) => json("POST", "/movimientos/cargos", datos),
+  movimientoBorrar: (id) => fetch(`${BASE}/movimientos/${id}`, { method: "DELETE" }).then(manejar),
+
+  // --- comprobantes ---
+  comprobantesListar: (f = {}) => fetch(`${BASE}/comprobantes?${new URLSearchParams(Object.fromEntries(Object.entries(f).filter(([, v]) => v)))}`).then(manejar),
+  comprobantesUrlCsv: (f = {}) => `${BASE}/comprobantes/csv?${new URLSearchParams(Object.fromEntries(Object.entries(f).filter(([, v]) => v)))}`,
+  comprobanteObtener: (id) => fetch(`${BASE}/comprobantes/${id}`).then(manejar),
+  comprobanteEmitir: (datos) => json("POST", "/comprobantes", datos),
+  comprobanteAnular: (id, motivo) => json("POST", `/comprobantes/${id}/anular`, { motivo }),
+  comprobanteUrlPdf: (id) => `${BASE}/comprobantes/${id}/pdf`,
+
+  // --- configuracion fiscal y ARCA (propia de cada cuenta) ---
+  configuracionFiscal: () => fetch(`${BASE}/configuracion-fiscal`).then(manejar),
+  guardarConfiguracionFiscal: (datos) => json("PUT", "/configuracion-fiscal", datos),
+  borrarCredencialesArca: () => fetch(`${BASE}/configuracion-fiscal/credenciales`, { method: "DELETE" }).then(manejar),
+  probarArca: () => json("POST", "/configuracion-fiscal/probar"),
+
+  // --- UIF ---
+  uifAlertas: () => fetch(`${BASE}/uif/alertas`).then(manejar),
+  uifParametros: () => fetch(`${BASE}/uif/parametros`).then(manejar),
+  uifGuardarParametros: (datos) => json("PUT", "/uif/parametros", datos),
+  uifExpedientes: () => fetch(`${BASE}/uif/expedientes`).then(manejar),
+  uifLegajo: (clienteId) => fetch(`${BASE}/uif/legajos/${clienteId}`).then(manejar),
+  uifGuardarLegajo: (clienteId, datos) => json("PUT", `/uif/legajos/${clienteId}`, datos),
+  uifExpediente: (id) => fetch(`${BASE}/uif/expedientes/${id}`).then(manejar),
+  uifGuardarExpediente: (id, datos) => json("PUT", `/uif/expedientes/${id}`, datos),
+  uifGenerarRecaudos: (id) => json("POST", `/uif/expedientes/${id}/generar`),
+  uifEventos: () => fetch(`${BASE}/uif/eventos`).then(manejar),
+  uifCrearEvento: (datos) => json("POST", "/uif/eventos", datos),
+  uifBorrarEvento: (id) => fetch(`${BASE}/uif/eventos/${id}`, { method: "DELETE" }).then(manejar),
 };

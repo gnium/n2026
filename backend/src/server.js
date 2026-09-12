@@ -28,6 +28,10 @@ import { rutasBibliotecaModelos } from "./routes/bibliotecaModelos.js";
 import { rutasClientes } from "./routes/clientes.js";
 import { rutasExpedientes } from "./routes/expedientes.js";
 import { rutasPresupuestos } from "./routes/presupuestos.js";
+import { rutasMovimientos } from "./routes/movimientos.js";
+import { rutasComprobantes } from "./routes/comprobantes.js";
+import { rutasConfiguracionFiscal } from "./routes/configuracionFiscal.js";
+import { rutasUif } from "./routes/uif.js";
 import { randomBytes } from "node:crypto";
 
 if (!env.auth.secreto) {
@@ -67,6 +71,10 @@ app.use("/api/biblioteca-modelos", requerirAuth, rutasBibliotecaModelos); // esc
 app.use("/api/clientes", requerirAuth, rutasClientes); // CRM propio de cada cuenta (identificadores cifrados)
 app.use("/api/expedientes", requerirAuth, rutasExpedientes); // carpetas con partes, tareas y vinculo al pipeline
 app.use("/api/presupuestos", requerirAuth, rutasPresupuestos); // presupuestos con PDF
+app.use("/api/movimientos", requerirAuth, rutasMovimientos); // cuenta corriente por cliente
+app.use("/api/comprobantes", requerirAuth, rutasComprobantes); // recibos, notas de honorarios y facturas (ARCA)
+app.use("/api/configuracion-fiscal", requerirAuth, rutasConfiguracionFiscal); // datos del emisor y credenciales ARCA (cada cuenta la suya)
+app.use("/api/uif", requerirAuth, rutasUif); // legajos, fichas por expediente, eventos y alertas UIF (parametros: solo admin)
 app.use("/api", requerirAuth, requerirAdmin, rutasConfiguracion);
 app.use((_req, res) => res.status(404).json({ error: { codigo: "NO_ENCONTRADO", mensaje: "Ruta inexistente" } }));
 app.use(manejadorErrores);

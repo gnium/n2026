@@ -19,6 +19,7 @@ Aplicación web monousuario para una escribana o un escribano. Se arrastra un ar
 | 4. Puesta en marcha local | Docker Compose (sección 3) y manual (sección 4) | Hecho, probado de punta a punta en Docker en modo simulado |
 | 5. Primera corrida real | Cargar `ANTHROPIC_API_KEY` de console.anthropic.com, procesar un antecedente real y ajustar prompts/plantillas desde la tabla `skills` | Pendiente (requiere clave de API, ver sección 3) |
 | 6. Ajuste fino | Afinar prompts por jurisdicción, agregar plantillas (hipoteca, permuta, cesión), pantalla de edición de skills | Siguiente iteración |
+| 7. Gestión de la práctica | Agenda, notas, biblioteca de modelos (3.7); clientes, expedientes, presupuestos (3.8); caja, comprobantes, ARCA y UIF (3.9) | Hecho |
 
 ### Pipeline de skills (secuencial)
 
@@ -63,6 +64,11 @@ notarius2026/
 │   │   ├── clientes.js        # CRM: nombre en claro, identificadores cifrados (contexto "cliente")
 │   │   ├── expedientes.js     # carpetas con partes, tareas (manuales o desde el checklist de la sesion) y vinculos
 │   │   ├── presupuestos.js / presupuestoPdf.js # presupuestos correlativos y su PDF (pdfkit)
+│   │   ├── movimientos.js     # cuenta corriente: cargos automaticos (presupuesto/comprobante), pagos, resumen, CSV
+│   │   ├── comprobantes.js / comprobantePdf.js # recibos, notas de honorarios y facturas (CAE); receptor cifrado
+│   │   ├── configuracionFiscal.js # datos del emisor y credenciales ARCA cifradas (contexto "fiscal")
+│   │   ├── arca.js            # adaptador WSAA (TRA + CMS con node-forge) y WSFEv1 (FEDummy, ultimo autorizado, FECAESolicitar)
+│   │   ├── uif.js / uifIA.js  # legajo KYC cifrado (contexto "uif"), ficha por expediente, alertas, eventos; recaudos con IA anonimizada
 │   │   └── auditoria.js       # escritura en MySQL, solo metadatos
 │   ├── src/skills/            # schemas.js (Zod), repositorio.js (lectura de MySQL)
 │   ├── scripts/initDb.js      # crea BD + seed sin necesitar el cliente mysql
@@ -70,7 +76,8 @@ notarius2026/
 ├── frontend/
 │   ├── src/                   # App.jsx (shell: barra lateral + barra superior), api.js, styles.css (tokens, tema claro/oscuro/sistema)
 │   │                          # components/{DropZone,Pipeline,ChatLog,ResultPanel,Protocolo,RegistrarProtocoloModal,SesionesGuardadasPicker,Agenda,Notas,BibliotecaModelos,
-│   │                          #             Clientes,Expedientes,PresupuestoModal,GuardarEnExpedienteModal,Iconos,TemaToggle}.jsx
+│   │                          #             Clientes,Expedientes,PresupuestoModal,GuardarEnExpedienteModal,Caja,Comprobantes,ComprobanteModal,
+│   │                          #             ConfiguracionFiscal,Uif,UifLegajo,UifExpediente,ParametrosUif,Iconos,TemaToggle}.jsx
 │   └── nginx.conf             # SPA + proxy /api (Docker)
 ├── ejemplos/antecedente-ejemplo.docx   # documento ficticio para probar
 ├── docker-compose.yml         # db + backend + frontend
@@ -273,6 +280,13 @@ Tres pantallas de gestión de la práctica, independientes del pipeline de IA, a
 - **Expedientes**: una carpeta por operación con partes (clientes + rol), tareas (pendientes/hechas), presupuestos y el vínculo con la ejecución del pipeline y con la entrada del protocolo. Desde el resultado de un análisis, **"Guardar en un expediente"** crea o elige un expediente, opcionalmente crea clientes a partir de los comparecientes y convierte el **checklist previo a la firma** (más los requisitos previos del estudio de títulos) en tareas.
 - **Presupuestos**: conceptos y montos en ARS o USD, número correlativo por cuenta, validez, notas; se descargan en **PDF** (`pdfkit`) y se comparten por WhatsApp con un enlace `wa.me` que lleva el resumen (el PDF se adjunta desde el chat).
 
+### 3.9 Caja, comprobantes, factura electrónica y UIF
+
+- **Caja** (cuenta corriente por cliente): los **cargos** nacen solos al pasar un presupuesto a "aceptado" y al emitir un comprobante (el cargo del presupuesto se reemplaza por el del comprobante, sin duplicar); también se cargan a mano. Los **pagos** se registran a mano (efectivo, transferencia, Mercado Pago, cheque, otro) con referencia. Resumen por período (pendiente de cobro, cobrado, cargado) por moneda y exportación a **CSV** (separador `;`, listo para Excel es-AR). Un cargo automático no se borra: se cambia el estado del presupuesto o se anula el comprobante.
+- **Comprobantes**: **recibo** y **nota de honorarios** son comprobantes internos ("documento no válido como factura"), numerados por tipo y punto de venta (`00001-00000001`), con PDF, anulación con motivo y CSV para el contador. El receptor se guarda como snapshot cifrado, así el comprobante se reimprime igual aunque el cliente se borre. Desde un presupuesto aceptado, "facturar" prellena cliente, expediente y conceptos.
+- **Factura electrónica (ARCA)**: viene **apagada**. Para habilitarla, en Comprobantes → "Datos fiscales": (1) cargar CUIT, razón social, domicilio, condición frente al IVA y punto de venta; (2) generar en ARCA un certificado para el servicio `wsfe` (primero en **homologación** vía WSASS: crear el CSR con `openssl req -new -key clave.key -subj "/C=AR/O=<razón social>/CN=doyfe/serialNumber=CUIT <cuit>" -out pedido.csr`, subirlo en WSASS, descargar el `.crt` y autorizar el servicio `wsfe` para ese certificado); (3) subir el `.crt` y la `.key` (se cifran y no se vuelven a mostrar), elegir entorno "homologación", guardar y **"Probar conexión con ARCA"** (WSAA + `FEDummy`); (4) emitir una factura de prueba; (5) repetir con el certificado de producción en el portal de ARCA (Administrador de Relaciones → WSFE) y pasar el entorno a "producción". Con ARCA encendido aparecen Factura A/B/C según la condición del emisor; el CAE y su vencimiento se imprimen en el PDF. La anulación fiscal de una factura con CAE requiere nota de crédito (fuera de alcance): la app solo la marca anulada y quita el cargo.
+- **UIF** (Ley 25.246, Res. UIF 242/2023): **legajo** por cliente (riesgo, diligencia, PEP, actividad, origen de fondos, beneficiarios finales para sociedades, documentación presentada; los datos sensibles van cifrados; próxima revisión calculada: reforzada 1 año, media 3, simplificada 5), **ficha por expediente** (actividad específica alcanzada, monto y umbral en SMVM, **recaudos generados con IA** a partir de datos anonimizados —editables, con estado pendiente/hecho/no aplica— o cargados a mano) y **registro de eventos** (reporte sistemático mensual y anual, ROS, autoevaluación, revisión externa, capacitación). La pantalla UIF abre con las **alertas**: recaudos pendientes, legajos vencidos o faltantes en expedientes alcanzados, reporte mensual del mes anterior sin registrar, reporte anual (enero–marzo) y autoevaluación bienal. Los parámetros **SMVM vigente** y **umbral en SMVM** se cargan en Configuración (admin). Todo es **orientativo**: la escribanía lo contrasta con la resolución vigente y su manual de procedimientos; la app no envía nada a la UIF.
+
 ---
 
 ## 5. Configuración
@@ -333,6 +347,16 @@ Los **prompts, modelo, esfuerzo y `max_tokens` de cada skill** se editan en la t
 | `GET/POST` | `/api/presupuestos?expedienteId=|clienteId=`, `/api/presupuestos` | Listar / crear (número correlativo por cuenta, total calculado en el servidor). |
 | `PUT/PATCH/DELETE` | `/api/presupuestos/:id`, `/:id/estado` | Editar, cambiar estado, borrar. |
 | `GET` | `/api/presupuestos/:id/pdf` | Descarga el presupuesto en PDF. |
+| `GET` | `/api/movimientos?clienteId=&desde=&hasta=`, `/resumen`, `/saldo/:clienteId`, `/csv` | Cuenta corriente: movimientos, resumen por moneda (cargado, cobrado, pendiente), saldo de un cliente, CSV. |
+| `POST/DELETE` | `/api/movimientos/pagos`, `/api/movimientos/cargos`, `/api/movimientos/:id` | Registrar un pago o un cargo manual; borrar solo movimientos manuales. |
+| `GET/POST` | `/api/comprobantes?desde=&hasta=&expedienteId=`, `/api/comprobantes` | Listar / emitir (recibo, nota de honorarios; factura A/B/C si ARCA está activo). `presupuestoId` prellena. |
+| `GET/POST` | `/api/comprobantes/:id`, `/:id/pdf`, `/:id/anular`, `/api/comprobantes/csv` | Detalle, PDF, anular con motivo, CSV para el contador. |
+| `GET/PUT/DELETE/POST` | `/api/configuracion-fiscal`, `/credenciales`, `/probar` | Datos fiscales del emisor y credenciales ARCA (cifradas, nunca devueltas); probar WSAA + FEDummy. |
+| `GET` | `/api/uif/alertas`, `/api/uif/expedientes` | Alertas de cumplimiento; expedientes con actividad UIF. |
+| `GET/PUT` | `/api/uif/parametros` | SMVM vigente y umbral en SMVM (PUT solo admin). |
+| `GET/PUT` | `/api/uif/legajos/:clienteId` | Legajo KYC del cliente (datos sensibles cifrados). |
+| `GET/PUT/POST` | `/api/uif/expedientes/:id`, `/:id/generar` | Ficha UIF del expediente (actividad, monto, recaudos, estado); generar recaudos con IA (entrada anonimizada, costo registrado en Consumo). |
+| `GET/POST/DELETE` | `/api/uif/eventos`, `/api/uif/eventos/:id` | Reportes y eventos de cumplimiento. |
 | `GET/PUT` | `/api/skills`, `/api/skills/:clave` | Configuración de skills. |
 | `GET` | `/api/plantillas`, `/api/plantillas/:clave` | Plantillas. |
 | `GET` | `/api/salud` | Estado del servidor y proveedor de IA activo. |
