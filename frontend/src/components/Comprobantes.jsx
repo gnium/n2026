@@ -19,6 +19,7 @@ export default function Comprobantes() {
   const [clientes, setClientes] = useState([]);
   const [expedientes, setExpedientes] = useState([]);
   const [config, setConfig] = useState(null);
+  const [google, setGoogle] = useState(null);
   const [modal, setModal] = useState(false);
   const [verFiscal, setVerFiscal] = useState(false);
   const [error, setError] = useState(null);
@@ -41,7 +42,20 @@ export default function Comprobantes() {
     api.clientesListar().then(setClientes).catch(() => setClientes([]));
     api.expedientesListar().then((l) => setExpedientes(l.filter((e) => e.estado === "abierto" || e.estado === "en_firma"))).catch(() => setExpedientes([]));
     api.configuracionFiscal().then(setConfig).catch(() => setConfig({ arcaEntorno: "apagado" }));
+    api.googleEstado().then(setGoogle).catch(() => setGoogle(null));
   }, []);
+
+  // Copiar el PDF a la carpeta de la escribanía en Drive (solo si la cuenta lo activó).
+  const aDrive = async (c) => {
+    setError(null);
+    try {
+      const r = await api.googleSubirADrive({ tipo: "comprobante", id: c.id });
+      setAviso(`${c.tipoNombre} ${c.numeroCompleto} copiado a Drive.`);
+      if (r?.enlace) window.open(r.enlace, "_blank", "noopener,noreferrer");
+    } catch (e) {
+      setError(e.message);
+    }
+  };
 
   const [aAnular, setAAnular] = useState(null);
   const anular = (c) => setAAnular(c);
@@ -101,6 +115,9 @@ export default function Comprobantes() {
                   <td>
                     <div className="acciones">
                       <a className="enlace" href={api.comprobanteUrlPdf(c.id)} download aria-label={`Descargar PDF de ${c.tipoNombre} ${c.numeroCompleto}`}>PDF</a>
+                      {google?.conectado && google?.subirComprobantes && (
+                        <button type="button" className="enlace" aria-label={`Copiar a Drive ${c.tipoNombre} ${c.numeroCompleto}`} onClick={() => aDrive(c)}>Drive</button>
+                      )}
                       {c.estado === "emitido" && <button type="button" className="enlace" aria-label={`Anular ${c.tipoNombre} ${c.numeroCompleto}`} onClick={() => anular(c)}>anular</button>}
                     </div>
                   </td>

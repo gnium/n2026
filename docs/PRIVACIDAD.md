@@ -108,23 +108,21 @@ Un expediente compartido muestra al colaborador la carátula, las observaciones,
 Es la primera función del producto que puede sacar datos de la escribanía hacia un tercero, así que está construida para que eso sea siempre una decisión explícita y reversible:
 
 - **Viene apagada dos veces.** No funciona hasta que (1) la titular carga el `client_id` y el `client_secret` de un proyecto de Google Cloud propio de la escribanía, y (2) cada cuenta conecta su propia cuenta de Google. Ninguna cuenta queda conectada por decisión de otra.
-- **Cada destino se activa por separado** (agenda, Gmail, comprobantes a Drive, escrituras a Drive). Mientras estén apagados, no sale nada.
-- **Alcances mínimos**: `calendar.events` (crear y editar eventos, no leer el resto del calendario), `gmail.send` (enviar; **no** permite leer la casilla) y `drive.file` (solo los archivos que crea esta app; no ve el resto del Drive).
+- **Al conectar** quedan activas la agenda y la copia de comprobantes a Drive, que es lo que la persona fue a hacer. **Subir la escritura final se activa aparte**, porque ese `.docx` sí tiene los datos reales de las partes. Cada destino se puede apagar en cualquier momento.
+- **Alcances mínimos**: `calendar.events` (crear y editar eventos, no leer el resto del calendario) y `drive.file` (solo los archivos que crea esta app; no ve el resto del Drive). **No se pide ningún permiso sobre el correo**: Gmail quedó deliberadamente fuera (`gmail.send` es un alcance restringido de Google y obliga a una auditoría de seguridad anual de un tercero para publicar la aplicación).
 
 Qué viaja con cada opción activada:
 
 | Opción | Qué se envía a Google | Qué **no** se envía |
 |---|---|---|
 | Agenda → Calendar | Título del turno, fecha, duración y estado | Las notas del turno no viajan como dato aparte; no se envían clientes ni expedientes |
-| Enviar por Gmail | El PDF que usted elige mandar (presupuesto o comprobante) y el correo del destinatario | Nada más; el correo sale desde su propia casilla y queda en sus Enviados |
-| Comprobantes → Drive | El PDF del comprobante | — |
+| Comprobantes → Drive | El PDF del comprobante o del presupuesto, solo cuando usted lo manda a copiar | — |
 | Escrituras → Drive | El `.docx` final. **Atención**: ese documento ya tiene los datos reales de las partes, porque es el que se firma | — |
 
 | Dato | Dónde | Cómo se guarda |
 |---|---|---|
 | `refresh_token` y `access_token` de cada cuenta | `google_cuentas` | **Cifrados**, contexto `"google"`. Rotar `JWT_SECRET` los deja ilegibles y hay que reconectar |
 | `client_secret` del proyecto | `configuracion` | **Cifrado**, contexto `"google"`. La API nunca lo devuelve |
-| Envíos hechos por Gmail | `google_envios` | Solo cuenta, tipo, id del comprobante y id del mensaje de Gmail. **No se guarda el destinatario** |
 | Id del evento y del archivo | `turnos.google_evento_id`, `comprobantes.drive_archivo_id` | Referencias, para no duplicar |
 
 Desconectar revoca el permiso en Google, borra los tokens y corta la sincronización. Lo que ya se subió a Calendar o Drive queda en la cuenta de Google de esa persona: la app no lo borra.

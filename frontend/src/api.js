@@ -229,5 +229,5 @@ export const api = {
   googleDesconectar: () => json("POST", "/google/desconectar"),
   googlePreferencias: (datos) => json("PUT", "/google/preferencias", datos),
   googleGuardarConfiguracion: (datos) => json("PUT", "/google/configuracion", datos),
-  googleEnviar: (datos) => json("POST", "/google/enviar", datos),
+  googleSubirADrive: (datos) => json("POST", "/google/drive", datos),
 };

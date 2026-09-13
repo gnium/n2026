@@ -7,3 +7,6 @@ backend/uploads/
 ejemplos/*.resultado*.json
 certs/*.pem
 .claude/settings.local.json
+TMP/
+client_secret*.json
+*.env.bak

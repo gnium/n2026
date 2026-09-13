@@ -12,7 +12,6 @@ const AVISOS = {
 
 const OPCIONES = [
   { clave: "sincronizarAgenda", titulo: "Agenda en Google Calendar", detalle: "Cada turno que cree o edite se copia a su calendario. Viaja el título, la fecha y la duración; nada más." },
-  { clave: "enviarPorGmail", titulo: "Enviar presupuestos y comprobantes por Gmail", detalle: "El correo sale desde su propia casilla, con el PDF adjunto, y le queda en Enviados." },
   { clave: "subirComprobantes", titulo: "Copiar comprobantes y presupuestos a Drive", detalle: "Guarda el PDF en una carpeta \"Doy Fe\" de su Drive, cuando usted lo pide desde el comprobante o el presupuesto." },
   { clave: "subirEscrituras", titulo: "Copiar escrituras a Drive", detalle: "Guarda el .docx generado. Atención: el documento final tiene los datos reales de las partes." },
 ];
@@ -79,7 +78,7 @@ export default function Integraciones({ usuario, aviso: avisoUrl = null }) {
     <div className="equipo">
       <h2>Integraciones</h2>
       <p className="nota">
-        Conecte su cuenta de Google para llevar la agenda a Calendar, enviar presupuestos y comprobantes desde su Gmail y guardar copias en Drive. <b>Todo viene apagado</b> y cada cosa se activa por separado: hasta que no active una opción, ningún dato sale de la escribanía.
+        Conecte su cuenta de Google para llevar la agenda a Calendar y guardar copias de los documentos en Drive. Hasta que no conecte una cuenta, no sale nada de la escribanía. Al conectar quedan activas la agenda y la copia de comprobantes; subir la escritura final —que sí tiene los datos reales de las partes— se activa aparte. El correo se maneja fuera de la app.
       </p>
       {error && <p className="alerta error" role="alert">{error}</p>}
       <p className={`alerta ${avisoUrl && AVISOS[avisoUrl]?.tipo === "error" ? "error" : "ok"} ${aviso ? "" : "sr-only"}`} role="status">{aviso}</p>
@@ -96,11 +95,11 @@ export default function Integraciones({ usuario, aviso: avisoUrl = null }) {
           )}
         </div>
         {g.conectado ? (
-          <p className="nota">Conectada como <b>{g.email}</b>. Permisos otorgados: crear eventos en su calendario, enviar correo (no leerlo) y ver solo los archivos que crea esta app en Drive.</p>
+          <p className="nota">Conectada como <b>{g.email}</b>. Permisos otorgados: crear y editar eventos en su calendario, y ver solo los archivos que esta app crea en su Drive. No puede leer su calendario completo ni el resto de su Drive, y no tiene ningún acceso a su correo.</p>
         ) : !g.configurado ? (
           <p className="alerta">Falta que la titular cargue las credenciales del proyecto de Google Cloud (abajo) antes de poder conectar cuentas.</p>
         ) : (
-          <p className="nota">Al conectar, Google va a pedirle permiso para calendario, envío de correo y archivos propios de la app.</p>
+          <p className="nota">Al conectar, Google le va a pedir permiso para crear y editar eventos en su calendario y para los archivos que esta app cree en su Drive. No pide ningún permiso sobre su correo.</p>
         )}
       </section>
 
@@ -126,13 +125,18 @@ export default function Integraciones({ usuario, aviso: avisoUrl = null }) {
       {usuario?.esAdmin && (
         <section className="bloque" aria-labelledby="google-config-titulo">
           <div className="protocolo-cabecera">
-            <h3 id="google-config-titulo">Credenciales de Google Cloud {g.configurado && <span className="etiqueta ok">cargadas</span>}</h3>
+            <h3 id="google-config-titulo">
+              Credenciales de Google Cloud {g.configurado && <span className="etiqueta ok">{g.origen === "entorno" ? "desde el .env" : "cargadas"}</span>}
+              {g.secretoIlegible && <span className="etiqueta riesgo-alto">ilegibles</span>}
+            </h3>
             <button type="button" className="boton chico" aria-expanded={verConfig} aria-controls="google-config" onClick={() => setVerConfig((v) => !v)}>{verConfig ? "Ocultar" : "Editar"}</button>
           </div>
+          {g.origen === "entorno" && <p className="nota">Vienen del archivo <span className="mono">.env</span> del servidor (<span className="mono">GOOGLE_CLIENT_ID</span> y <span className="mono">GOOGLE_CLIENT_SECRET</span>). Si carga valores acá, estos tienen prioridad sobre los del archivo.</p>}
+          {g.secretoIlegible && <p className="alerta error" role="alert">El client_secret guardado está cifrado con otra JWT_SECRET y no se puede leer. Vuelva a cargarlo acá o definalo en el .env del servidor.</p>}
           {verConfig && (
             <form id="google-config" className="cert-form" onSubmit={guardarConfig}>
               <p className="ayuda">
-                En console.cloud.google.com: cree un proyecto, active las APIs de Calendar, Gmail y Drive, configure la pantalla de consentimiento y cree credenciales de tipo <b>ID de cliente de OAuth · Aplicación web</b>. Copie acá el ID y el secreto, y en Google pegue el URI de redirección que figura abajo.
+                En console.cloud.google.com: cree un proyecto, active las APIs de <b>Google Calendar</b> y <b>Google Drive</b>, configure la pantalla de consentimiento y cree credenciales de tipo <b>ID de cliente de OAuth · Aplicación web</b>. Copie acá el ID y el secreto, y en Google pegue el URI de redirección que figura abajo. Si la escribanía tiene Google Workspace, elija tipo de usuario <b>Interno</b>: evita la verificación de Google y el permiso no vence.
               </p>
               <div className="cert-grid">
                 <label className="campo"><span className="campo-titulo">Client ID</span>
@@ -155,7 +159,7 @@ export default function Integraciones({ usuario, aviso: avisoUrl = null }) {
       <section className="bloque" aria-labelledby="google-privacidad-titulo">
         <h3 id="google-privacidad-titulo">Qué sale de la escribanía</h3>
         <p className="ayuda">
-          Con la agenda activada viajan el título, la fecha y la duración del turno. Con Gmail, el PDF que usted elige enviar y el correo del destinatario. Con Drive, el documento que elija copiar: si activa las escrituras, tenga presente que el .docx final ya tiene los datos reales de las partes. El pipeline de IA no cambia: sigue anonimizando antes de analizar. Está detallado en docs/PRIVACIDAD.md.
+          Con la agenda activada viajan el título, la fecha y la duración del turno. Con Drive, solo el documento que usted manda a copiar: si activa las escrituras, tenga presente que el .docx final ya tiene los datos reales de las partes. El pipeline de IA no cambia: sigue anonimizando antes de analizar. Está detallado en docs/PRIVACIDAD.md.
         </p>
       </section>
 

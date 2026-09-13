@@ -70,7 +70,7 @@ app.use("/api/sesiones-guardadas", requerirAuth, rutasSesionesGuardadas); // cad
 app.use("/api/equipo", requerirAuth, rutasEquipo); // integrantes, invitaciones, roles y metricas del equipo
 app.use("/api/alertas", requerirAuth, rutasAlertas); // novedades: vencimientos y pendientes de la cuenta (segun rol)
 app.use("/api/google/callback", rutasGoogleCallback); // publica: la vuelta de OAuth se autentica con el state firmado
-app.use("/api/google", requerirAuth, rutasGoogle); // Calendar, Gmail y Drive (apagado hasta configurarlo)
+app.use("/api/google", requerirAuth, rutasGoogle); // Calendar y Drive (apagado hasta configurarlo)
 app.use("/api/protocolo", requerirAuth, requerirRol("escribano"), rutasProtocolo); // indice de protocolo: reservado a escribana/escribano
 app.use("/api/turnos", requerirAuth, rutasTurnos); // agenda propia de cada cuenta
 app.use("/api/notas", requerirAuth, rutasNotas); // notas propias + compartidas con la instalacion

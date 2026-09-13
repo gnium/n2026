@@ -24,6 +24,14 @@ export const env = {
     pass: process.env.SMTP_PASS || "",
     from: process.env.SMTP_FROM || "Doy Fe <no-responder@localhost>",
   },
+  // Credenciales del proyecto de Google Cloud (Calendar y Drive). Son de la
+  // instalacion, no de cada cuenta. Si estan aca, la app arranca ya configurada;
+  // lo que se cargue desde Integraciones tiene prioridad sobre esto.
+  google: {
+    clientId: process.env.GOOGLE_CLIENT_ID || "",
+    clientSecret: process.env.GOOGLE_CLIENT_SECRET || "",
+    redirectUri: process.env.GOOGLE_REDIRECT_URI || "",
+  },
   llm: {
     proveedor: (process.env.LLM_PROVIDER || "auto").toLowerCase(), // auto | anthropic | gemini | local | mock
     gemini: {

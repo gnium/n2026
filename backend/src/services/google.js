@@ -1,6 +1,8 @@
 /**
- * Integraciones con Google: Calendar (agenda), Gmail (envio de presupuestos y
- * comprobantes) y Drive (copia de los documentos generados).
+ * Integraciones con Google: Calendar (agenda) y Drive (copia de los documentos
+ * generados). El correo se maneja fuera de la app a proposito: `gmail.send` es
+ * un alcance restringido de Google y obliga a una auditoria de seguridad anual
+ * de un tercero para publicar la aplicacion.
  *
  * Viene apagado. Hacen falta dos pasos, y cada uno lo da una persona distinta:
  *   1. La titular carga el client_id y el client_secret de un proyecto de
@@ -10,7 +12,6 @@
  *
  * Alcances minimos (ver docs/PRIVACIDAD.md):
  *   calendar.events -> crear y editar eventos; no lee el resto del calendario.
- *   gmail.send      -> enviar; NO permite leer la casilla.
  *   drive.file      -> solo los archivos que crea esta app; no ve el Drive.
  */
 import { createHmac, randomBytes, timingSafeEqual } from "node:crypto";
@@ -25,7 +26,6 @@ const TOKEN_URL = "https://oauth2.googleapis.com/token";
 const REVOKE_URL = "https://oauth2.googleapis.com/revoke";
 const USERINFO_URL = "https://www.googleapis.com/oauth2/v3/userinfo";
 const API_CALENDAR = "https://www.googleapis.com/calendar/v3";
-const API_GMAIL = "https://gmail.googleapis.com/gmail/v1";
 const API_DRIVE = "https://www.googleapis.com/drive/v3";
 const SUBIDA_DRIVE = "https://www.googleapis.com/upload/drive/v3";
 const TIMEOUT_MS = 20000;
@@ -35,7 +35,6 @@ export const ALCANCES = [
   "openid",
   "email",
   "https://www.googleapis.com/auth/calendar.events",
-  "https://www.googleapis.com/auth/gmail.send",
   "https://www.googleapis.com/auth/drive.file",
 ];
 
@@ -46,25 +45,39 @@ async function leerConfig(claves) {
   return Object.fromEntries(rows.map((r) => [r.clave, r.valor]));
 }
 
-/** client_id, redirect_uri y si hay secreto cargado. Nunca devuelve el secreto. */
+/**
+ * client_id, redirect_uri y si hay secreto cargado. Nunca devuelve el secreto.
+ * Origen: lo cargado desde Integraciones gana sobre las variables de entorno
+ * (mismo criterio que la clave de IA), y el entorno sirve para dejar la
+ * instalacion ya configurada en el despliegue.
+ */
 export async function configuracionOAuth() {
   const c = await leerConfig(["google_client_id", "google_client_secret_cifrado", "google_redirect_uri"]);
-  const redirectUri = c.google_redirect_uri || `${env.appUrl}/api/google/callback`;
+  const clientId = c.google_client_id || env.google.clientId;
+  const secretoIlegible = Boolean(c.google_client_secret_cifrado) && descifrar(c.google_client_secret_cifrado, "google") === null && !env.google.clientSecret;
+  const tieneSecreto = Boolean(c.google_client_secret_cifrado) || Boolean(env.google.clientSecret);
   return {
-    clientId: c.google_client_id || "",
-    tieneSecreto: Boolean(c.google_client_secret_cifrado),
-    redirectUri,
-    configurado: Boolean(c.google_client_id && c.google_client_secret_cifrado),
+    clientId,
+    tieneSecreto,
+    secretoIlegible,
+    origen: c.google_client_id ? "aplicacion" : clientId ? "entorno" : null,
+    redirectUri: c.google_redirect_uri || env.google.redirectUri || `${env.appUrl}/api/google/callback`,
+    configurado: Boolean(clientId && tieneSecreto) && !secretoIlegible,
   };
 }
 
 async function credenciales() {
   const c = await leerConfig(["google_client_id", "google_client_secret_cifrado", "google_redirect_uri"]);
-  const secreto = c.google_client_secret_cifrado ? descifrar(c.google_client_secret_cifrado, "google") : null;
-  if (!c.google_client_id || !secreto) {
-    throw new AppError("GOOGLE_SIN_CONFIGURAR", "Las integraciones con Google no estan configuradas: la titular debe cargar el client_id y el client_secret en Configuracion.", 400);
+  const guardado = c.google_client_secret_cifrado ? descifrar(c.google_client_secret_cifrado, "google") : null;
+  if (c.google_client_secret_cifrado && !guardado && !env.google.clientSecret) {
+    throw new AppError("GOOGLE_CREDENCIALES_ILEGIBLES", "El client_secret guardado esta cifrado con otra JWT_SECRET y no se puede leer. Vuelva a cargarlo en Integraciones.", 410);
   }
-  return { clientId: c.google_client_id, clientSecret: secreto, redirectUri: c.google_redirect_uri || `${env.appUrl}/api/google/callback` };
+  const clientId = c.google_client_id || env.google.clientId;
+  const clientSecret = guardado || env.google.clientSecret;
+  if (!clientId || !clientSecret) {
+    throw new AppError("GOOGLE_SIN_CONFIGURAR", "Las integraciones con Google no estan configuradas: cargue el client_id y el client_secret en Integraciones, o definalos como GOOGLE_CLIENT_ID y GOOGLE_CLIENT_SECRET en el .env del servidor.", 400);
+  }
+  return { clientId, clientSecret, redirectUri: c.google_redirect_uri || env.google.redirectUri || `${env.appUrl}/api/google/callback` };
 }
 
 /** Guarda las credenciales del proyecto de Google Cloud (solo la titular). */
@@ -168,9 +181,12 @@ export async function conectar(usuarioId, code) {
   let email = null;
   const info = await pedir(USERINFO_URL, { headers: { authorization: `Bearer ${acceso}` } });
   if (info.ok) email = info.cuerpo?.email || null;
+  // Al conectar quedan activas la agenda y la copia de comprobantes a Drive: es lo que
+  // la persona vino a hacer. Subir la escritura final (con los datos reales de las
+  // partes) sigue apagado y se activa a mano. Al reconectar se respetan sus elecciones.
   await pool.query(
-    `INSERT INTO google_cuentas (usuario_id, email, refresh_cifrado, access_cifrado, access_expira_en, alcances)
-     VALUES (:usuarioId, :email, :refresco, :acceso, DATE_ADD(NOW(), INTERVAL :segundos SECOND), :scope)
+    `INSERT INTO google_cuentas (usuario_id, email, refresh_cifrado, access_cifrado, access_expira_en, alcances, sincronizar_agenda, subir_comprobantes)
+     VALUES (:usuarioId, :email, :refresco, :acceso, DATE_ADD(NOW(), INTERVAL :segundos SECOND), :scope, 1, 1)
      ON DUPLICATE KEY UPDATE email = VALUES(email), refresh_cifrado = VALUES(refresh_cifrado), access_cifrado = VALUES(access_cifrado),
        access_expira_en = VALUES(access_expira_en), alcances = VALUES(alcances)`,
     { usuarioId, email, refresco: cifrar(refresco, "google"), acceso: cifrar(acceso, "google"), segundos: Number(expira) || 3600, scope: String(scope || "").slice(0, 600) },
@@ -198,12 +214,13 @@ export async function estado(usuarioId) {
     configurado: cfg.configurado,
     clientId: cfg.clientId,
     redirectUri: cfg.redirectUri,
+    origen: cfg.origen, // "entorno" (.env del servidor) o "aplicacion" (cargadas en Integraciones)
+    secretoIlegible: cfg.secretoIlegible,
     conectado: Boolean(r),
     email: r?.email || null,
     conectadoEn: r?.conectado_en || null,
     calendarioId: r?.calendario_id || "primary",
     sincronizarAgenda: Boolean(r?.sincronizar_agenda),
-    enviarPorGmail: Boolean(r?.enviar_por_gmail),
     subirEscrituras: Boolean(r?.subir_escrituras),
     subirComprobantes: Boolean(r?.subir_comprobantes),
     driveCarpetaNombre: r?.drive_carpeta_nombre || null,
@@ -215,12 +232,11 @@ export async function guardarPreferencias(usuarioId, p) {
   const [[r]] = await pool.query("SELECT usuario_id FROM google_cuentas WHERE usuario_id = ?", [usuarioId]);
   if (!r) throw new AppError("GOOGLE_NO_CONECTADO", "Conecte una cuenta de Google antes de elegir que sincronizar.", 400);
   await pool.query(
-    `UPDATE google_cuentas SET sincronizar_agenda = :agenda, enviar_por_gmail = :gmail, subir_escrituras = :escrituras,
+    `UPDATE google_cuentas SET sincronizar_agenda = :agenda, subir_escrituras = :escrituras,
        subir_comprobantes = :comprobantes, calendario_id = :calendario WHERE usuario_id = :usuarioId`,
     {
       usuarioId,
       agenda: p.sincronizarAgenda ? 1 : 0,
-      gmail: p.enviarPorGmail ? 1 : 0,
       escrituras: p.subirEscrituras ? 1 : 0,
       comprobantes: p.subirComprobantes ? 1 : 0,
       calendario: String(p.calendarioId || "primary").slice(0, 190),
@@ -320,41 +336,6 @@ export async function eventosDeGoogle(usuarioId, desde, hasta) {
   return (r?.items || [])
     .filter((e) => e.status !== "cancelled" && e.start?.dateTime)
     .map((e) => ({ googleEventoId: e.id, titulo: e.summary || "(sin titulo)", fechaHora: e.start.dateTime, fin: e.end?.dateTime || null, enlace: e.htmlLink || null }));
-}
-
-// ---------- Gmail ----------
-
-const b64url = (b) => Buffer.from(b).toString("base64").replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
-
-/** Envia un correo desde la cuenta de Google del usuario, con un adjunto opcional. */
-export async function enviarPorGmail(usuarioId, { para, asunto, texto, adjunto = null, tipo = "otro", referenciaId = null }) {
-  const [[c]] = await pool.query("SELECT enviar_por_gmail, email FROM google_cuentas WHERE usuario_id = ?", [usuarioId]);
-  if (!c) throw new AppError("GOOGLE_NO_CONECTADO", "Conecte su cuenta de Google para enviar desde Gmail.", 400);
-  if (!c.enviar_por_gmail) throw new AppError("GMAIL_APAGADO", "El envio por Gmail esta apagado en Integraciones.", 400);
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(para || ""))) throw new AppError("DATOS_INVALIDOS", "El destinatario no es un correo valido.", 400);
-  const limite = "=_doyfe_" + randomBytes(12).toString("hex");
-  const asuntoCodificado = `=?UTF-8?B?${Buffer.from(String(asunto || "")).toString("base64")}?=`;
-  // El nombre del adjunto va entre comillas en dos cabeceras: sin sanear, unas comillas o un CRLF inyectan cabeceras.
-  const nombreAdjunto = adjunto ? String(adjunto.nombre || "documento.pdf").replace(/[\r\n"\\]/g, "").slice(0, 120) || "documento.pdf" : null;
-  let mensaje;
-  if (adjunto) {
-    mensaje =
-      `From: ${c.email}\r\nTo: ${para}\r\nSubject: ${asuntoCodificado}\r\nMIME-Version: 1.0\r\n` +
-      `Content-Type: multipart/mixed; boundary="${limite}"\r\n\r\n` +
-      `--${limite}\r\nContent-Type: text/plain; charset="UTF-8"\r\nContent-Transfer-Encoding: base64\r\n\r\n${Buffer.from(texto || "").toString("base64")}\r\n` +
-      `--${limite}\r\nContent-Type: ${adjunto.tipo || "application/pdf"}; name="${nombreAdjunto}"\r\n` +
-      `Content-Disposition: attachment; filename="${nombreAdjunto}"\r\nContent-Transfer-Encoding: base64\r\n\r\n${adjunto.contenido.toString("base64")}\r\n` +
-      `--${limite}--`;
-  } else {
-    mensaje = `From: ${c.email}\r\nTo: ${para}\r\nSubject: ${asuntoCodificado}\r\nMIME-Version: 1.0\r\nContent-Type: text/plain; charset="UTF-8"\r\nContent-Transfer-Encoding: base64\r\n\r\n${Buffer.from(texto || "").toString("base64")}`;
-  }
-  const r = await api(usuarioId, `${API_GMAIL}/users/me/messages/send`, {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify({ raw: b64url(mensaje) }),
-  });
-  await pool.query("INSERT INTO google_envios (usuario_id, tipo, referencia_id, gmail_id) VALUES (?, ?, ?, ?)", [usuarioId, tipo, referenciaId, r?.id || null]);
-  return { enviado: true, gmailId: r?.id || null, desde: c.email };
 }
 
 // ---------- Drive ----------

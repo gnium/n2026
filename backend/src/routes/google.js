@@ -14,7 +14,6 @@ import {
   guardarPreferencias,
   configuracionOAuth,
   guardarConfiguracionOAuth,
-  enviarPorGmail,
   subirADrive,
   subeADrive,
 } from "../services/google.js";
@@ -88,7 +87,6 @@ async function documento(usuarioId, tipo, id) {
       tipo: "application/pdf",
       contenido: await construirPresupuestoPdf(datos),
       asunto: `Presupuesto N° ${datos.presupuesto.numero}`,
-      correoCliente: datos.cliente?.email || null,
     };
   }
   if (tipo === "comprobante") {
@@ -102,31 +100,10 @@ async function documento(usuarioId, tipo, id) {
       tipo: "application/pdf",
       contenido: await construirComprobantePdf(datos),
       asunto: `${datos.comprobante.tipoNombre} ${datos.comprobante.numeroCompleto}`,
-      correoCliente: null, // la foto del receptor no guarda correo
     };
   }
   throw new AppError("DATOS_INVALIDOS", "tipo debe ser presupuesto o comprobante.", 400);
 }
-
-/** POST /enviar {tipo, id, para?, mensaje?} - manda el PDF por Gmail desde la cuenta del escribano. */
-rutasGoogle.post(
-  "/enviar",
-  manejar(async (req, res) => {
-    const { tipo, id, para, mensaje } = req.body || {};
-    const doc = await documento(req.usuario.id, tipo, id);
-    const destino = String(para || doc.correoCliente || "").trim();
-    if (!destino) throw new AppError("DATOS_INVALIDOS", "Indique el correo del destinatario.", 400);
-    const r = await enviarPorGmail(req.usuario.id, {
-      para: destino,
-      asunto: doc.asunto,
-      texto: String(mensaje || `Adjunto ${doc.asunto.toLowerCase()}.\n\nSaludos cordiales.`).slice(0, 5000),
-      adjunto: { nombre: doc.nombre, tipo: doc.tipo, contenido: doc.contenido },
-      tipo,
-      referenciaId: Number(id) || null,
-    });
-    res.json(r);
-  }),
-);
 
 /** POST /drive {tipo, id} - sube el PDF a la carpeta de la escribania en Drive. */
 rutasGoogle.post(
