@@ -23,6 +23,7 @@ import ParametrosUif from "./components/ParametrosUif.jsx";
 import Equipo from "./components/Equipo.jsx";
 import Integraciones from "./components/Integraciones.jsx";
 import Novedades from "./components/Novedades.jsx";
+import Soporte from "./components/Soporte.jsx";
 import TemaToggle from "./components/TemaToggle.jsx";
 import Icono from "./components/Iconos.jsx";
 import { api } from "./api.js";
@@ -61,7 +62,10 @@ const NAV = [
   {
     titulo: "Administración",
     soloAdmin: true,
-    items: [{ clave: "configuracion", texto: "Configuración", icono: "ajustes" }],
+    items: [
+      { clave: "soporte", texto: "Operación", icono: "capas" },
+      { clave: "configuracion", texto: "Configuración", icono: "ajustes" },
+    ],
   },
 ];
 const TITULO = Object.fromEntries(NAV.flatMap((g) => g.items.map((i) => [i.clave, i.texto])));
@@ -337,6 +341,7 @@ export default function App() {
     uif: <Uif onAbrirExpediente={abrirExpediente} esAdmin={usuario.esAdmin} />,
     equipo: <Equipo usuario={usuario} />,
     integraciones: <Integraciones usuario={usuario} aviso={avisoGoogle} />,
+    soporte: <Soporte />,
     agenda: <Agenda />,
     notas: <Notas />,
     biblioteca: <BibliotecaModelos />,

@@ -19,6 +19,7 @@ import { requerirAuth, requerirAdmin, requerirRol } from "./middleware/auth.js";
 import { rutasEquipo } from "./routes/equipo.js";
 import { rutasGoogle, rutasGoogleCallback } from "./routes/google.js";
 import { rutasAlertas } from "./routes/alertas.js";
+import { rutasSoporte } from "./routes/soporte.js";
 import { asegurarTablasAuth } from "./auth/repositorio.js";
 import { rutasSuscripcion } from "./routes/suscripcion.js";
 import { rutasPlanes } from "./routes/planes.js";
@@ -69,6 +70,7 @@ app.use("/api/sesiones", requerirAuth, rutasSesiones); // cada sesion de trabajo
 app.use("/api/sesiones-guardadas", requerirAuth, rutasSesionesGuardadas); // cada cuenta guarda/reanuda solo las suyas
 app.use("/api/equipo", requerirAuth, rutasEquipo); // integrantes, invitaciones, roles y metricas del equipo
 app.use("/api/alertas", requerirAuth, rutasAlertas); // novedades: vencimientos y pendientes de la cuenta (segun rol)
+app.use("/api/soporte", requerirAuth, requerirAdmin, rutasSoporte); // panel de operacion de la plataforma: solo metadatos y agregados
 app.use("/api/google/callback", rutasGoogleCallback); // publica: la vuelta de OAuth se autentica con el state firmado
 app.use("/api/google", requerirAuth, rutasGoogle); // Calendar y Drive (apagado hasta configurarlo)
 app.use("/api/protocolo", requerirAuth, requerirRol("escribano"), rutasProtocolo); // indice de protocolo: reservado a escribana/escribano

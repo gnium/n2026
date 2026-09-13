@@ -220,6 +220,12 @@ export const api = {
   expedienteDejarDeCompartir: (id, usuarioId) => fetch(`${BASE}/expedientes/${id}/colaboradores/${usuarioId}`, { method: "DELETE" }).then(manejar),
   misTareas: () => fetch(`${BASE}/expedientes/mis-tareas`).then(manejar),
 
+  // --- panel de operación de la plataforma (solo la cuenta operadora) ---
+  soporteResumen: (dias = 30) => fetch(`${BASE}/soporte/resumen?dias=${dias}`).then(manejar),
+  soporteCuentas: (f = {}) => fetch(`${BASE}/soporte/cuentas?${new URLSearchParams(Object.fromEntries(Object.entries(f).filter(([, v]) => v)))}`).then(manejar),
+  soporteCuenta: (id, dias = 30) => fetch(`${BASE}/soporte/cuentas/${id}?dias=${dias}`).then(manejar),
+  soporteCuentaActivo: (id, activo) => json("PATCH", `/soporte/cuentas/${id}/activo`, { activo }),
+
   // --- novedades (vencimientos y pendientes) ---
   novedades: () => fetch(`${BASE}/alertas`).then(manejar),
 

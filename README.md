@@ -304,6 +304,14 @@ Tres pantallas de gestión de la práctica, independientes del pipeline de IA, a
   - Al conectar quedan activas la agenda y la copia de comprobantes a Drive; subir el `.docx` de la escritura —que sí tiene los datos reales de las partes— se activa aparte. Qué viaja: la agenda manda título, fecha y duración; Drive guarda solo el documento que se manda a copiar. Está detallado en [docs/PRIVACIDAD.md](docs/PRIVACIDAD.md), "Integraciones con Google". *Desconectar* revoca el permiso en Google y borra los tokens.
 - **Novedades** (panel al abrir la app): reúne en un solo lugar lo que vence o pide atención — certificado de ARCA por vencer o vencido, tareas vencidas o de esta semana, turnos de las próximas 48 horas, presupuestos enviados cuya validez pasó, sesiones guardadas por caducar y las alertas de UIF. Está ordenado por urgencia, cada línea lleva a su pantalla, y **respeta el rol**: una cuenta con rol *empleado* no recibe las novedades de caja, ARCA ni UIF. Si no hay nada pendiente, el panel no ocupa lugar.
 
+### 3.11 Operación de la plataforma (pantalla *Operación*)
+
+Consola de quien **opera** Doy Fe, no de las escribanías. Entra únicamente la **cuenta operadora**: `usuarios.es_admin`, que se asigna sola a la primera cuenta registrada en la instalación. El titular de una escribanía **no** es operador — su rol sale de `equipo_miembros` —, así que no ve nada de esta pantalla ni de sus rutas (el servidor responde 403).
+
+- **Soporte**: buscador de cuentas y escribanías, y ficha por cuenta con alta, último acceso, equipo y rol, plan y estado de suscripción, documentos procesados y fallidos, costo de IA, facturado por uso, si tiene ARCA o Google conectados, las últimas ejecuciones del pipeline (estado, tipo de acto, duración, costo) y los errores agrupados por skill. Acción de soporte: activar o desactivar una cuenta, que no borra nada.
+- **Negocio**: altas y actividad del período, documentos procesados, costo de IA contra lo facturado, suscripciones por estado, y el embudo *se registraron → subieron un documento → completaron uno → se suscribieron* con la conversión de cada etapa.
+- **Frontera de privacidad**: la consola devuelve **solo metadatos y agregados**. De las tablas con datos de las partes se leen **conteos** (cuántos clientes, expedientes o comprobantes tiene una cuenta), nunca sus filas: no hay forma de ver un cliente, una carátula, el protocolo ni un documento desde acá. Está verificado con una prueba que falla si la respuesta trae contenido. Ver [docs/PRIVACIDAD.md](docs/PRIVACIDAD.md), "El operador de la plataforma".
+
 ---
 
 ## 5. Configuración
@@ -385,6 +393,8 @@ Los **prompts, modelo, esfuerzo y `max_tokens` de cada skill** se editan en la t
 | `GET/PUT` | `/api/google/configuracion` | Credenciales del proyecto de Google Cloud (solo titular; el secreto se guarda cifrado y no se devuelve). |
 | `POST` | `/api/google/drive` | Sube el PDF de un presupuesto o comprobante a la carpeta de la escribanía en Drive. |
 | `GET` | `/api/alertas` | Novedades de la cuenta (certificado ARCA, tareas, turnos, presupuestos vencidos, sesiones guardadas y UIF), filtradas según el rol. |
+| `GET` | `/api/soporte/resumen?dias=`, `/api/soporte/cuentas?q=&dias=&problemas=` | Panel de operación (solo la cuenta operadora): indicadores, embudo y listado de cuentas. Solo metadatos y agregados. |
+| `GET/PATCH` | `/api/soporte/cuentas/:id`, `/:id/activo` | Ficha de soporte de una cuenta (estado, últimas ejecuciones, errores por skill, cargos) y activar/desactivar. |
 | `GET/PUT` | `/api/skills`, `/api/skills/:clave` | Configuración de skills. |
 | `GET` | `/api/plantillas`, `/api/plantillas/:clave` | Plantillas. |
 | `GET` | `/api/salud` | Estado del servidor y proveedor de IA activo. |

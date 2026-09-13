@@ -103,6 +103,23 @@ El equipo (`database/13_equipo.sql`) **no junta los datos de las cuentas**. Cada
 
 Un expediente compartido muestra al colaborador la carátula, las observaciones, el estado, las tareas y los nombres de las partes (solo el nombre: el DNI, el CUIT, el domicilio y el teléfono siguen cifrados y solo los descifra la cuenta dueña del cliente). **No** se comparten los presupuestos, los comprobantes, la ficha UIF ni el vínculo con el protocolo. Quitar a alguien del equipo le saca el acceso a lo compartido y no borra nada suyo.
 
+## El operador de la plataforma
+
+Cuando Doy Fe se presta como plataforma —varias escribanías en una misma instalación— aparece un actor que no es ninguna de ellas: **quien opera el servicio**. Es `usuarios.es_admin`, que se asigna sola a la primera cuenta registrada. La titular de una escribanía **no** lo es: su rol sale de `equipo_miembros`.
+
+La regla es que el operador **pueda dar soporte sin poder mirar el trabajo de nadie**:
+
+| Ve | No ve |
+|---|---|
+| Cuentas y escribanías: alta, último acceso, rol, estado | Clientes, expedientes, protocolo, comprobantes, presupuestos, documentos |
+| Plan, estado de suscripción, próximo cobro, cargos de uso | Cualquier fila de esas tablas: de ellas solo se leen **conteos** ("12 clientes"), nunca su contenido |
+| Metadatos del pipeline: estado, tipo de acto detectado, duración, tokens, costo, código de error | El texto del documento, los nombres de las partes ni el resultado del análisis |
+| Si la cuenta tiene ARCA o Google conectados, y en qué entorno | El certificado de ARCA, los tokens de Google ni el `client_secret` (siguen cifrados y la API no los devuelve) |
+
+El módulo que alimenta esa pantalla (`services/soporte.js`) está escrito con esa restricción como regla explícita, sus rutas exigen `requerirAdmin`, y hay una prueba automatizada que **falla si la respuesta trae carátulas, comparecientes, receptores o datos cifrados**. La única acción que puede tomar es activar o desactivar una cuenta, que no borra nada.
+
+Lo que el operador **sí** puede hacer, como cualquiera que administre un servidor, es leer la base de datos directamente. Contra eso protege el cifrado en reposo (identificadores de clientes, legajos UIF, protocolo, sesiones guardadas, credenciales de ARCA y Google), no la aplicación. Una escribanía que no quiera depender de eso tiene la opción de una instalación propia.
+
 ## Integraciones con Google
 
 Es la primera función del producto que puede sacar datos de la escribanía hacia un tercero, así que está construida para que eso sea siempre una decisión explícita y reversible:
