@@ -215,28 +215,88 @@ const fechaArca = (f) => String(f).slice(0, 10).replace(/-/g, "");
  * Solicita el CAE de un comprobante (concepto 2 = servicios). Importes: en Factura C
  * (monotributo/exento) todo es neto sin IVA; en A/B se discrimina IVA 21%.
  */
-export async function solicitarCae({ ta, cuit, entorno, puntoVenta, tipo, numero, fecha, receptor, total, moneda, cotizacion, condicionIvaEmisor }) {
+/** Tratamiento de IVA por item. `id` es el codigo de alicuota de WSFEv1 (FEParamGetTiposIva). */
+export const IVA_ITEM = {
+  gravado_21: { id: 5, tasa: 0.21, nombre: "IVA 21%" },
+  gravado_10_5: { id: 4, tasa: 0.105, nombre: "IVA 10,5%" },
+  gravado_27: { id: 6, tasa: 0.27, nombre: "IVA 27%" },
+  exento: { id: null, tasa: 0, nombre: "Exento" },
+  no_gravado: { id: null, tasa: 0, nombre: "No gravado" },
+};
+const r2 = (n) => Math.round(Number(n) * 100) / 100;
+
+/**
+ * Totales fiscales a partir de items { monto (neto), iva }. Para un emisor que no discrimina
+ * IVA (monotributo/exento → Factura C) todo va como neto sin alicuotas.
+ */
+export function calcularImportes(items, discriminaIva) {
+  const out = { neto: 0, noGravado: 0, exento: 0, iva: 0, total: 0, alicuotas: {} };
+  for (const it of items) {
+    const monto = r2(it.monto);
+    const trat = discriminaIva ? IVA_ITEM[it.iva] || IVA_ITEM.gravado_21 : null;
+    if (!trat) {
+      out.neto = r2(out.neto + monto);
+    } else if (it.iva === "no_gravado") {
+      out.noGravado = r2(out.noGravado + monto);
+    } else if (it.iva === "exento") {
+      out.exento = r2(out.exento + monto);
+    } else {
+      const imp = r2(monto * trat.tasa);
+      out.neto = r2(out.neto + monto);
+      out.iva = r2(out.iva + imp);
+      const a = (out.alicuotas[trat.id] ||= { id: trat.id, base: 0, importe: 0 });
+      a.base = r2(a.base + monto);
+      a.importe = r2(a.importe + imp);
+    }
+  }
+  out.total = r2(out.neto + out.noGravado + out.exento + out.iva);
+  return out;
+}
+
+export function docReceptor(receptor) {
+  const docTipo = receptor?.cuit ? DOC_TIPO.cuit : receptor?.documento ? DOC_TIPO.dni : DOC_TIPO.consumidor_final;
+  const docNro = receptor?.cuit ? String(receptor.cuit).replace(/\D/g, "") : receptor?.documento ? String(receptor.documento).replace(/\D/g, "") : "0";
+  return { docTipo, docNro };
+}
+
+/** Cotizacion oficial del dia habil anterior (FEParamGetCotizacion). */
+export async function cotizacionArca({ ta, cuit, entorno, moneda }) {
+  const monId = MONEDA[moneda];
+  if (!monId || monId === "PES") return 1;
+  const xml = await soap(URLS[entorno].wsfe, "http://ar.gov.afip.dif.FEV1/FEParamGetCotizacion", envolverWsfe("FEParamGetCotizacion", `${auth(ta, cuit)}<ar:MonId>${monId}</ar:MonId>`));
+  const falla = faultDe(xml);
+  if (falla) throw new AppError("WSFE", `WSFE: ${falla}`, 502);
+  const r = parser.parse(xml)?.Envelope?.Body?.FEParamGetCotizacionResponse?.FEParamGetCotizacionResult;
+  const errores = erroresDe(r);
+  if (errores.length) throw new AppError("WSFE", `WSFE: ${errores.join(" | ")}`, 502);
+  const c = Number(r?.ResultGet?.MonCotiz);
+  if (!(c > 0)) throw new AppError("WSFE", "ARCA no devolvio la cotizacion de la moneda.", 502);
+  return c;
+}
+
+/**
+ * Solicita el CAE de un comprobante (concepto 2 = servicios). `importes` viene de calcularImportes:
+ * en Factura C todo es neto sin IVA; en A/B se informan neto gravado, no gravado, exento y alicuotas.
+ */
+export async function solicitarCae({ ta, cuit, entorno, puntoVenta, tipo, numero, fecha, receptor, importes, moneda, cotizacion }) {
   const cbteTipo = CBTE_TIPO[tipo];
   if (!cbteTipo) throw new AppError("DATOS_INVALIDOS", "Tipo de comprobante no electronico.", 400);
-  const discriminaIva = condicionIvaEmisor === "responsable_inscripto";
-  const totalN = Math.round(Number(total) * 100) / 100; // centavos exactos: ImpTotal debe ser igual a neto + IVA
-  const neto = discriminaIva ? Math.round((totalN / 1.21) * 100) / 100 : totalN;
-  const iva = discriminaIva ? Math.round((totalN - neto) * 100) / 100 : 0;
-  const docTipo = receptor.cuit ? DOC_TIPO.cuit : receptor.documento ? DOC_TIPO.dni : DOC_TIPO.consumidor_final;
-  const docNro = receptor.cuit ? String(receptor.cuit).replace(/\D/g, "") : receptor.documento ? String(receptor.documento).replace(/\D/g, "") : "0";
+  const { docTipo, docNro } = docReceptor(receptor);
   if (receptor.condicionIva && !Object.hasOwn(COND_IVA_RECEPTOR, receptor.condicionIva)) throw new AppError("DATOS_INVALIDOS", `condicionIva del receptor invalida: ${Object.keys(COND_IVA_RECEPTOR).join(", ")}.`, 400);
   const condReceptor = Object.hasOwn(COND_IVA_RECEPTOR, receptor.condicionIva) ? COND_IVA_RECEPTOR[receptor.condicionIva] : COND_IVA_RECEPTOR.consumidor_final;
-  if (moneda === "USD" && !(Number(cotizacion) > 0)) throw new AppError("DATOS_INVALIDOS", "Para facturar en dolares hay que indicar la cotizacion.", 400);
+  if (moneda === "USD" && !(Number(cotizacion) > 0)) throw new AppError("DATOS_INVALIDOS", "Para facturar en dolares hace falta la cotizacion.", 400);
   const f = fechaArca(fecha);
   // CanMisMonExt (RG 5616, WSFEv1 v4): en moneda extranjera se declara si se cancela en esa moneda ("N": se cobra en pesos).
   const monExt = moneda === "USD" ? "<ar:CanMisMonExt>N</ar:CanMisMonExt>" : "";
+  const alic = Object.values(importes.alicuotas || {});
+  const ivaXml = alic.length ? `<ar:Iva>${alic.map((a) => `<ar:AlicIva><ar:Id>${a.id}</ar:Id><ar:BaseImp>${a.base.toFixed(2)}</ar:BaseImp><ar:Importe>${a.importe.toFixed(2)}</ar:Importe></ar:AlicIva>`).join("")}</ar:Iva>` : "";
   const det = `<ar:FECAEDetRequest><ar:Concepto>2</ar:Concepto><ar:DocTipo>${docTipo}</ar:DocTipo><ar:DocNro>${docNro}</ar:DocNro>
     <ar:CbteDesde>${numero}</ar:CbteDesde><ar:CbteHasta>${numero}</ar:CbteHasta><ar:CbteFch>${f}</ar:CbteFch>
-    <ar:ImpTotal>${totalN.toFixed(2)}</ar:ImpTotal><ar:ImpTotConc>0.00</ar:ImpTotConc><ar:ImpNeto>${neto.toFixed(2)}</ar:ImpNeto><ar:ImpOpEx>0.00</ar:ImpOpEx><ar:ImpTrib>0.00</ar:ImpTrib><ar:ImpIVA>${iva.toFixed(2)}</ar:ImpIVA>
+    <ar:ImpTotal>${importes.total.toFixed(2)}</ar:ImpTotal><ar:ImpTotConc>${importes.noGravado.toFixed(2)}</ar:ImpTotConc><ar:ImpNeto>${importes.neto.toFixed(2)}</ar:ImpNeto><ar:ImpOpEx>${importes.exento.toFixed(2)}</ar:ImpOpEx><ar:ImpTrib>0.00</ar:ImpTrib><ar:ImpIVA>${importes.iva.toFixed(2)}</ar:ImpIVA>
     <ar:FchServDesde>${f}</ar:FchServDesde><ar:FchServHasta>${f}</ar:FchServHasta><ar:FchVtoPago>${f}</ar:FchVtoPago>
     <ar:MonId>${MONEDA[moneda] || "PES"}</ar:MonId><ar:MonCotiz>${moneda === "USD" ? Number(cotizacion).toFixed(4) : "1"}</ar:MonCotiz>${monExt}
     <ar:CondicionIVAReceptorId>${condReceptor}</ar:CondicionIVAReceptorId>
-    ${discriminaIva ? `<ar:Iva><ar:AlicIva><ar:Id>5</ar:Id><ar:BaseImp>${neto.toFixed(2)}</ar:BaseImp><ar:Importe>${iva.toFixed(2)}</ar:Importe></ar:AlicIva></ar:Iva>` : ""}
+    ${ivaXml}
   </ar:FECAEDetRequest>`;
   const cuerpo = `${auth(ta, cuit)}<ar:FeCAEReq><ar:FeCabReq><ar:CantReg>1</ar:CantReg><ar:PtoVta>${puntoVenta}</ar:PtoVta><ar:CbteTipo>${cbteTipo}</ar:CbteTipo></ar:FeCabReq><ar:FeDetReq>${det}</ar:FeDetReq></ar:FeCAEReq>`;
   const xml = await soap(URLS[entorno].wsfe, "http://ar.gov.afip.dif.FEV1/FECAESolicitar", envolverWsfe("FECAESolicitar", cuerpo));
@@ -260,7 +320,7 @@ export async function solicitarCae({ ta, cuit, entorno, puntoVenta, tipo, numero
  * tiene mas comprobantes que la base, hay uno emitido que no se registro (por ejemplo, un timeout
  * despues de que ARCA otorgo el CAE): se aborta para no facturar dos veces.
  */
-export async function emitirComprobante({ cred, tipo, fecha, receptor, total, moneda, cotizacion, ultimoLocal = null }) {
+export async function emitirComprobante({ cred, tipo, fecha, receptor, importes, moneda, cotizacion, ultimoLocal = null }) {
   const ta = await loginWsaa(cred);
   const cbteTipo = CBTE_TIPO[tipo];
   const ultimo = await ultimoAutorizado({ ta, cuit: cred.cuit, entorno: cred.entorno, puntoVenta: cred.puntoVenta, cbteTipo });
@@ -268,8 +328,33 @@ export async function emitirComprobante({ cred, tipo, fecha, receptor, total, mo
     throw new AppError("ARCA_DESINCRONIZADO", `ARCA ya tiene ${ultimo} comprobante(s) de este tipo en el punto de venta ${cred.puntoVenta} y la app registra ${ultimoLocal}: hay una emision sin guardar (numero ${ultimo}). Consultela en ARCA y registrela antes de emitir otra.`, 409);
   }
   const numero = ultimo + 1;
-  const cae = await solicitarCae({ ta, cuit: cred.cuit, entorno: cred.entorno, puntoVenta: cred.puntoVenta, tipo, numero, fecha, receptor, total, moneda, cotizacion, condicionIvaEmisor: cred.condicionIva });
-  return { numero, ...cae };
+  // Sin cotizacion explicita se usa la oficial de ARCA (dia habil anterior), que es la que WSFE valida.
+  const cotiz = moneda === "USD" ? (Number(cotizacion) > 0 ? Number(cotizacion) : await cotizacionArca({ ta, cuit: cred.cuit, entorno: cred.entorno, moneda })) : 1;
+  const cae = await solicitarCae({ ta, cuit: cred.cuit, entorno: cred.entorno, puntoVenta: cred.puntoVenta, tipo, numero, fecha, receptor, importes, moneda, cotizacion: cotiz });
+  return { numero, cotizacion: cotiz, cbteTipo, ...docReceptor(receptor), ...cae };
+}
+
+/**
+ * URL del codigo QR obligatorio en comprobantes electronicos (RG 4892/2020):
+ * JSON del comprobante en base64 detras de https://www.afip.gob.ar/fe/qr/.
+ */
+export function urlQr({ fecha, cuit, puntoVenta, cbteTipo, numero, total, moneda, cotizacion, docTipo, docNro, cae }) {
+  const datos = {
+    ver: 1,
+    fecha: String(fecha).slice(0, 10),
+    cuit: Number(String(cuit).replace(/\D/g, "")),
+    ptoVta: Number(puntoVenta),
+    tipoCmp: Number(cbteTipo),
+    nroCmp: Number(numero),
+    importe: Number(Number(total).toFixed(2)),
+    moneda: MONEDA[moneda] || "PES",
+    ctz: Number(Number(cotizacion || 1).toFixed(4)),
+    tipoDocRec: Number(docTipo),
+    nroDocRec: Number(docNro || 0),
+    tipoCodAut: "E",
+    codAut: Number(cae),
+  };
+  return `https://www.afip.gob.ar/fe/qr/?p=${Buffer.from(JSON.stringify(datos), "utf8").toString("base64")}`;
 }
 
 export async function probarConexion(cred) {

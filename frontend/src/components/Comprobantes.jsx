@@ -4,12 +4,13 @@ import Icono from "./Iconos.jsx";
 import { fechaCorta } from "./Expedientes.jsx";
 import { formatoMonto } from "./PresupuestoModal.jsx";
 import ComprobanteModal from "./ComprobanteModal.jsx";
+import ConfirmarDialogo from "./ConfirmarDialogo.jsx";
 import ConfiguracionFiscal from "./ConfiguracionFiscal.jsx";
 
 const haceDias = (n) => {
   const d = new Date();
   d.setDate(d.getDate() - n);
-  return d.toISOString().slice(0, 10);
+  return d.toLocaleDateString("sv-SE");
 };
 
 export default function Comprobantes() {
@@ -42,15 +43,18 @@ export default function Comprobantes() {
     api.configuracionFiscal().then(setConfig).catch(() => setConfig({ arcaEntorno: "apagado" }));
   }, []);
 
-  const anular = async (c) => {
-    const motivo = window.prompt(`Motivo de anulación de ${c.tipoNombre} ${c.numeroCompleto}:`);
-    if (motivo === null) return;
+  const [aAnular, setAAnular] = useState(null);
+  const anular = (c) => setAAnular(c);
+  const confirmarAnulacion = async (motivo) => {
+    const c = aAnular;
     setError(null);
     try {
       const r = await api.comprobanteAnular(c.id, motivo);
+      setAAnular(null);
       await cargar();
       setAviso(r.advertencia || "Comprobante anulado.");
     } catch (e) {
+      setAAnular(null);
       setError(e.message);
     }
   };
@@ -107,6 +111,7 @@ export default function Comprobantes() {
         </div>
       )}
 
+      <ConfirmarDialogo abierto={Boolean(aAnular)} titulo={aAnular ? `Anular ${aAnular.tipoNombre} ${aAnular.numeroCompleto}` : ""} texto={aAnular?.cae ? "La factura queda marcada como anulada y se quita el cargo de la cuenta corriente. La anulación fiscal ante ARCA requiere una nota de crédito (fuera de esta app)." : "El comprobante queda marcado como anulado y se quita el cargo de la cuenta corriente. No se borra."} confirmar="Anular" destructivo conMotivo etiquetaMotivo="Motivo de anulación" onConfirmar={confirmarAnulacion} onCancelar={() => setAAnular(null)} />
       <ComprobanteModal abierto={modal} clientes={clientes} expedientes={expedientes} config={config} onCerrar={() => setModal(false)} onEmitido={() => cargar()} />
     </div>
   );

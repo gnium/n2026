@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { api } from "../api.js";
 import Icono from "./Iconos.jsx";
+import ConfirmarDialogo from "./ConfirmarDialogo.jsx";
 import { fechaCorta } from "./Expedientes.jsx";
 import { formatoMonto } from "./PresupuestoModal.jsx";
 import { ACTIVIDADES_UIF, NOMBRE_NIVEL_ALERTA } from "./UifExpediente.jsx";
@@ -8,7 +9,7 @@ import { ACTIVIDADES_UIF, NOMBRE_NIVEL_ALERTA } from "./UifExpediente.jsx";
 const NOMBRE_ACTIVIDAD = Object.fromEntries(ACTIVIDADES_UIF);
 const TIPOS_EVENTO = [["reporte_mensual", "Reporte sistemático mensual"], ["reporte_anual", "Reporte sistemático anual"], ["ros", "Reporte de operación sospechosa"], ["autoevaluacion", "Autoevaluación de riesgos"], ["revision_externa", "Revisión externa independiente"], ["capacitacion", "Capacitación"], ["otro", "Otro"]];
 const NOMBRE_EVENTO = Object.fromEntries(TIPOS_EVENTO);
-const hoyISO = () => new Date().toISOString().slice(0, 10);
+const hoyISO = () => new Date().toLocaleDateString("sv-SE");
 const mesAnterior = () => {
   const d = new Date();
   d.setMonth(d.getMonth() - 1);
@@ -52,11 +53,15 @@ export default function Uif({ onAbrirExpediente, esAdmin }) {
     }
   };
 
-  const borrar = async (ev) => {
-    if (!window.confirm(`¿Borrar el evento "${NOMBRE_EVENTO[ev.tipo]}" del ${fechaCorta(ev.fecha)}?`)) return;
+  const [aBorrar, setABorrar] = useState(null);
+  const borrar = (ev) => setABorrar(ev);
+  const confirmarBorrado = async () => {
+    const ev = aBorrar;
+    setABorrar(null);
     try {
       await api.uifBorrarEvento(ev.id);
       await cargar();
+      setAviso("Evento borrado.");
     } catch (err) {
       setError(err.message);
     }
@@ -69,6 +74,7 @@ export default function Uif({ onAbrirExpediente, esAdmin }) {
       {error && <p className="alerta error" role="alert">{error}</p>}
       <p className={`alerta ok ${aviso ? "" : "sr-only"}`} role="status">{aviso}</p>
 
+      <ConfirmarDialogo abierto={Boolean(aBorrar)} titulo="Borrar evento de cumplimiento" texto={aBorrar ? `${NOMBRE_EVENTO[aBorrar.tipo]} del ${fechaCorta(aBorrar.fecha)}${aBorrar.referencia ? ` (${aBorrar.referencia})` : ""}. Es la constancia interna del reporte: borrala solo si se cargó por error.` : ""} confirmar="Borrar" destructivo onConfirmar={confirmarBorrado} onCancelar={() => setABorrar(null)} />
       <section className="bloque primero" aria-labelledby="uif-alertas-titulo">
         <h3 id="uif-alertas-titulo">Alertas {alertas && <span className={`etiqueta ${alertas.length ? "" : "ok"}`}>{alertas.length ? alertas.length : "sin pendientes"}</span>}</h3>
         {alertas === null ? <p className="vacio" role="status">Cargando…</p> : alertas.length === 0 ? <p className="vacio">Nada pendiente.</p> : (

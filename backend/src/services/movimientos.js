@@ -105,13 +105,13 @@ function validarMonto(monto) {
   return n.toFixed(2);
 }
 
-async function insertar(datos) {
-  const [r] = await pool.query(
+async function insertar(datos, db = pool) {
+  const [r] = await db.query(
     `INSERT INTO movimientos (usuario_id, cliente_id, expediente_id, tipo, origen, origen_id, fecha, concepto, monto, moneda, medio_pago, referencia)
      VALUES (:usuarioId, :clienteId, :expedienteId, :tipo, :origen, :origenId, :fecha, :concepto, :monto, :moneda, :medioPago, :referencia)`,
     datos,
   );
-  const [[fila]] = await pool.query(`${SELECT} WHERE m.id = ?`, [r.insertId]);
+  const [[fila]] = await db.query(`${SELECT} WHERE m.id = ?`, [r.insertId]);
   return filaAVista(fila);
 }
 
@@ -170,11 +170,11 @@ export async function borrar(usuarioId, id) {
 // ---------- cargos automaticos ----------
 
 /** Crea el cargo de un presupuesto aceptado (idempotente). Sin cliente no hay cuenta corriente: devuelve null. */
-export async function cargoDesdePresupuesto(usuarioId, p) {
+export async function cargoDesdePresupuesto(usuarioId, p, db = pool) {
   if (!p.clienteId) return null;
-  const [[existe]] = await pool.query("SELECT id FROM movimientos WHERE usuario_id = ? AND origen = 'presupuesto' AND origen_id = ?", [usuarioId, p.id]);
+  const [[existe]] = await db.query("SELECT id FROM movimientos WHERE usuario_id = ? AND origen = 'presupuesto' AND origen_id = ?", [usuarioId, p.id]);
   if (existe) return existe.id;
-  const [[reemplazado]] = await pool.query("SELECT m.id FROM movimientos m JOIN comprobantes c ON c.id = m.origen_id WHERE m.usuario_id = ? AND m.origen = 'comprobante' AND c.presupuesto_id = ? AND c.estado = 'emitido'", [usuarioId, p.id]);
+  const [[reemplazado]] = await db.query("SELECT m.id FROM movimientos m JOIN comprobantes c ON c.id = m.origen_id WHERE m.usuario_id = ? AND m.origen = 'comprobante' AND c.presupuesto_id = ? AND c.estado = 'emitido'", [usuarioId, p.id]);
   if (reemplazado) return reemplazado.id; // ya hay un comprobante emitido sobre este presupuesto
   const mov = await insertar({
     usuarioId,
@@ -189,7 +189,7 @@ export async function cargoDesdePresupuesto(usuarioId, p) {
     moneda: p.moneda,
     medioPago: null,
     referencia: null,
-  });
+  }, db);
   return mov.id;
 }
 
@@ -198,12 +198,12 @@ export async function quitarCargoDePresupuesto(usuarioId, presupuestoId) {
 }
 
 /** Cargo de un comprobante emitido; si venia de un presupuesto ya cargado, ese cargo pasa a apuntar al comprobante. */
-export async function cargoDesdeComprobante(usuarioId, c) {
+export async function cargoDesdeComprobante(usuarioId, c, db = pool) {
   if (!c.clienteId) return null;
-  const [[existe]] = await pool.query("SELECT id FROM movimientos WHERE usuario_id = ? AND origen = 'comprobante' AND origen_id = ?", [usuarioId, c.id]);
+  const [[existe]] = await db.query("SELECT id FROM movimientos WHERE usuario_id = ? AND origen = 'comprobante' AND origen_id = ?", [usuarioId, c.id]);
   if (existe) return existe.id;
   if (c.presupuestoId) {
-    const [r] = await pool.query(
+    const [r] = await db.query(
       "UPDATE movimientos SET origen = 'comprobante', origen_id = :id, cliente_id = :clienteId, expediente_id = :expedienteId, concepto = :concepto, monto = :monto, moneda = :moneda, fecha = :fecha WHERE usuario_id = :usuarioId AND origen = 'presupuesto' AND origen_id = :presupuestoId",
       { id: c.id, clienteId: c.clienteId, expedienteId: c.expedienteId || null, concepto: c.descripcion, monto: Number(c.total).toFixed(2), moneda: c.moneda, fecha: String(c.fecha).slice(0, 10), usuarioId, presupuestoId: c.presupuestoId },
     );
@@ -222,12 +222,12 @@ export async function cargoDesdeComprobante(usuarioId, c) {
     moneda: c.moneda,
     medioPago: null,
     referencia: null,
-  });
+  }, db);
   return mov.id;
 }
 
-export async function quitarCargoDeComprobante(usuarioId, comprobanteId) {
-  await pool.query("DELETE FROM movimientos WHERE usuario_id = ? AND origen = 'comprobante' AND origen_id = ?", [usuarioId, comprobanteId]);
+export async function quitarCargoDeComprobante(usuarioId, comprobanteId, db = pool) {
+  await db.query("DELETE FROM movimientos WHERE usuario_id = ? AND origen = 'comprobante' AND origen_id = ?", [usuarioId, comprobanteId]);
 }
 
 /** CSV con separador ";" (Excel en es-AR) y BOM para acentos. */

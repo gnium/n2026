@@ -1,4 +1,6 @@
 import PDFDocument from "pdfkit";
+import QRCode from "qrcode";
+import { IVA_ITEM } from "./arca.js";
 
 const TINTA = "#1b1f24";
 const GRIS = "#566069";
@@ -16,7 +18,8 @@ function fecha(d) {
 const cuitFmt = (c) => (c ? String(c).replace(/\D/g, "").replace(/^(\d{2})(\d{8})(\d)$/, "$1-$2-$3") : null);
 
 /** PDF A4 de un comprobante interno o electronico. Devuelve un Buffer. */
-export function construirComprobantePdf({ comprobante: c, emisor }) {
+export async function construirComprobantePdf({ comprobante: c, emisor }) {
+  const qrPng = c.urlQr ? await QRCode.toBuffer(c.urlQr, { errorCorrectionLevel: "M", margin: 1, width: 220 }) : null;
   return new Promise((resolve, reject) => {
     const doc = new PDFDocument({ size: "A4", margin: 56, info: { Title: `${c.tipoNombre} ${c.numeroCompleto}`, Author: emisor.razon_social || emisor.nombre || "Doy Fe", Creator: "Doy Fe" } });
     const chunks = [];
@@ -55,29 +58,48 @@ export function construirComprobantePdf({ comprobante: c, emisor }) {
     }
     doc.moveDown(1.2);
 
-    // Items
+    // Items (con columna de IVA cuando el emisor discrimina: Factura A/B)
+    const discrimina = Boolean(c.importes && c.items.some((it) => it.iva && it.iva !== "no_aplica"));
     const colMonto = izq + ancho - 120;
+    const colIva = colMonto - 90;
     const yCab = doc.y;
     doc.rect(izq, yCab - 4, ancho, 20).fillColor("#f3f4f1").fill();
-    doc.font("Helvetica-Bold").fontSize(9).fillColor(GRIS).text("CONCEPTO", izq + 8, yCab).text("IMPORTE", colMonto, yCab, { width: 112, align: "right" });
+    doc.font("Helvetica-Bold").fontSize(9).fillColor(GRIS).text("CONCEPTO", izq + 8, yCab);
+    if (discrimina) doc.text("IVA", colIva, yCab, { width: 80, align: "right" });
+    doc.text(discrimina ? "NETO" : "IMPORTE", colMonto, yCab, { width: 112, align: "right" });
     doc.moveDown(1.2);
     doc.font("Helvetica").fontSize(11).fillColor(TINTA);
     for (const it of c.items) {
       const y = doc.y;
-      doc.text(it.concepto, izq + 8, y, { width: colMonto - izq - 20 });
+      doc.text(it.concepto, izq + 8, y, { width: (discrimina ? colIva : colMonto) - izq - 20 });
       const yFin = doc.y;
+      if (discrimina) doc.font("Helvetica").fontSize(9).fillColor(GRIS).text(IVA_ITEM[it.iva]?.nombre || "—", colIva, y + 2, { width: 80, align: "right" }).font("Helvetica").fontSize(11).fillColor(TINTA);
       doc.text(moneda(it.monto, c.moneda), colMonto, y, { width: 112, align: "right" });
       doc.y = Math.max(yFin, doc.y) + 6;
       doc.moveTo(izq, doc.y).lineTo(izq + ancho, doc.y).strokeColor(LINEA).lineWidth(0.5).stroke();
       doc.moveDown(0.5);
     }
     doc.moveDown(0.4);
+    if (discrimina) {
+      const fila = (etq, val) => { doc.font("Helvetica").fontSize(10).fillColor(GRIS).text(etq, izq + 8, doc.y, { continued: true }).fillColor(TINTA).text(moneda(val, c.moneda), { align: "right" }); doc.moveDown(0.15); };
+      if (c.importes.neto) fila("Subtotal neto gravado", c.importes.neto);
+      if (c.importes.noGravado) fila("No gravado", c.importes.noGravado);
+      if (c.importes.exento) fila("Exento", c.importes.exento);
+      for (const a of Object.values(c.importes.alicuotas || {})) fila(`${Object.values(IVA_ITEM).find((x) => x.id === a.id)?.nombre || "IVA"} sobre ${moneda(a.base, c.moneda)}`, a.importe);
+      doc.moveDown(0.3);
+    }
     doc.font("Helvetica-Bold").fontSize(13).fillColor(TINTA).text("Total", izq + 8, doc.y, { continued: true }).text(moneda(c.total, c.moneda), { align: "right" });
     doc.moveDown(1.2);
 
     if (c.esFiscal && c.cae) {
-      doc.font("Helvetica").fontSize(10).fillColor(TINTA).text(`CAE: ${c.cae}   ·   Vencimiento CAE: ${c.caeVencimiento ? String(c.caeVencimiento).slice(0, 10).split("-").reverse().join("/") : "—"}`, izq);
-      doc.moveDown(0.8);
+      const yCae = doc.y;
+      if (qrPng) doc.image(qrPng, izq, yCae, { width: 96 });
+      const xTexto = qrPng ? izq + 108 : izq;
+      doc.font("Helvetica").fontSize(10).fillColor(TINTA).text(`CAE: ${c.cae}`, xTexto, yCae + 4, { width: ancho - (xTexto - izq) });
+      doc.text(`Vencimiento CAE: ${c.caeVencimiento ? String(c.caeVencimiento).slice(0, 10).split("-").reverse().join("/") : "—"}`, xTexto);
+      if (c.arcaResultado?.cotizacion && c.moneda !== "ARS") doc.text(`Cotización ${c.moneda}: ${Number(c.arcaResultado.cotizacion).toLocaleString("es-AR", { minimumFractionDigits: 2, maximumFractionDigits: 4 })}`, xTexto);
+      if (qrPng) doc.font("Helvetica").fontSize(8).fillColor(GRIS).text("Código QR según RG 4892/2020 (ARCA): verificá este comprobante escaneándolo.", xTexto, doc.y + 4, { width: ancho - (xTexto - izq) });
+      doc.y = Math.max(doc.y, yCae + (qrPng ? 100 : 0)) + 8;
     }
     if (c.estado === "anulado") {
       doc.font("Helvetica-Bold").fontSize(10).fillColor(ROJO).text(`ANULADO${c.motivoAnulacion ? ` · ${c.motivoAnulacion}` : ""}`, izq);

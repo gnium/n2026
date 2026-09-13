@@ -56,7 +56,7 @@ export default function UifLegajo({ abierto, clienteId, onCerrar, onGuardado }) 
         observaciones: form.observaciones,
         beneficiariosFinales: form.beneficiariosFinales.filter((b) => b.nombre?.trim()),
         documentacion: form.documentacion,
-        actualizadoEn: new Date().toISOString().slice(0, 10),
+        actualizadoEn: new Date().toLocaleDateString("sv-SE"),
       });
       onGuardado?.(r);
       onCerrar?.();
@@ -121,7 +121,7 @@ export default function UifLegajo({ abierto, clienteId, onCerrar, onGuardado }) 
               <ul className="recaudos sin-acciones">
                 {form.documentacion.map((d, i) => (
                   <li className={`recaudo ${d.presentado ? "hecho" : ""}`} key={i}>
-                    <input type="checkbox" id={`doc-${i}`} checked={d.presentado} onChange={(e) => setDoc(i, { presentado: e.target.checked, fecha: e.target.checked ? new Date().toISOString().slice(0, 10) : null })} />
+                    <input type="checkbox" id={`doc-${i}`} checked={d.presentado} onChange={(e) => setDoc(i, { presentado: e.target.checked, fecha: e.target.checked ? new Date().toLocaleDateString("sv-SE") : null })} />
                     <label htmlFor={`doc-${i}`}><span className="recaudo-texto">{d.item}</span>{d.presentado && d.fecha && <span className="recaudo-meta">presentado {fechaCorta(d.fecha)}</span>}</label>
                   </li>
                 ))}

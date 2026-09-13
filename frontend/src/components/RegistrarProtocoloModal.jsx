@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { api } from "../api.js";
 
 const TIPOS_ACTO = ["compraventa", "donacion", "hipoteca", "permuta", "cesion", "sucesion", "poder", "certificacion_firmas", "otro"];
-const hoyISO = () => new Date().toISOString().slice(0, 10);
+const hoyISO = () => new Date().toLocaleDateString("sv-SE");
 
 /**
  * Panel para registrar la escritura recien generada en el indice de

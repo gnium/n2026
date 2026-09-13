@@ -4,6 +4,7 @@ import Icono from "./Iconos.jsx";
 import PresupuestoModal, { enlaceWhatsApp, formatoMonto } from "./PresupuestoModal.jsx";
 import ComprobanteModal from "./ComprobanteModal.jsx";
 import UifExpediente from "./UifExpediente.jsx";
+import ConfirmarDialogo from "./ConfirmarDialogo.jsx";
 
 const TIPOS_ACTO = ["compraventa", "donacion", "hipoteca", "permuta", "cesion", "sucesion", "poder", "certificacion_firmas", "otro"];
 const ESTADOS = [["abierto", "Abierto"], ["en_firma", "En firma"], ["cerrado", "Cerrado"], ["archivado", "Archivado"]];
@@ -126,8 +127,9 @@ export default function Expedientes({ inicialId = null, onConsumirInicial }) {
     accion(() => api.tareaCrear(detalle.id, { descripcion: nuevaTarea.trim() })).then(() => setNuevaTarea(""));
   };
 
+  const [confirmar, setConfirmar] = useState(null); // { tipo: "expediente" } | { tipo: "presupuesto", p }
   const borrarExpediente = () => {
-    if (!window.confirm("¿Borrar este expediente con sus tareas y vínculos? Los presupuestos quedan sin expediente asociado.")) return;
+    setConfirmar(null);
     accion(async () => {
       await api.expedienteBorrar(detalle.id);
       setDetalle(null);
@@ -204,7 +206,7 @@ export default function Expedientes({ inicialId = null, onConsumirInicial }) {
                 </select>
               </label>
               <button type="button" className="boton chico" onClick={() => setFormulario({ id: detalle.id, caratula: detalle.caratula, tipoActo: detalle.tipoActo, observaciones: detalle.observaciones || "" })}>Editar</button>
-              <button type="button" className="boton chico" onClick={borrarExpediente}><Icono nombre="basura" tamano={14} /> Borrar</button>
+              <button type="button" className="boton chico" onClick={() => setConfirmar({ tipo: "expediente" })}><Icono nombre="basura" tamano={14} /> Borrar</button>
             </div>
           </div>
 
@@ -275,7 +277,7 @@ export default function Expedientes({ inicialId = null, onConsumirInicial }) {
                             <a className="enlace" href={enlaceWhatsApp({ ...p, validezDias: p.validezDias ?? 15 }, clientes.find((c) => c.id === p.clienteId))} target="_blank" rel="noreferrer" aria-label={`Enviar por WhatsApp el presupuesto ${p.numero}`}>WhatsApp</a>
                             {p.estado === "aceptado" && <button type="button" className="enlace" aria-label={`Emitir comprobante del presupuesto ${p.numero}`} onClick={async () => { try { setComprobante({ abierto: true, presupuesto: await api.presupuestoObtener(p.id) }); } catch (e) { setError(e.message); } }}>facturar</button>}
                             <button type="button" className="enlace" aria-label={`Editar presupuesto ${p.numero}`} onClick={async () => { try { setPresupuesto({ abierto: true, presupuesto: await api.presupuestoObtener(p.id) }); } catch (e) { setError(e.message); } }}>editar</button>
-                            <button type="button" className="enlace" aria-label={`Borrar presupuesto ${p.numero}`} onClick={() => window.confirm(`¿Borrar el presupuesto N° ${p.numero}?`) && accion(() => api.presupuestoBorrar(p.id), `Presupuesto N° ${p.numero} borrado.`)}>borrar</button>
+                            <button type="button" className="enlace" aria-label={`Borrar presupuesto ${p.numero}`} onClick={() => setConfirmar({ tipo: "presupuesto", p })}>borrar</button>
                           </div>
                         </td>
                       </tr>
@@ -316,6 +318,15 @@ export default function Expedientes({ inicialId = null, onConsumirInicial }) {
         </div>
       )}
 
+      <ConfirmarDialogo
+        abierto={Boolean(confirmar)}
+        titulo={confirmar?.tipo === "presupuesto" ? `Borrar presupuesto N° ${confirmar.p.numero}` : "Borrar expediente"}
+        texto={confirmar?.tipo === "presupuesto" ? "Se borra el presupuesto y, si estaba aceptado, su cargo en la cuenta corriente." : "Se borran sus tareas, vínculos y ficha UIF. Los presupuestos y comprobantes quedan sin expediente asociado."}
+        confirmar="Borrar"
+        destructivo
+        onConfirmar={() => (confirmar?.tipo === "presupuesto" ? (setConfirmar(null), accion(() => api.presupuestoBorrar(confirmar.p.id), `Presupuesto N° ${confirmar.p.numero} borrado.`)) : borrarExpediente())}
+        onCancelar={() => setConfirmar(null)}
+      />
       <ComprobanteModal
         abierto={Boolean(comprobante?.abierto)}
         presupuesto={comprobante?.presupuesto || null}

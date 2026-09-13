@@ -8,7 +8,7 @@ import { pool } from "../config/db.js";
 import { cifrar, descifrar } from "../utils/cifrado.js";
 import { AppError } from "../utils/errores.js";
 import { credencialesArca } from "./configuracionFiscal.js";
-import { emitirComprobante as emitirEnArca, COND_IVA_RECEPTOR } from "./arca.js";
+import { emitirComprobante as emitirEnArca, COND_IVA_RECEPTOR, IVA_ITEM, calcularImportes, urlQr, docReceptor, CBTE_TIPO } from "./arca.js";
 import { cargoDesdeComprobante, quitarCargoDeComprobante, cargoDesdePresupuesto } from "./movimientos.js";
 import { logger } from "../utils/logger.js";
 import { hoyLocal, esFechaValida, texto } from "../utils/fechas.js";
@@ -41,6 +41,14 @@ function receptorDesde(blob) {
 
 function filaAVista(r) {
   const { receptor, legible } = receptorDesde(r.receptor_cifrado);
+  let arcaRes = null;
+  if (r.arca_resultado) {
+    try {
+      arcaRes = typeof r.arca_resultado === "string" ? JSON.parse(r.arca_resultado) : r.arca_resultado;
+    } catch {
+      arcaRes = null;
+    }
+  }
   return {
     id: r.id,
     tipo: r.tipo,
@@ -66,6 +74,9 @@ function filaAVista(r) {
     motivoAnulacion: r.motivo_anulacion,
     cae: r.cae,
     caeVencimiento: r.cae_vencimiento,
+    arcaResultado: arcaRes,
+    importes: arcaRes?.importes || null,
+    urlQr: r.cae && arcaRes?.cbteTipo ? urlQr({ fecha: r.fecha, cuit: arcaRes.cuitEmisor, puntoVenta: r.punto_venta, cbteTipo: arcaRes.cbteTipo, numero: r.numero, total: r.total, moneda: r.moneda, cotizacion: arcaRes.cotizacion, docTipo: arcaRes.docTipo, docNro: arcaRes.docNro, cae: r.cae }) : null,
     creadoEn: r.creado_en,
   };
 }
@@ -75,15 +86,26 @@ const SELECT = `SELECT c.*, cl.nombre AS cliente_nombre, e.caratula AS expedient
                   LEFT JOIN clientes cl ON cl.id = c.cliente_id
                   LEFT JOIN expedientes e ON e.id = c.expediente_id`;
 
-function normalizarItems(items) {
+/**
+ * Items { concepto, monto, iva }. `monto` es el importe del item sin IVA. `iva` solo cuenta cuando el
+ * emisor discrimina IVA (Factura A/B): gravado_21 (defecto), gravado_10_5, gravado_27, exento, no_gravado.
+ */
+function normalizarItems(items, discriminaIva) {
   if (!Array.isArray(items) || !items.length) throw new AppError("DATOS_INVALIDOS", "El comprobante necesita al menos un item.", 400);
-  const limpios = items.map((it) => ({ concepto: texto(it?.concepto, 200), monto: Number(it?.monto) }));
+  const limpios = items.map((it) => ({ concepto: texto(it?.concepto, 200), monto: Number(it?.monto), iva: discriminaIva ? it?.iva || "gravado_21" : "no_aplica" }));
   for (const it of limpios) {
     if (!it.concepto) throw new AppError("DATOS_INVALIDOS", "Cada item necesita un concepto.", 400);
     if (!Number.isFinite(it.monto) || it.monto < 0) throw new AppError("DATOS_INVALIDOS", `Monto invalido en "${it.concepto}".`, 400);
+    if (discriminaIva && !Object.hasOwn(IVA_ITEM, it.iva)) throw new AppError("DATOS_INVALIDOS", `iva invalido en "${it.concepto}": ${Object.keys(IVA_ITEM).join(", ")}.`, 400);
     it.monto = Math.round(it.monto * 100) / 100; // centavos exactos
   }
   return limpios;
+}
+
+async function obtenerCon(db, usuarioId, id) {
+  const [[r]] = await db.query(`${SELECT} WHERE c.id = ? AND c.usuario_id = ?`, [id, usuarioId]);
+  if (!r) throw new AppError("NO_ENCONTRADO", "El comprobante no existe.", 404);
+  return filaAVista(r);
 }
 
 async function fotoReceptor(usuarioId, clienteId, condicionIvaReceptor) {
@@ -141,12 +163,17 @@ async function emitirInterno(usuarioId, datos) {
     const [[e]] = await pool.query("SELECT id FROM expedientes WHERE id = ? AND usuario_id = ?", [expedienteId, usuarioId]);
     if (!e) throw new AppError("EXPEDIENTE_INVALIDO", "El expediente no existe o no pertenece a esta cuenta.", 400);
   }
-  const items = normalizarItems(datos.items?.length ? datos.items : presupuesto ? (typeof presupuesto.items === "string" ? JSON.parse(presupuesto.items) : presupuesto.items) : []);
-  const total = items.reduce((s, it) => s + it.monto, 0);
+  const [[cfg]] = await pool.query("SELECT punto_venta, arca_entorno, condicion_iva, cuit FROM configuracion_fiscal WHERE usuario_id = ?", [usuarioId]);
+  const esElectronico = ELECTRONICOS.has(datos.tipo);
+  const discriminaIva = esElectronico && datos.tipo !== "factura_c" && cfg?.condicion_iva === "responsable_inscripto";
+  if (esElectronico && datos.tipo !== "factura_c" && cfg?.condicion_iva !== "responsable_inscripto") throw new AppError("DATOS_INVALIDOS", "Solo un emisor responsable inscripto emite Facturas A o B; con monotributo o exento corresponde Factura C.", 400);
+  if (datos.tipo === "factura_c" && cfg?.condicion_iva === "responsable_inscripto") throw new AppError("DATOS_INVALIDOS", "Un emisor responsable inscripto emite Factura A o B, no C.", 400);
+  const items = normalizarItems(datos.items?.length ? datos.items : presupuesto ? (typeof presupuesto.items === "string" ? JSON.parse(presupuesto.items) : presupuesto.items) : [], discriminaIva);
+  const importes = calcularImportes(items, discriminaIva);
+  const total = importes.total;
   const moneda = datos.moneda || presupuesto?.moneda || "ARS";
   const fecha = datos.fecha || hoyLocal();
   const receptor = await fotoReceptor(usuarioId, clienteId, datos.condicionIvaReceptor);
-  const [[cfg]] = await pool.query("SELECT punto_venta, arca_entorno FROM configuracion_fiscal WHERE usuario_id = ?", [usuarioId]);
   const puntoVenta = cfg?.punto_venta ?? 1;
   const entorno = ELECTRONICOS.has(datos.tipo) ? cfg?.arca_entorno || "apagado" : "apagado";
 
@@ -159,11 +186,13 @@ async function emitirInterno(usuarioId, datos) {
     if (!receptor) throw new AppError("DATOS_INVALIDOS", "Una factura electronica necesita un cliente receptor.", 400);
     const cred = await credencialesArca(usuarioId);
     const [[ul]] = await pool.query("SELECT COALESCE(MAX(numero), 0) AS n FROM comprobantes WHERE usuario_id = ? AND tipo = ? AND punto_venta = ? AND arca_entorno = ?", [usuarioId, datos.tipo, puntoVenta, entorno]);
-    const r = await emitirEnArca({ cred, tipo: datos.tipo, fecha, receptor, total, moneda, cotizacion: datos.cotizacion, ultimoLocal: Number(ul.n) });
+    const r = await emitirEnArca({ cred, tipo: datos.tipo, fecha, receptor, importes, moneda, cotizacion: datos.cotizacion, ultimoLocal: Number(ul.n) });
     numero = r.numero;
     cae = r.cae;
     caeVencimiento = r.caeVencimiento;
-    arcaResultado = { observaciones: r.observaciones, cbteTipo: r.resultado?.FeCabResp?.CbteTipo, fechaProceso: r.resultado?.FeCabResp?.FchProceso };
+    arcaResultado = { observaciones: r.observaciones, cbteTipo: r.cbteTipo, cuitEmisor: cred.cuit, cotizacion: r.cotizacion, docTipo: r.docTipo, docNro: r.docNro, importes, fechaProceso: r.resultado?.FeCabResp?.FchProceso };
+  } else if (discriminaIva) {
+    arcaResultado = { importes };
   }
 
   const base = {
@@ -185,16 +214,22 @@ async function emitirInterno(usuarioId, datos) {
   };
   for (let intento = 0; intento < 3; intento++) {
     const n = numero ?? (await pool.query("SELECT COALESCE(MAX(numero), 0) + 1 AS n FROM comprobantes WHERE usuario_id = ? AND tipo = ? AND punto_venta = ? AND arca_entorno = ?", [usuarioId, datos.tipo, puntoVenta, entorno]))[0][0].n;
+    const conn = await pool.getConnection();
     try {
-      const [r] = await pool.query(
+      await conn.beginTransaction();
+      const [r] = await conn.query(
         `INSERT INTO comprobantes (usuario_id, tipo, punto_venta, arca_entorno, numero, fecha, cliente_id, expediente_id, presupuesto_id, receptor_cifrado, items, total, moneda, cae, cae_vencimiento, arca_resultado)
          VALUES (:usuarioId, :tipo, :puntoVenta, :entorno, :numero, :fecha, :clienteId, :expedienteId, :presupuestoId, :receptorCifrado, :items, :total, :moneda, :cae, :caeVencimiento, :arcaResultado)`,
         { ...base, numero: Number(n) },
       );
-      const c = await obtener(usuarioId, r.insertId);
-      await cargoDesdeComprobante(usuarioId, { ...c, descripcion: `${NOMBRE_TIPO[c.tipo]} ${c.numeroCompleto}` });
+      const c = await obtenerCon(conn, usuarioId, r.insertId);
+      await cargoDesdeComprobante(usuarioId, { ...c, descripcion: `${NOMBRE_TIPO[c.tipo]} ${c.numeroCompleto}` }, conn);
+      await conn.commit();
+      conn.release();
       return c;
     } catch (e) {
+      await conn.rollback().catch(() => {});
+      conn.release();
       if (cae) {
         // ARCA ya otorgo el CAE y la base no lo guardo: queda registrado para reconciliar a mano (sin datos del receptor).
         logger.error("comprobante_huerfano_arca", { usuarioId, tipo: datos.tipo, puntoVenta, entorno, numero, cae, caeVencimiento, total: base.total, moneda, error: e.code || e.message });
@@ -208,12 +243,22 @@ async function emitirInterno(usuarioId, datos) {
 export async function anular(usuarioId, id, motivo) {
   const c = await obtener(usuarioId, id);
   if (c.estado === "anulado") return c;
-  await pool.query("UPDATE comprobantes SET estado = 'anulado', motivo_anulacion = ? WHERE id = ? AND usuario_id = ?", [texto(motivo, 300) || null, id, usuarioId]);
-  await quitarCargoDeComprobante(usuarioId, id);
-  // Si el comprobante reemplazaba el cargo de un presupuesto que sigue aceptado, ese cargo vuelve a la cuenta corriente.
-  if (c.presupuestoId) {
-    const [[p]] = await pool.query("SELECT id, numero, cliente_id AS clienteId, expediente_id AS expedienteId, fecha, total, moneda, estado FROM presupuestos WHERE id = ? AND usuario_id = ?", [c.presupuestoId, usuarioId]);
-    if (p?.estado === "aceptado") await cargoDesdePresupuesto(usuarioId, p);
+  const conn = await pool.getConnection();
+  try {
+    await conn.beginTransaction();
+    await conn.query("UPDATE comprobantes SET estado = 'anulado', motivo_anulacion = ? WHERE id = ? AND usuario_id = ?", [texto(motivo, 300) || null, id, usuarioId]);
+    await quitarCargoDeComprobante(usuarioId, id, conn);
+    // Si el comprobante reemplazaba el cargo de un presupuesto que sigue aceptado, ese cargo vuelve a la cuenta corriente.
+    if (c.presupuestoId) {
+      const [[p]] = await conn.query("SELECT id, numero, cliente_id AS clienteId, expediente_id AS expedienteId, fecha, total, moneda, estado FROM presupuestos WHERE id = ? AND usuario_id = ?", [c.presupuestoId, usuarioId]);
+      if (p?.estado === "aceptado") await cargoDesdePresupuesto(usuarioId, p, conn);
+    }
+    await conn.commit();
+  } catch (e) {
+    await conn.rollback().catch(() => {});
+    throw e;
+  } finally {
+    conn.release();
   }
   const out = await obtener(usuarioId, id);
   if (out.esFiscal && out.cae) out.advertencia = "La anulacion fiscal de una factura con CAE requiere emitir una nota de credito en ARCA; aqui solo se marca como anulada y se quita el cargo de la cuenta corriente.";

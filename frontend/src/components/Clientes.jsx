@@ -4,6 +4,7 @@ import Icono from "./Iconos.jsx";
 import { fechaCorta } from "./Expedientes.jsx";
 import { formatoMonto } from "./PresupuestoModal.jsx";
 import UifLegajo from "./UifLegajo.jsx";
+import ConfirmarDialogo from "./ConfirmarDialogo.jsx";
 
 const VACIO = { tipo: "persona", nombre: "", documento: "", cuit: "", domicilio: "", telefono: "", email: "", estadoCivil: "", estadoCivilObs: "", nacionalidad: "", observaciones: "" };
 // Estados civiles del Código Civil y Comercial; la unión convivencial (arts. 509 y ss.) importa para el asentimiento del art. 522.
@@ -77,8 +78,9 @@ export default function Clientes({ onAbrirExpediente }) {
     }
   };
 
+  const [confirmarBorrado, setConfirmarBorrado] = useState(false);
   const borrar = async (id) => {
-    if (!window.confirm("¿Borrar este cliente? Se quitará de sus expedientes; los presupuestos quedan sin cliente asociado.")) return;
+    setConfirmarBorrado(false);
     setError(null);
     try {
       await api.clienteBorrar(id);
@@ -150,7 +152,7 @@ export default function Clientes({ onAbrirExpediente }) {
             <div className="acciones">
               <button type="button" className="boton chico" onClick={() => setLegajoAbierto(true)}><Icono nombre="escudo" tamano={14} /> Legajo UIF</button>
               <button type="button" className="boton chico" onClick={() => setFormulario({ ...VACIO, ...detalle, expedientes: undefined, presupuestos: undefined })}>Editar</button>
-              <button type="button" className="boton chico" onClick={() => borrar(detalle.id)}><Icono nombre="basura" tamano={14} /> Borrar</button>
+              <button type="button" className="boton chico" onClick={() => setConfirmarBorrado(true)}><Icono nombre="basura" tamano={14} /> Borrar</button>
               <button type="button" className="boton discreto chico" aria-label="Cerrar detalle" onClick={() => setDetalle(null)}><Icono nombre="cruz" tamano={14} /></button>
             </div>
           </div>
@@ -183,6 +185,7 @@ export default function Clientes({ onAbrirExpediente }) {
         </div>
       )}
 
+      <ConfirmarDialogo abierto={confirmarBorrado} titulo={detalle ? `Borrar a ${detalle.nombre}` : "Borrar cliente"} texto="Se quita de sus expedientes y se borran sus datos cifrados, su legajo UIF y sus movimientos de cuenta corriente. Los presupuestos y comprobantes quedan sin cliente asociado (el comprobante conserva el receptor)." confirmar="Borrar cliente" destructivo onConfirmar={() => borrar(detalle.id)} onCancelar={() => setConfirmarBorrado(false)} />
       <UifLegajo abierto={legajoAbierto} clienteId={detalle?.id} onCerrar={() => setLegajoAbierto(false)} onGuardado={(l) => { setLegajo(l); setAviso("Legajo UIF guardado."); }} />
 
       <dialog ref={dialogo} className="modal" aria-labelledby="cliente-form-titulo" onClose={() => setFormulario(null)} onClick={(e) => e.target === dialogo.current && setFormulario(null)}>

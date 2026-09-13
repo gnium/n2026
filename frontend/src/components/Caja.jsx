@@ -1,14 +1,15 @@
 import { useEffect, useRef, useState } from "react";
 import { api } from "../api.js";
 import Icono from "./Iconos.jsx";
+import ConfirmarDialogo from "./ConfirmarDialogo.jsx";
 import { fechaCorta } from "./Expedientes.jsx";
 import { formatoMonto, parseMonto } from "./PresupuestoModal.jsx";
 
-const hoyISO = () => new Date().toISOString().slice(0, 10);
+const hoyISO = () => new Date().toLocaleDateString("sv-SE");
 const haceDias = (n) => {
   const d = new Date();
   d.setDate(d.getDate() - n);
-  return d.toISOString().slice(0, 10);
+  return d.toLocaleDateString("sv-SE");
 };
 const MEDIOS = [["efectivo", "Efectivo"], ["transferencia", "Transferencia"], ["mercadopago", "Mercado Pago"], ["cheque", "Cheque"], ["otro", "Otro"]];
 const NOMBRE_MEDIO = Object.fromEntries(MEDIOS);
@@ -79,8 +80,11 @@ export default function Caja() {
     }
   };
 
-  const borrar = async (m) => {
-    if (!window.confirm(`¿Borrar el ${m.tipo} manual "${m.concepto}" de ${formatoMonto(m.monto, m.moneda)}?`)) return;
+  const [aBorrar, setABorrar] = useState(null);
+  const borrar = (m) => setABorrar(m);
+  const confirmarBorrado = async () => {
+    const m = aBorrar;
+    setABorrar(null);
     setError(null);
     try {
       await api.movimientoBorrar(m.id);
@@ -158,6 +162,7 @@ export default function Caja() {
         </div>
       )}
 
+      <ConfirmarDialogo abierto={Boolean(aBorrar)} titulo={aBorrar ? `Borrar ${aBorrar.tipo} manual` : ""} texto={aBorrar ? `"${aBorrar.concepto}" de ${formatoMonto(aBorrar.monto, aBorrar.moneda)} (${fechaCorta(aBorrar.fecha)}). Esta acción no se puede deshacer.` : ""} confirmar="Borrar" destructivo onConfirmar={confirmarBorrado} onCancelar={() => setABorrar(null)} />
       <dialog ref={dialogo} className="modal" aria-labelledby="caja-form-titulo" onClose={() => setForm(null)} onClick={(e) => e.target === dialogo.current && setForm(null)}>
         {form && (
           <form className="cert-form modal-caja" onSubmit={guardar}>

@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { api } from "../api.js";
 import Icono from "./Iconos.jsx";
 
-const hoyISO = () => new Date().toISOString().slice(0, 10);
+const hoyISO = () => new Date().toLocaleDateString("sv-SE");
 const ITEMS_INICIALES = [
   { concepto: "Honorarios", monto: "" },
   { concepto: "Aportes y sellados", monto: "" },

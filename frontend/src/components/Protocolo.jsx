@@ -3,7 +3,7 @@ import { api } from "../api.js";
 import Icono from "./Iconos.jsx";
 
 const TIPOS_ACTO = ["compraventa", "donacion", "hipoteca", "permuta", "cesion", "sucesion", "poder", "certificacion_firmas", "otro"];
-const hoyISO = () => new Date().toISOString().slice(0, 10);
+const hoyISO = () => new Date().toLocaleDateString("sv-SE");
 
 /** Indice de protocolo: la unica pantalla que muestra nombres reales de comparecientes (cifrados en la base). */
 export default function Protocolo() {

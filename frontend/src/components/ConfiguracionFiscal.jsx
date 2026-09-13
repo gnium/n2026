@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { api } from "../api.js";
 import Icono from "./Iconos.jsx";
+import ConfirmarDialogo from "./ConfirmarDialogo.jsx";
 
 const COND_IVA = [["monotributo", "Responsable Monotributo"], ["responsable_inscripto", "IVA Responsable Inscripto"], ["exento", "IVA Exento"]];
 const ENTORNOS = [["apagado", "Apagado (solo comprobantes internos)"], ["homologacion", "Homologación (pruebas de ARCA)"], ["produccion", "Producción"]];
@@ -64,8 +65,9 @@ export default function ConfiguracionFiscal({ onCambio }) {
     }
   };
 
+  const [confirmarBorrado, setConfirmarBorrado] = useState(false);
   const borrarCred = async () => {
-    if (!window.confirm("¿Borrar el certificado y la clave de ARCA? Se apaga la factura electrónica.")) return;
+    setConfirmarBorrado(false);
     try {
       const c = await api.borrarCredencialesArca();
       setCfg(c);
@@ -110,7 +112,8 @@ export default function ConfiguracionFiscal({ onCambio }) {
       <div className="acciones">
         <button type="submit" className="boton primario" disabled={ocupado}>Guardar datos fiscales</button>
         <button type="button" className="boton" onClick={probar} disabled={ocupado || cfg.arcaEntorno === "apagado"}>Probar conexión con ARCA</button>
-        {cfg.tieneCredenciales && <button type="button" className="boton" onClick={borrarCred} disabled={ocupado}>Borrar credenciales</button>}
+        {cfg.tieneCredenciales && <button type="button" className="boton" onClick={() => setConfirmarBorrado(true)} disabled={ocupado}>Borrar credenciales</button>}
+        <ConfirmarDialogo abierto={confirmarBorrado} titulo="Borrar credenciales de ARCA" texto="Se borran el certificado y la clave privada guardados y la factura electrónica queda apagada. Los comprobantes ya emitidos no se tocan." confirmar="Borrar credenciales" destructivo onConfirmar={borrarCred} onCancelar={() => setConfirmarBorrado(false)} />
         {cfg.arcaEntorno === "apagado" && <span className="ayuda">Para probar la conexión, elegí homologación o producción y guardá con las credenciales cargadas.</span>}
       </div>
     </form>
