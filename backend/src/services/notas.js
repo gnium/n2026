@@ -1,10 +1,12 @@
 /**
- * Notas individuales o compartidas entre las cuentas de la misma instalacion.
- * Tabla sin cifrar (ver docs/PRIVACIDAD.md, "Excepcion sin cifrar: agenda,
- * notas y biblioteca de modelos").
+ * Notas individuales o compartidas con el equipo de la escribania (fase 4:
+ * antes eran visibles para toda la instalacion). Tabla sin cifrar (ver
+ * docs/PRIVACIDAD.md, "Excepcion sin cifrar: agenda, notas y biblioteca de
+ * modelos"). Una cuenta sin equipo solo ve las propias.
  */
 import { pool } from "../config/db.js";
 import { AppError } from "../utils/errores.js";
+import { idsDelEquipo } from "./equipo.js";
 
 function filaAVista(r, usuarioId) {
   return {
@@ -20,13 +22,14 @@ function filaAVista(r, usuarioId) {
 }
 
 export async function listar(usuarioId) {
+  const equipo = await idsDelEquipo(usuarioId);
   const [rows] = await pool.query(
     `SELECT n.*, u.nombre AS autor_nombre, u.email AS autor_email
        FROM notas n
        JOIN usuarios u ON u.id = n.usuario_id
-      WHERE n.usuario_id = :usuarioId OR n.compartida = 1
+      WHERE n.usuario_id = ? OR (n.compartida = 1 AND n.usuario_id IN (?))
       ORDER BY n.creado_en DESC`,
-    { usuarioId },
+    [usuarioId, equipo],
   );
   return rows.map((r) => filaAVista(r, usuarioId));
 }

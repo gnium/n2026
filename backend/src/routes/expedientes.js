@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { listar, obtener, crear, actualizar, actualizarEstado, borrar, reemplazarPartes, crearTarea, actualizarTarea, actualizarEstadoTarea, borrarTarea, crearTareasDesdeSesion } from "../services/expedientes.js";
+import { listar, obtener, crear, actualizar, actualizarEstado, borrar, reemplazarPartes, crearTarea, actualizarTarea, actualizarEstadoTarea, borrarTarea, crearTareasDesdeSesion, listarColaboradores, compartir, dejarDeCompartir, misTareas } from "../services/expedientes.js";
 import { obtenerSesionDeUsuario } from "../services/sessionStore.js";
 import { AppError } from "../utils/errores.js";
 
@@ -14,6 +14,8 @@ const manejar = (fn) => async (req, res, next) => {
 };
 
 rutasExpedientes.get("/", manejar(async (req, res) => res.json(await listar(req.usuario.id, req.query.estado))));
+// Antes de "/:id": si no, la ruta dinamica se quedaria con esta.
+rutasExpedientes.get("/mis-tareas", manejar(async (req, res) => res.json(await misTareas(req.usuario.id))));
 rutasExpedientes.get("/:id", manejar(async (req, res) => res.json(await obtener(req.usuario.id, req.params.id))));
 rutasExpedientes.post("/", manejar(async (req, res) => res.status(201).json(await crear(req.usuario.id, req.body || {}))));
 rutasExpedientes.put("/:id", manejar(async (req, res) => res.json(await actualizar(req.usuario.id, req.params.id, req.body || {}))));
@@ -24,6 +26,11 @@ rutasExpedientes.delete("/:id", manejar(async (req, res) => {
 }));
 
 rutasExpedientes.put("/:id/partes", manejar(async (req, res) => res.json(await reemplazarPartes(req.usuario.id, req.params.id, req.body?.partes))));
+
+// Compartir puntual con integrantes del equipo (solo la cuenta duena del expediente).
+rutasExpedientes.get("/:id/colaboradores", manejar(async (req, res) => res.json(await listarColaboradores(req.usuario.id, req.params.id))));
+rutasExpedientes.post("/:id/colaboradores", manejar(async (req, res) => res.status(201).json(await compartir(req.usuario.id, req.params.id, req.body || {}))));
+rutasExpedientes.delete("/:id/colaboradores/:usuarioId", manejar(async (req, res) => res.json(await dejarDeCompartir(req.usuario.id, req.params.id, req.params.usuarioId))));
 
 rutasExpedientes.post("/:id/tareas", manejar(async (req, res) => res.status(201).json(await crearTarea(req.usuario.id, req.params.id, req.body || {}))));
 rutasExpedientes.put("/:id/tareas/:tareaId", manejar(async (req, res) => res.json(await actualizarTarea(req.usuario.id, req.params.id, req.params.tareaId, req.body || {}))));

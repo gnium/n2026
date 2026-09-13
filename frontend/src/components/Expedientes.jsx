@@ -30,6 +30,8 @@ export default function Expedientes({ inicialId = null, onConsumirInicial }) {
   const [comprobante, setComprobante] = useState(null); // { abierto, presupuesto? }
   const [comprobantes, setComprobantes] = useState([]);
   const [configFiscal, setConfigFiscal] = useState(null);
+  const [companeros, setCompaneros] = useState([]);
+  const [nuevoColaborador, setNuevoColaborador] = useState({ usuarioId: "", permiso: "lectura" });
   const [error, setError] = useState(null);
   const [aviso, setAviso] = useState(null);
   const dialogo = useRef(null);
@@ -62,6 +64,7 @@ export default function Expedientes({ inicialId = null, onConsumirInicial }) {
   useEffect(() => {
     api.clientesListar().then(setClientes).catch(() => setClientes([]));
     api.configuracionFiscal().then(setConfigFiscal).catch(() => setConfigFiscal({ arcaEntorno: "apagado" }));
+    api.equipoCompaneros().then(setCompaneros).catch(() => setCompaneros([]));
   }, []);
 
   useEffect(() => {
@@ -121,6 +124,15 @@ export default function Expedientes({ inicialId = null, onConsumirInicial }) {
   };
   const quitarParte = (clienteId) => accion(() => api.expedientePartes(detalle.id, detalle.partes.filter((p) => p.clienteId !== clienteId).map((p) => ({ clienteId: p.clienteId, rol: p.rol }))));
 
+  const compartirCon = (e) => {
+    e.preventDefault();
+    if (!nuevoColaborador.usuarioId) return;
+    accion(
+      () => api.expedienteCompartir(detalle.id, { conUsuarioId: Number(nuevoColaborador.usuarioId), permiso: nuevoColaborador.permiso }),
+      "Expediente compartido.",
+    ).then(() => setNuevoColaborador({ usuarioId: "", permiso: "lectura" }));
+  };
+
   const agregarTarea = (e) => {
     e.preventDefault();
     if (!nuevaTarea.trim()) return;
@@ -137,6 +149,9 @@ export default function Expedientes({ inicialId = null, onConsumirInicial }) {
   };
 
   const clientesDelExpediente = detalle ? clientes.filter((c) => detalle.partes.some((p) => p.clienteId === c.id)) : [];
+  // Un expediente compartido por otra cuenta del equipo: se ve, y se edita solo con permiso de edicion.
+  const esPropio = !detalle || detalle.esPropio !== false;
+  const puedeEditar = esPropio || detalle.permiso === "edicion";
   const pendientes = detalle?.tareas.filter((t) => t.estado === "pendiente") || [];
   const hechas = detalle?.tareas.filter((t) => t.estado === "hecha") || [];
 
@@ -149,7 +164,7 @@ export default function Expedientes({ inicialId = null, onConsumirInicial }) {
         </>
       )}
       {error && !formulario && <p className="alerta error" role="alert">{error}</p>}
-      {aviso && <p className="alerta ok" role="status">{aviso}</p>}
+      <p className={`alerta ok ${aviso ? "" : "sr-only"}`} role="status">{aviso}</p>
 
       {!detalle ? (
         <>
@@ -198,15 +213,20 @@ export default function Expedientes({ inicialId = null, onConsumirInicial }) {
                 {detalle.protocolo && ` · protocolo N° ${detalle.protocolo.numeroOrden}/${detalle.protocolo.anio}`}
               </p>
               {detalle.observaciones && <p className="nota">{detalle.observaciones}</p>}
+              {!esPropio && (
+                <p className="nota">
+                  <span className="etiqueta">compartido</span> por {detalle.duenoNombre || "otra cuenta del equipo"} · {detalle.permiso === "edicion" ? "puede editar tareas y estado" : "solo lectura"}
+                </p>
+              )}
             </div>
             <div className="acciones">
               <label className="campo"><span className="sr-only">Estado</span>
-                <select value={detalle.estado} onChange={(e) => accion(() => api.expedienteEstado(detalle.id, e.target.value), "Estado del expediente actualizado.")}>
+                <select value={detalle.estado} disabled={!puedeEditar} onChange={(e) => accion(() => api.expedienteEstado(detalle.id, e.target.value), "Estado del expediente actualizado.")}>
                   {ESTADOS.map(([v, t]) => <option key={v} value={v}>{t}</option>)}
                 </select>
               </label>
-              <button type="button" className="boton chico" onClick={() => setFormulario({ id: detalle.id, caratula: detalle.caratula, tipoActo: detalle.tipoActo, observaciones: detalle.observaciones || "" })}>Editar</button>
-              <button type="button" className="boton chico" onClick={() => setConfirmar({ tipo: "expediente" })}><Icono nombre="basura" tamano={14} /> Borrar</button>
+              {puedeEditar && <button type="button" className="boton chico" onClick={() => setFormulario({ id: detalle.id, caratula: detalle.caratula, tipoActo: detalle.tipoActo, observaciones: detalle.observaciones || "" })}>Editar</button>}
+              {esPropio && <button type="button" className="boton chico" onClick={() => setConfirmar({ tipo: "expediente" })}><Icono nombre="basura" tamano={14} /> Borrar</button>}
             </div>
           </div>
 
@@ -215,41 +235,76 @@ export default function Expedientes({ inicialId = null, onConsumirInicial }) {
             {detalle.partes.length === 0 ? <p className="vacio">Sin partes vinculadas.</p> : (
               <ul className="chips">
                 {detalle.partes.map((p) => (
-                  <li key={p.clienteId} className="chip">{p.nombre}{p.rol ? <span> · {p.rol}</span> : null}<button type="button" className="enlace" aria-label={`Quitar a ${p.nombre}`} onClick={() => quitarParte(p.clienteId)}><Icono nombre="cruz" tamano={12} /></button></li>
+                  <li key={p.clienteId} className="chip">{p.nombre}{p.rol ? <span> · {p.rol}</span> : null}{esPropio && <button type="button" className="enlace" aria-label={`Quitar a ${p.nombre}`} onClick={() => quitarParte(p.clienteId)}><Icono nombre="cruz" tamano={12} /></button>}</li>
                 ))}
               </ul>
             )}
-            <form className="fila-alta" onSubmit={agregarParte}>
-              <select aria-label="Cliente" value={nuevaParte.clienteId} onChange={(e) => setNuevaParte({ ...nuevaParte, clienteId: e.target.value })}>
-                <option value="">Agregar cliente…</option>
-                {clientes.filter((c) => !detalle.partes.some((p) => p.clienteId === c.id)).map((c) => <option key={c.id} value={c.id}>{c.nombre}</option>)}
-              </select>
-              <input type="text" aria-label="Rol" placeholder="Rol (vendedor, comprador…)" value={nuevaParte.rol} onChange={(e) => setNuevaParte({ ...nuevaParte, rol: e.target.value })} />
-              <button type="submit" className="boton chico" disabled={!nuevaParte.clienteId}>Agregar</button>
-            </form>
+            {esPropio && (
+              <form className="fila-alta" onSubmit={agregarParte}>
+                <select aria-label="Cliente" value={nuevaParte.clienteId} onChange={(e) => setNuevaParte({ ...nuevaParte, clienteId: e.target.value })}>
+                  <option value="">Agregar cliente…</option>
+                  {clientes.filter((c) => !detalle.partes.some((p) => p.clienteId === c.id)).map((c) => <option key={c.id} value={c.id}>{c.nombre}</option>)}
+                </select>
+                <input type="text" aria-label="Rol" placeholder="Rol (vendedor, comprador…)" value={nuevaParte.rol} onChange={(e) => setNuevaParte({ ...nuevaParte, rol: e.target.value })} />
+                <button type="submit" className="boton chico" disabled={!nuevaParte.clienteId}>Agregar</button>
+              </form>
+            )}
           </section>
 
           <section className="bloque">
             <h4>Tareas <span className="nota">{pendientes.length} pendientes · {hechas.length} hechas</span></h4>
-            <form className="fila-alta simple" onSubmit={agregarTarea}>
-              <input type="text" aria-label="Nueva tarea" aria-describedby="ayuda-tarea" placeholder="Nueva tarea" value={nuevaTarea} onChange={(e) => setNuevaTarea(e.target.value)} maxLength={300} />
-              <span id="ayuda-tarea" className="sr-only">Presione Enter o el botón Agregar para crear la tarea.</span>
-              <button type="submit" className="boton chico" disabled={!nuevaTarea.trim()}>Agregar</button>
-            </form>
+            {puedeEditar && (
+              <form className="fila-alta simple" onSubmit={agregarTarea}>
+                <input type="text" aria-label="Nueva tarea" aria-describedby="ayuda-tarea" placeholder="Nueva tarea" value={nuevaTarea} onChange={(e) => setNuevaTarea(e.target.value)} maxLength={300} />
+                <span id="ayuda-tarea" className="sr-only">Presione Enter o el botón Agregar para crear la tarea.</span>
+                <button type="submit" className="boton chico" disabled={!nuevaTarea.trim()}>Agregar</button>
+              </form>
+            )}
             <div className="tareas">
               <div>
                 <span className="eyebrow-mini">Pendientes</span>
                 {pendientes.length === 0 && <p className="vacio">Nada pendiente.</p>}
-                {pendientes.map((t) => <Tarea key={t.id} t={t} expedienteId={detalle.id} accion={accion} />)}
+                {pendientes.map((t) => <Tarea key={t.id} t={t} expedienteId={detalle.id} accion={accion} companeros={companeros} puedeEditar={puedeEditar} />)}
               </div>
               <div>
                 <span className="eyebrow-mini">Hechas</span>
                 {hechas.length === 0 && <p className="vacio">Todavía ninguna.</p>}
-                {hechas.map((t) => <Tarea key={t.id} t={t} expedienteId={detalle.id} accion={accion} />)}
+                {hechas.map((t) => <Tarea key={t.id} t={t} expedienteId={detalle.id} accion={accion} companeros={companeros} puedeEditar={puedeEditar} />)}
               </div>
             </div>
           </section>
 
+          {esPropio && companeros.length > 0 && (
+            <section className="bloque">
+              <h4>Compartido con el equipo {detalle.colaboradores?.length ? <span className="etiqueta">{detalle.colaboradores.length}</span> : null}</h4>
+              {!detalle.colaboradores?.length ? (
+                <p className="vacio">Este expediente lo ve solo su cuenta.</p>
+              ) : (
+                <ul className="chips">
+                  {detalle.colaboradores.map((c) => (
+                    <li key={c.usuarioId} className="chip">
+                      {c.nombre || c.email} · <span className="nota">{c.permiso === "edicion" ? "puede editar tareas y estado" : "solo lectura"}</span>
+                      <button type="button" className="enlace" aria-label={`Dejar de compartir con ${c.nombre || c.email}`} onClick={() => accion(() => api.expedienteDejarDeCompartir(detalle.id, c.usuarioId), "Se dejó de compartir el expediente.")}><Icono nombre="cruz" tamano={12} /></button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+              <form className="fila-alta" onSubmit={compartirCon}>
+                <select aria-label="Integrante del equipo" value={nuevoColaborador.usuarioId} onChange={(e) => setNuevoColaborador({ ...nuevoColaborador, usuarioId: e.target.value })}>
+                  <option value="">Compartir con…</option>
+                  {companeros.filter((c) => !detalle.colaboradores?.some((x) => x.usuarioId === c.usuarioId)).map((c) => <option key={c.usuarioId} value={c.usuarioId}>{c.nombre || c.email}</option>)}
+                </select>
+                <select aria-label="Permiso" value={nuevoColaborador.permiso} onChange={(e) => setNuevoColaborador({ ...nuevoColaborador, permiso: e.target.value })}>
+                  <option value="lectura">Solo lectura</option>
+                  <option value="edicion">Puede editar tareas y estado</option>
+                </select>
+                <button type="submit" className="boton chico" disabled={!nuevoColaborador.usuarioId}>Compartir</button>
+              </form>
+              <p className="ayuda">Quien lo recibe ve la carátula, las partes (solo el nombre), las tareas y el estado. Los presupuestos, los comprobantes, la ficha UIF y el protocolo siguen siendo suyos.</p>
+            </section>
+          )}
+
+          {esPropio ? (<>
           <section className="bloque">
             <div className="protocolo-cabecera">
               <h4>Presupuestos</h4>
@@ -315,6 +370,9 @@ export default function Expedientes({ inicialId = null, onConsumirInicial }) {
           </section>
 
           <UifExpediente expedienteId={detalle.id} />
+          </>) : (
+            <p className="nota">Los presupuestos, los comprobantes y la ficha UIF de este expediente los gestiona {detalle.duenoNombre || "su dueño"}.</p>
+          )}
         </div>
       )}
 
@@ -372,19 +430,30 @@ export default function Expedientes({ inicialId = null, onConsumirInicial }) {
   );
 }
 
-function Tarea({ t, expedienteId, accion }) {
+function Tarea({ t, expedienteId, accion, companeros = [], puedeEditar = true }) {
   const hecha = t.estado === "hecha";
+  const asignar = (usuarioId) =>
+    accion(
+      () => api.tareaActualizar(expedienteId, t.id, { descripcion: t.descripcion, responsable: t.responsable, venceEn: t.venceEn, responsableUsuarioId: usuarioId || null }),
+      usuarioId ? "Tarea asignada." : "Tarea sin responsable.",
+    );
   return (
     <div className={`tarea ${hecha ? "hecha" : ""}`}>
-      <input type="checkbox" id={`tarea-${t.id}`} checked={hecha} onChange={() => accion(() => api.tareaEstado(expedienteId, t.id, hecha ? "pendiente" : "hecha"), hecha ? "Tarea marcada como pendiente." : "Tarea marcada como hecha.").then(() => document.getElementById(`tarea-${t.id}`)?.focus())} />
+      <input type="checkbox" id={`tarea-${t.id}`} checked={hecha} disabled={!puedeEditar} onChange={() => accion(() => api.tareaEstado(expedienteId, t.id, hecha ? "pendiente" : "hecha"), hecha ? "Tarea marcada como pendiente." : "Tarea marcada como hecha.").then(() => document.getElementById(`tarea-${t.id}`)?.focus())} />
       <label htmlFor={`tarea-${t.id}`}>
         {t.descripcion}
         <span className="tarea-meta">
           {t.origen === "checklist" && <span className="etiqueta">checklist</span>}
-          {[t.responsable, t.venceEn && `vence ${fechaCorta(t.venceEn)}`].filter(Boolean).join(" · ")}
+          {[t.responsableNombre, t.responsable, t.venceEn && `vence ${fechaCorta(t.venceEn)}`].filter(Boolean).join(" · ")}
         </span>
       </label>
-      <button type="button" className="boton discreto chico" aria-label={`Borrar tarea: ${t.descripcion}`} onClick={() => accion(() => api.tareaBorrar(expedienteId, t.id), "Tarea borrada.")}><Icono nombre="basura" tamano={14} /></button>
+      {puedeEditar && companeros.length > 0 && (
+        <select className="tarea-responsable" aria-label={`Responsable de: ${t.descripcion}`} value={t.responsableUsuarioId || ""} onChange={(e) => asignar(e.target.value)}>
+          <option value="">Sin asignar</option>
+          {companeros.map((c) => <option key={c.usuarioId} value={c.usuarioId}>{c.nombre || c.email}</option>)}
+        </select>
+      )}
+      {puedeEditar && <button type="button" className="boton discreto chico" aria-label={`Borrar tarea: ${t.descripcion}`} onClick={() => accion(() => api.tareaBorrar(expedienteId, t.id), "Tarea borrada.")}><Icono nombre="basura" tamano={14} /></button>}
     </div>
   );
 }

@@ -88,6 +88,49 @@ Las tablas de `database/11_caja_comprobantes_uif.sql` cubren dos obligaciones re
 
 **ARCA**: la comunicación con `wsaa`/`wsfev1` lleva CUIT del emisor, tipo y número de documento del receptor e importes, que es exactamente lo que la factura electrónica exige. No pasa por ningún proveedor de IA. El ticket de acceso (TA) se cachea en memoria del proceso por cuenta y entorno hasta 10 minutos antes de vencer.
 
+## Equipo: qué se comparte y qué no
+
+El equipo (`database/13_equipo.sql`) **no junta los datos de las cuentas**. Cada cuenta sigue siendo dueña de sus clientes, expedientes, agenda, caja y protocolo; la columna `usuario_id` de cada tabla no cambió. Lo que el equipo agrega es:
+
+| Qué | Dónde | Quién lo ve |
+|---|---|---|
+| Rol (`titular` / `escribano` / `empleado`) | `equipo_miembros` | El equipo. El rol **reserva pantallas enteras**: con rol `empleado`, el servidor rechaza (403) protocolo, caja, comprobantes, datos fiscales y UIF, y la interfaz no los muestra |
+| Invitaciones | `equipo_invitaciones` | Solo la titular. Se guarda el hash del token, nunca el token; vencen a los 7 días y solo las acepta el correo al que fueron dirigidas |
+| Expediente compartido | `expediente_colaboradores` | Solo quien lo recibe. El dueño elige de a un expediente por vez y con qué permiso (`lectura` o `edicion`) |
+| Notas marcadas como compartidas | `notas.compartida` | Los integrantes del equipo (antes: toda la instalación) |
+| Turnos marcados como del equipo | `turnos.compartido` | Los integrantes del equipo, en modo lectura |
+| Métricas por integrante | Se calculan al vuelo | Solo la titular. Son **conteos y totales** (expedientes, tareas, turnos, documentos, comprobantes, cobrado en pesos): ningún contenido de un expediente, cliente o documento sale de la cuenta que lo creó |
+
+Un expediente compartido muestra al colaborador la carátula, las observaciones, el estado, las tareas y los nombres de las partes (solo el nombre: el DNI, el CUIT, el domicilio y el teléfono siguen cifrados y solo los descifra la cuenta dueña del cliente). **No** se comparten los presupuestos, los comprobantes, la ficha UIF ni el vínculo con el protocolo. Quitar a alguien del equipo le saca el acceso a lo compartido y no borra nada suyo.
+
+## Integraciones con Google
+
+Es la primera función del producto que puede sacar datos de la escribanía hacia un tercero, así que está construida para que eso sea siempre una decisión explícita y reversible:
+
+- **Viene apagada dos veces.** No funciona hasta que (1) la titular carga el `client_id` y el `client_secret` de un proyecto de Google Cloud propio de la escribanía, y (2) cada cuenta conecta su propia cuenta de Google. Ninguna cuenta queda conectada por decisión de otra.
+- **Cada destino se activa por separado** (agenda, Gmail, comprobantes a Drive, escrituras a Drive). Mientras estén apagados, no sale nada.
+- **Alcances mínimos**: `calendar.events` (crear y editar eventos, no leer el resto del calendario), `gmail.send` (enviar; **no** permite leer la casilla) y `drive.file` (solo los archivos que crea esta app; no ve el resto del Drive).
+
+Qué viaja con cada opción activada:
+
+| Opción | Qué se envía a Google | Qué **no** se envía |
+|---|---|---|
+| Agenda → Calendar | Título del turno, fecha, duración y estado | Las notas del turno no viajan como dato aparte; no se envían clientes ni expedientes |
+| Enviar por Gmail | El PDF que usted elige mandar (presupuesto o comprobante) y el correo del destinatario | Nada más; el correo sale desde su propia casilla y queda en sus Enviados |
+| Comprobantes → Drive | El PDF del comprobante | — |
+| Escrituras → Drive | El `.docx` final. **Atención**: ese documento ya tiene los datos reales de las partes, porque es el que se firma | — |
+
+| Dato | Dónde | Cómo se guarda |
+|---|---|---|
+| `refresh_token` y `access_token` de cada cuenta | `google_cuentas` | **Cifrados**, contexto `"google"`. Rotar `JWT_SECRET` los deja ilegibles y hay que reconectar |
+| `client_secret` del proyecto | `configuracion` | **Cifrado**, contexto `"google"`. La API nunca lo devuelve |
+| Envíos hechos por Gmail | `google_envios` | Solo cuenta, tipo, id del comprobante y id del mensaje de Gmail. **No se guarda el destinatario** |
+| Id del evento y del archivo | `turnos.google_evento_id`, `comprobantes.drive_archivo_id` | Referencias, para no duplicar |
+
+Desconectar revoca el permiso en Google, borra los tokens y corta la sincronización. Lo que ya se subió a Calendar o Drive queda en la cuenta de Google de esa persona: la app no lo borra.
+
+**El pipeline de IA no cambia.** La regla de oro sigue igual: los datos de las partes se anonimizan antes de cualquier análisis y no se persisten. Las integraciones actúan sobre documentos ya terminados y a pedido expreso de la persona.
+
 ## Qué queda en MySQL después de una ejecución
 
 Ejemplo real de una fila de `ejecuciones`:

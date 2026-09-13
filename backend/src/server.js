@@ -15,7 +15,10 @@ import { cargarConfiguracionIA } from "./services/configuracionIA.js";
 import { rutasPrecios } from "./routes/precios.js";
 import { rutasConsumo } from "./routes/consumo.js";
 import { cargarPrecios } from "./services/precios.js";
-import { requerirAuth, requerirAdmin } from "./middleware/auth.js";
+import { requerirAuth, requerirAdmin, requerirRol } from "./middleware/auth.js";
+import { rutasEquipo } from "./routes/equipo.js";
+import { rutasGoogle, rutasGoogleCallback } from "./routes/google.js";
+import { rutasAlertas } from "./routes/alertas.js";
 import { asegurarTablasAuth } from "./auth/repositorio.js";
 import { rutasSuscripcion } from "./routes/suscripcion.js";
 import { rutasPlanes } from "./routes/planes.js";
@@ -64,17 +67,21 @@ app.use("/api/consumo", requerirAuth, rutasConsumo); // cada cuenta ve su propio
 app.use("/api/suscripcion", requerirAuth, rutasSuscripcion); // cada cuenta gestiona su propia suscripcion
 app.use("/api/sesiones", requerirAuth, rutasSesiones); // cada sesion de trabajo pertenece a quien la creo
 app.use("/api/sesiones-guardadas", requerirAuth, rutasSesionesGuardadas); // cada cuenta guarda/reanuda solo las suyas
-app.use("/api/protocolo", requerirAuth, rutasProtocolo); // cada cuenta gestiona su propio indice de protocolo
+app.use("/api/equipo", requerirAuth, rutasEquipo); // integrantes, invitaciones, roles y metricas del equipo
+app.use("/api/alertas", requerirAuth, rutasAlertas); // novedades: vencimientos y pendientes de la cuenta (segun rol)
+app.use("/api/google/callback", rutasGoogleCallback); // publica: la vuelta de OAuth se autentica con el state firmado
+app.use("/api/google", requerirAuth, rutasGoogle); // Calendar, Gmail y Drive (apagado hasta configurarlo)
+app.use("/api/protocolo", requerirAuth, requerirRol("escribano"), rutasProtocolo); // indice de protocolo: reservado a escribana/escribano
 app.use("/api/turnos", requerirAuth, rutasTurnos); // agenda propia de cada cuenta
 app.use("/api/notas", requerirAuth, rutasNotas); // notas propias + compartidas con la instalacion
 app.use("/api/biblioteca-modelos", requerirAuth, rutasBibliotecaModelos); // escrituras modelo propias, reutilizables entre sesiones
 app.use("/api/clientes", requerirAuth, rutasClientes); // CRM propio de cada cuenta (identificadores cifrados)
 app.use("/api/expedientes", requerirAuth, rutasExpedientes); // carpetas con partes, tareas y vinculo al pipeline
 app.use("/api/presupuestos", requerirAuth, rutasPresupuestos); // presupuestos con PDF
-app.use("/api/movimientos", requerirAuth, rutasMovimientos); // cuenta corriente por cliente
-app.use("/api/comprobantes", requerirAuth, rutasComprobantes); // recibos, notas de honorarios y facturas (ARCA)
-app.use("/api/configuracion-fiscal", requerirAuth, rutasConfiguracionFiscal); // datos del emisor y credenciales ARCA (cada cuenta la suya)
-app.use("/api/uif", requerirAuth, rutasUif); // legajos, fichas por expediente, eventos y alertas UIF (parametros: solo admin)
+app.use("/api/movimientos", requerirAuth, requerirRol("escribano"), rutasMovimientos); // cuenta corriente: no visible para el rol empleado
+app.use("/api/comprobantes", requerirAuth, requerirRol("escribano"), rutasComprobantes); // recibos, notas de honorarios y facturas (ARCA)
+app.use("/api/configuracion-fiscal", requerirAuth, requerirRol("escribano"), rutasConfiguracionFiscal); // datos del emisor y credenciales ARCA (cada cuenta la suya)
+app.use("/api/uif", requerirAuth, requerirRol("escribano"), rutasUif); // legajos, fichas y eventos UIF (parametros: solo admin)
 app.use("/api", requerirAuth, requerirAdmin, rutasConfiguracion);
 app.use((_req, res) => res.status(404).json({ error: { codigo: "NO_ENCONTRADO", mensaje: "Ruta inexistente" } }));
 app.use(manejadorErrores);

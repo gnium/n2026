@@ -289,6 +289,22 @@ Tres pantallas de gestión de la práctica, independientes del pipeline de IA, a
 
 ---
 
+### 3.10 Equipo de la escribanía e integraciones con Google
+
+- **Equipo** (pantalla *Equipo*): el modelo es **cuentas separadas con compartir puntual**. Cada cuenta sigue siendo dueña de sus clientes, expedientes, agenda y caja; el equipo solo agrega roles, invitaciones y lo que se comparte a propósito.
+  - **Roles**: *titular* (administra la instalación y el equipo), *escribano* (todo su trabajo: protocolo, caja, comprobantes y UIF incluidos) y *empleado* (clientes, expedientes, tareas, agenda, notas y biblioteca; el servidor le rechaza protocolo, caja, comprobantes, datos fiscales y UIF, y la barra lateral no se los muestra). Una cuenta sin equipo se comporta como *escribano* sobre sus propios datos: una instalación de una sola persona no cambia en nada.
+  - **Invitaciones**: la titular invita por correo eligiendo el rol. El enlace vence a los 7 días, es de un solo uso y solo lo puede aceptar ese mismo correo (quien no tenga cuenta la crea en ese momento, sin código de registro). Sin SMTP configurado, la app muestra el enlace para pasarlo a mano.
+  - **Compartir un expediente**: desde el detalle del expediente, *Compartido con el equipo* → elegir integrante y permiso (*solo lectura* o *puede editar tareas y estado*). Quien lo recibe ve carátula, partes (solo el nombre), tareas y estado; **no** ve presupuestos, comprobantes, ficha UIF ni protocolo, que siguen siendo del dueño.
+  - **Tareas asignadas**: cada tarea puede tener un responsable del equipo. **Agenda del equipo**: un turno marcado como compartido lo ve el resto (en lectura) con el botón *Equipo* de la agenda. **Notas compartidas**: ahora alcanzan al equipo, no a toda la instalación.
+  - **Métricas** (solo titular): expedientes abiertos/creados/cerrados, tareas hechas y pendientes, turnos, documentos generados con IA, comprobantes emitidos y cobrado en pesos, por integrante y por período. Son conteos: ningún contenido sale de la cuenta que lo creó.
+- **Integraciones con Google** (pantalla *Integraciones*): agenda en Google Calendar, envío de presupuestos y comprobantes desde el Gmail del escribano, y copia de documentos en Drive. **Viene apagada** y se enciende en dos pasos:
+  1. **La titular configura el proyecto** (una vez por instalación): en [console.cloud.google.com](https://console.cloud.google.com) crear un proyecto, activar las APIs de *Google Calendar*, *Gmail* y *Google Drive*, completar la pantalla de consentimiento (tipo *Externo*; mientras esté en modo *Testing* hay que agregar como usuarios de prueba los correos de la escribanía) y crear credenciales de tipo **ID de cliente de OAuth · Aplicación web**. En *URI de redirección autorizados* pegar exactamente el que muestra la pantalla de Integraciones (por defecto `<APP_URL>/api/google/callback`). Copiar el *client ID* y el *client secret* en Integraciones → *Credenciales de Google Cloud*; el secreto se guarda cifrado y no se vuelve a mostrar.
+  2. **Cada cuenta conecta su Google** con *Conectar con Google* y elige qué sincronizar. Los permisos que pide son los mínimos: `calendar.events` (crear y editar eventos, no leer el calendario), `gmail.send` (enviar, **no** leer) y `drive.file` (solo los archivos que crea la app).
+  - Qué viaja: la agenda manda título, fecha y duración; Gmail manda el PDF que usted elige y el correo del destinatario; Drive guarda el PDF del comprobante y, si lo activa, el `.docx` de la escritura (que sí tiene los datos reales de las partes). Está detallado en [docs/PRIVACIDAD.md](docs/PRIVACIDAD.md), "Integraciones con Google". *Desconectar* revoca el permiso en Google y borra los tokens.
+- **Novedades** (panel al abrir la app): reúne en un solo lugar lo que vence o pide atención — certificado de ARCA por vencer o vencido, tareas vencidas o de esta semana, turnos de las próximas 48 horas, presupuestos enviados cuya validez pasó, sesiones guardadas por caducar y las alertas de UIF. Está ordenado por urgencia, cada línea lleva a su pantalla, y **respeta el rol**: una cuenta con rol *empleado* no recibe las novedades de caja, ARCA ni UIF. Si no hay nada pendiente, el panel no ocupa lugar.
+
+---
+
 ## 5. Configuración
 
 Variables en `backend/.env` (ver `.env.example`):
@@ -357,6 +373,17 @@ Los **prompts, modelo, esfuerzo y `max_tokens` de cada skill** se editan en la t
 | `GET/PUT` | `/api/uif/legajos/:clienteId` | Legajo KYC del cliente (datos sensibles cifrados). |
 | `GET/PUT/POST` | `/api/uif/expedientes/:id`, `/:id/generar` | Ficha UIF del expediente (actividad, monto, recaudos, estado); generar recaudos con IA (entrada anonimizada, costo registrado en Consumo). |
 | `GET/POST/DELETE` | `/api/uif/eventos`, `/api/uif/eventos/:id` | Reportes y eventos de cumplimiento. |
+| `GET/POST/PUT` | `/api/equipo`, `/api/equipo/companeros`, `/api/equipo/metricas?dias=` | Equipo: integrantes e invitaciones, compañeros con quienes compartir, métricas por integrante (solo titular). |
+| `POST/DELETE` | `/api/equipo/invitaciones`, `/:id`, `/aceptar` | Invitar por correo (token de un solo uso, vence a los 7 días), cancelar, aceptar con la cuenta autenticada. |
+| `PATCH/DELETE` | `/api/equipo/miembros/:id/rol`, `/estado`, `/api/equipo/miembros/:id` | Cambiar rol, suspender/reactivar o quitar a un integrante (solo titular). |
+| `GET` | `/api/auth/invitacion/:token` | Datos públicos de una invitación, para mostrarla antes de ingresar. |
+| `GET/POST/DELETE` | `/api/expedientes/:id/colaboradores` | Compartir un expediente con el equipo (`lectura` o `edicion`), listar y dejar de compartir. Solo el dueño. |
+| `GET` | `/api/expedientes/mis-tareas` | Tareas pendientes asignadas a la cuenta, en expedientes propios o compartidos. |
+| `GET/POST/PUT` | `/api/google/estado`, `/autorizar`, `/desconectar`, `/preferencias` | Estado de la integración, inicio del flujo OAuth, desconexión y qué sincronizar. |
+| `GET` | `/api/google/callback` | Vuelta de OAuth (pública: se autentica con el `state` firmado, no con la cookie). |
+| `GET/PUT` | `/api/google/configuracion` | Credenciales del proyecto de Google Cloud (solo titular; el secreto se guarda cifrado y no se devuelve). |
+| `POST` | `/api/google/enviar`, `/api/google/drive` | Enviar un presupuesto o comprobante por Gmail con el PDF adjunto; subir ese PDF a Drive. |
+| `GET` | `/api/alertas` | Novedades de la cuenta (certificado ARCA, tareas, turnos, presupuestos vencidos, sesiones guardadas y UIF), filtradas según el rol. |
 | `GET/PUT` | `/api/skills`, `/api/skills/:clave` | Configuración de skills. |
 | `GET` | `/api/plantillas`, `/api/plantillas/:clave` | Plantillas. |
 | `GET` | `/api/salud` | Estado del servidor y proveedor de IA activo. |

@@ -7,7 +7,7 @@ export const rutasTurnos = Router();
 rutasTurnos.get("/", async (req, res, next) => {
   try {
     if (!req.query.desde || !req.query.hasta) throw new AppError("DATOS_INVALIDOS", "Debe indicar desde y hasta.", 400);
-    res.json(await listarRango(req.usuario.id, req.query.desde, req.query.hasta));
+    res.json(await listarRango(req.usuario.id, req.query.desde, req.query.hasta, { equipo: req.query.equipo === "1" }));
   } catch (e) {
     next(e);
   }

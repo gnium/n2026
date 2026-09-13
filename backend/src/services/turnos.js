@@ -8,10 +8,17 @@ import { pool } from "../config/db.js";
 import { enviarCorreo } from "./correo.js";
 import { AppError } from "../utils/errores.js";
 import { logger } from "../utils/logger.js";
+import { idsDelEquipo } from "./equipo.js";
+import { sincronizarTurno, borrarEventoDeTurno } from "./google.js";
+
+/** Sincroniza con Google Calendar sin bloquear ni romper la agenda si Google falla. */
+function aGoogle(usuarioId, turno) {
+  sincronizarTurno(usuarioId, turno).catch((e) => logger.warn("No se pudo sincronizar el turno con Google Calendar (se ignora)", { turnoId: turno.id, codigo: e.codigo || e.code }));
+}
 
 const ESTADOS = new Set(["pendiente", "confirmado", "cancelado", "realizado"]);
 
-function filaAVista(r) {
+function filaAVista(r, usuarioId) {
   return {
     id: r.id,
     titulo: r.titulo,
@@ -19,6 +26,10 @@ function filaAVista(r) {
     fechaHora: r.fecha_hora,
     duracionMin: r.duracion_min,
     estado: r.estado,
+    compartido: Boolean(r.compartido),
+    googleEventoId: r.google_evento_id || null,
+    esPropio: usuarioId === undefined ? true : Number(r.usuario_id) === Number(usuarioId),
+    autor: r.autor_nombre || r.autor_email || null,
     recordatorioMinutosAntes: r.recordatorio_minutos_antes,
     recordatorioEnviado: Boolean(r.recordatorio_enviado_en),
     ejecucionId: r.ejecucion_id,
@@ -43,21 +54,30 @@ function validarDatos(datos, { completos }) {
   }
 }
 
-export async function listarRango(usuarioId, desde, hasta) {
+/**
+ * Turnos del rango. Con `equipo`, suma los que las demas cuentas del equipo
+ * marcaron como compartidos (la agenda del estudio); esos son de solo lectura.
+ */
+export async function listarRango(usuarioId, desde, hasta, { equipo = false } = {}) {
   validarFecha(desde);
   validarFecha(hasta);
+  const ids = equipo ? await idsDelEquipo(usuarioId) : [Number(usuarioId)];
   const [rows] = await pool.query(
-    "SELECT * FROM turnos WHERE usuario_id = ? AND fecha_hora >= ? AND fecha_hora < ? ORDER BY fecha_hora",
-    [usuarioId, new Date(desde), new Date(hasta)],
+    `SELECT t.*, u.nombre AS autor_nombre, u.email AS autor_email
+       FROM turnos t JOIN usuarios u ON u.id = t.usuario_id
+      WHERE (t.usuario_id = ? OR (t.compartido = 1 AND t.usuario_id IN (?)))
+        AND t.fecha_hora >= ? AND t.fecha_hora < ?
+      ORDER BY t.fecha_hora`,
+    [usuarioId, ids, new Date(desde), new Date(hasta)],
   );
-  return rows.map(filaAVista);
+  return rows.map((r) => filaAVista(r, usuarioId));
 }
 
 export async function crear(usuarioId, datos) {
   validarDatos(datos, { completos: true });
   const [r] = await pool.query(
-    `INSERT INTO turnos (usuario_id, titulo, notas, fecha_hora, duracion_min, estado, recordatorio_minutos_antes, ejecucion_id)
-     VALUES (:usuarioId, :titulo, :notas, :fechaHora, :duracionMin, :estado, :recordatorioMinutosAntes, :ejecucionId)`,
+    `INSERT INTO turnos (usuario_id, titulo, notas, fecha_hora, duracion_min, estado, compartido, recordatorio_minutos_antes, ejecucion_id)
+     VALUES (:usuarioId, :titulo, :notas, :fechaHora, :duracionMin, :estado, :compartido, :recordatorioMinutosAntes, :ejecucionId)`,
     {
       usuarioId,
       titulo: datos.titulo.trim(),
@@ -65,15 +85,18 @@ export async function crear(usuarioId, datos) {
       fechaHora: new Date(datos.fechaHora),
       duracionMin: datos.duracionMin ?? 30,
       estado: ESTADOS.has(datos.estado) ? datos.estado : "pendiente",
+      compartido: datos.compartido ? 1 : 0,
       recordatorioMinutosAntes: datos.recordatorioMinutosAntes ?? 1440,
       ejecucionId: datos.ejecucionId ?? null,
     },
   );
   const [[fila]] = await pool.query("SELECT * FROM turnos WHERE id = ?", [r.insertId]);
-  return filaAVista(fila);
+  const vista = filaAVista(fila, usuarioId);
+  aGoogle(usuarioId, vista);
+  return vista;
 }
 
-const CAMPOS_EDITABLES = ["titulo", "notas", "fechaHora", "duracionMin", "recordatorioMinutosAntes"];
+const CAMPOS_EDITABLES = ["titulo", "notas", "fechaHora", "duracionMin", "compartido", "recordatorioMinutosAntes"];
 
 export async function actualizar(usuarioId, id, datos) {
   validarDatos(datos, { completos: false });
@@ -95,6 +118,10 @@ export async function actualizar(usuarioId, id, datos) {
     sets.push("duracion_min = :duracionMin");
     params.duracionMin = datos.duracionMin;
   }
+  if (datos.compartido !== undefined) {
+    sets.push("compartido = :compartido");
+    params.compartido = datos.compartido ? 1 : 0;
+  }
   if (datos.recordatorioMinutosAntes !== undefined) {
     sets.push("recordatorio_minutos_antes = :recordatorioMinutosAntes, recordatorio_enviado_en = NULL");
     params.recordatorioMinutosAntes = datos.recordatorioMinutosAntes;
@@ -103,7 +130,9 @@ export async function actualizar(usuarioId, id, datos) {
   const [r] = await pool.query(`UPDATE turnos SET ${sets.join(", ")} WHERE id = :id AND usuario_id = :usuarioId`, params);
   if (r.affectedRows === 0) throw new AppError("NO_ENCONTRADO", "El turno no existe.", 404);
   const [[fila]] = await pool.query("SELECT * FROM turnos WHERE id = ?", [id]);
-  return filaAVista(fila);
+  const vista = filaAVista(fila, usuarioId);
+  aGoogle(usuarioId, vista);
+  return vista;
 }
 
 export async function actualizarEstado(usuarioId, id, estado) {
@@ -111,12 +140,18 @@ export async function actualizarEstado(usuarioId, id, estado) {
   const [r] = await pool.query("UPDATE turnos SET estado = :estado WHERE id = :id AND usuario_id = :usuarioId", { id, usuarioId, estado });
   if (r.affectedRows === 0) throw new AppError("NO_ENCONTRADO", "El turno no existe.", 404);
   const [[fila]] = await pool.query("SELECT * FROM turnos WHERE id = ?", [id]);
-  return filaAVista(fila);
+  const vista = filaAVista(fila, usuarioId);
+  aGoogle(usuarioId, vista);
+  return vista;
 }
 
 export async function borrar(usuarioId, id) {
+  const [[previo]] = await pool.query("SELECT google_evento_id FROM turnos WHERE id = ? AND usuario_id = ?", [id, usuarioId]);
   const [r] = await pool.query("DELETE FROM turnos WHERE id = ? AND usuario_id = ?", [id, usuarioId]);
   if (r.affectedRows === 0) throw new AppError("NO_ENCONTRADO", "El turno no existe.", 404);
+  if (previo?.google_evento_id) {
+    borrarEventoDeTurno(usuarioId, previo.google_evento_id).catch((e) => logger.warn("No se pudo borrar el evento en Google Calendar (se ignora)", { codigo: e.codigo || e.code }));
+  }
 }
 
 /**

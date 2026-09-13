@@ -105,7 +105,7 @@ export const api = {
   protocoloUrlExportar: (anio) => `${BASE}/protocolo/${anio}/exportar`,
 
   // --- agenda de turnos ---
-  turnosListar: (desde, hasta) => fetch(`${BASE}/turnos?desde=${encodeURIComponent(desde)}&hasta=${encodeURIComponent(hasta)}`).then(manejar),
+  turnosListar: (desde, hasta, equipo = false) => fetch(`${BASE}/turnos?desde=${encodeURIComponent(desde)}&hasta=${encodeURIComponent(hasta)}${equipo ? "&equipo=1" : ""}`).then(manejar),
   turnoCrear: (datos) => json("POST", "/turnos", datos),
   turnoActualizar: (id, datos) => json("PUT", `/turnos/${id}`, datos),
   turnoEstado: (id, estado) => json("PATCH", `/turnos/${id}/estado`, { estado }),
@@ -199,4 +199,35 @@ export const api = {
   uifEventos: () => fetch(`${BASE}/uif/eventos`).then(manejar),
   uifCrearEvento: (datos) => json("POST", "/uif/eventos", datos),
   uifBorrarEvento: (id) => fetch(`${BASE}/uif/eventos/${id}`, { method: "DELETE" }).then(manejar),
+
+  // --- equipo de la escribanía ---
+  equipo: () => fetch(`${BASE}/equipo`).then(manejar),
+  equipoCompaneros: () => fetch(`${BASE}/equipo/companeros`).then(manejar),
+  equipoMetricas: (dias = 30) => fetch(`${BASE}/equipo/metricas?dias=${dias}`).then(manejar),
+  equipoCrear: (nombre) => json("POST", "/equipo", { nombre }),
+  equipoRenombrar: (nombre) => json("PUT", "/equipo", { nombre }),
+  equipoInvitar: (datos) => json("POST", "/equipo/invitaciones", datos),
+  equipoCancelarInvitacion: (id) => fetch(`${BASE}/equipo/invitaciones/${id}`, { method: "DELETE" }).then(manejar),
+  equipoAceptarInvitacion: (token) => json("POST", "/equipo/invitaciones/aceptar", { token }),
+  equipoCambiarRol: (usuarioId, rol) => json("PATCH", `/equipo/miembros/${usuarioId}/rol`, { rol }),
+  equipoCambiarEstado: (usuarioId, estado) => json("PATCH", `/equipo/miembros/${usuarioId}/estado`, { estado }),
+  equipoQuitar: (usuarioId) => fetch(`${BASE}/equipo/miembros/${usuarioId}`, { method: "DELETE" }).then(manejar),
+  invitacionVer: (token) => fetch(`${BASE}/auth/invitacion/${token}`).then(manejar),
+
+  // --- compartir un expediente con el equipo ---
+  expedienteColaboradores: (id) => fetch(`${BASE}/expedientes/${id}/colaboradores`).then(manejar),
+  expedienteCompartir: (id, datos) => json("POST", `/expedientes/${id}/colaboradores`, datos),
+  expedienteDejarDeCompartir: (id, usuarioId) => fetch(`${BASE}/expedientes/${id}/colaboradores/${usuarioId}`, { method: "DELETE" }).then(manejar),
+  misTareas: () => fetch(`${BASE}/expedientes/mis-tareas`).then(manejar),
+
+  // --- novedades (vencimientos y pendientes) ---
+  novedades: () => fetch(`${BASE}/alertas`).then(manejar),
+
+  // --- integraciones con Google ---
+  googleEstado: () => fetch(`${BASE}/google/estado`).then(manejar),
+  googleAutorizar: () => fetch(`${BASE}/google/autorizar`).then(manejar),
+  googleDesconectar: () => json("POST", "/google/desconectar"),
+  googlePreferencias: (datos) => json("PUT", "/google/preferencias", datos),
+  googleGuardarConfiguracion: (datos) => json("PUT", "/google/configuracion", datos),
+  googleEnviar: (datos) => json("POST", "/google/enviar", datos),
 };

@@ -9,6 +9,7 @@ import { hashPassword, verificarPassword, validarPassword } from "./password.js"
 import { emitirToken } from "./token.js";
 import { NOMBRE_COOKIE, opcionesCookie, requerirAuth } from "../middleware/auth.js";
 import * as repo from "./repositorio.js";
+import { contexto, verInvitacion, aceptarInvitacion } from "../services/equipo.js";
 
 export const rutasAuth = Router();
 
@@ -37,7 +38,11 @@ function fijarSesion(res, usuario) {
   res.cookie(NOMBRE_COOKIE, token, opcionesCookie(env.auth.sesionSegundos));
 }
 
-const publico = (u) => ({ id: u.id, email: u.email, nombre: u.nombre, esAdmin: Boolean(u.es_admin) });
+/** Datos de la cuenta para el frontend, con su rol y equipo (fase 4). */
+async function publico(u) {
+  const ctx = await contexto(u.id);
+  return { id: u.id, email: u.email, nombre: u.nombre, esAdmin: Boolean(u.es_admin), rol: ctx.rol, equipoId: ctx.equipoId, equipo: ctx.equipoNombre, suspendido: ctx.suspendido };
+}
 
 /** POST /api/auth/registro {email, password, nombre?, codigo?} */
 rutasAuth.post("/registro", async (req, res, next) => {
@@ -49,16 +54,20 @@ rutasAuth.post("/registro", async (req, res, next) => {
     if (errPass) throw new AppError("PASSWORD_DEBIL", errPass, 400);
 
     // Politica: el primer usuario se registra libremente; luego hace falta el codigo de registro (o REGISTRO_ABIERTO=1).
+    // Una invitacion del equipo vigente para este mismo correo habilita el registro sin codigo.
     const cantidad = await repo.contarUsuarios();
-    const permitido = cantidad === 0 || env.auth.registroAbierto || (env.auth.codigoRegistro && codigo === env.auth.codigoRegistro);
+    const invitacion = req.body?.invitacion ? await verInvitacion(req.body.invitacion) : null;
+    if (invitacion && invitacion.email.toLowerCase() !== email) throw new AppError("INVITACION_OTRO_CORREO", `La invitacion es para ${invitacion.email}: registrese con ese correo.`, 403);
+    const permitido = cantidad === 0 || Boolean(invitacion) || env.auth.registroAbierto || (env.auth.codigoRegistro && codigo === env.auth.codigoRegistro);
     if (!permitido) throw new AppError("REGISTRO_CERRADO", "El registro requiere el codigo de invitacion configurado por la administradora.", 403);
 
     if (await repo.buscarPorEmail(email)) throw new AppError("EMAIL_EN_USO", "Ya existe una cuenta con ese correo.", 409);
     const id = await repo.crearUsuario({ email, nombre: String(nombre || "").slice(0, 120), passwordHash: await hashPassword(password) });
+    if (invitacion) await aceptarInvitacion(id, req.body.invitacion);
     const usuario = await repo.buscarPorId(id);
     fijarSesion(res, usuario);
     await auditoria.evento("auth.registro", null, { cantidad: id });
-    res.status(201).json({ usuario: publico(usuario) });
+    res.status(201).json({ usuario: await publico(usuario) });
   } catch (e) {
     next(e);
   }
@@ -77,7 +86,7 @@ rutasAuth.post("/login", async (req, res, next) => {
     await repo.registrarAcceso(usuario.id);
     fijarSesion(res, usuario);
     await auditoria.evento("auth.login", null, { cantidad: usuario.id });
-    res.json({ usuario: publico(usuario) });
+    res.json({ usuario: await publico(usuario) });
   } catch (e) {
     next(e);
   }
@@ -94,7 +103,18 @@ rutasAuth.get("/yo", requerirAuth, async (req, res, next) => {
   try {
     const usuario = await repo.buscarPorId(req.usuario.id);
     if (!usuario || !usuario.activo) throw new AppError("NO_AUTENTICADO", "Sesion invalida.", 401);
-    res.json({ usuario: publico(usuario) });
+    res.json({ usuario: await publico(usuario) });
+  } catch (e) {
+    next(e);
+  }
+});
+
+/** GET /api/auth/invitacion/:token -> datos publicos de la invitacion, para mostrarla antes de ingresar. */
+rutasAuth.get("/invitacion/:token", async (req, res, next) => {
+  try {
+    const inv = await verInvitacion(req.params.token);
+    if (!inv) throw new AppError("INVITACION_INVALIDA", "La invitacion no existe, ya fue usada o vencio.", 404);
+    res.json(inv);
   } catch (e) {
     next(e);
   }

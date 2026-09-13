@@ -20,6 +20,9 @@ import Caja from "./components/Caja.jsx";
 import Comprobantes from "./components/Comprobantes.jsx";
 import Uif from "./components/Uif.jsx";
 import ParametrosUif from "./components/ParametrosUif.jsx";
+import Equipo from "./components/Equipo.jsx";
+import Integraciones from "./components/Integraciones.jsx";
+import Novedades from "./components/Novedades.jsx";
 import TemaToggle from "./components/TemaToggle.jsx";
 import Icono from "./components/Iconos.jsx";
 import { api } from "./api.js";
@@ -37,18 +40,20 @@ const NAV = [
       { clave: "principal", texto: "Redactar", icono: "pluma" },
       { clave: "expedientes", texto: "Expedientes", icono: "carpeta" },
       { clave: "clientes", texto: "Clientes", icono: "personas" },
-      { clave: "caja", texto: "Caja", icono: "caja" },
-      { clave: "comprobantes", texto: "Comprobantes", icono: "factura" },
-      { clave: "uif", texto: "UIF", icono: "escudo" },
+      { clave: "caja", texto: "Caja", icono: "caja", rolMinimo: "escribano" },
+      { clave: "comprobantes", texto: "Comprobantes", icono: "factura", rolMinimo: "escribano" },
+      { clave: "uif", texto: "UIF", icono: "escudo", rolMinimo: "escribano" },
       { clave: "agenda", texto: "Agenda", icono: "calendario" },
       { clave: "notas", texto: "Notas", icono: "nota" },
       { clave: "biblioteca", texto: "Biblioteca de modelos", icono: "biblioteca" },
-      { clave: "protocolo", texto: "Protocolo", icono: "protocolo" },
+      { clave: "protocolo", texto: "Protocolo", icono: "protocolo", rolMinimo: "escribano" },
     ],
   },
   {
     titulo: "Cuenta",
     items: [
+      { clave: "equipo", texto: "Equipo", icono: "edificio" },
+      { clave: "integraciones", texto: "Integraciones", icono: "nube" },
       { clave: "consumo", texto: "Consumo de IA", icono: "grafico" },
       { clave: "suscripcion", texto: "Suscripción", icono: "tarjeta" },
     ],
@@ -60,6 +65,9 @@ const NAV = [
   },
 ];
 const TITULO = Object.fromEntries(NAV.flatMap((g) => g.items.map((i) => [i.clave, i.texto])));
+// Roles del equipo: el personal administrativo no ve protocolo, caja, comprobantes ni UIF.
+const RANGO_ROL = { empleado: 1, escribano: 2, titular: 3 };
+const puedeVer = (usuario, rolMinimo) => !rolMinimo || (RANGO_ROL[usuario?.rol] || RANGO_ROL.escribano) >= RANGO_ROL[rolMinimo];
 
 export default function App() {
   const [salud, setSalud] = useState(null);
@@ -78,6 +86,8 @@ export default function App() {
   const [numeroIteracion, setNumeroIteracion] = useState(1);
   const [errorGeneral, setErrorGeneral] = useState(null);
   const [expedienteAbierto, setExpedienteAbierto] = useState(null);
+  const [invitacion, setInvitacion] = useState(() => new URLSearchParams(window.location.search).get("invitacion"));
+  const [avisoGoogle] = useState(() => new URLSearchParams(window.location.search).get("google"));
   const cerrarSSE = useRef(null);
   const sesionIdRef = useRef(null);
 
@@ -89,6 +99,33 @@ export default function App() {
       clearInterval(sondeo.current);
     };
   }, []);
+
+  // Vuelta de Google: el backend redirige a /?google=<resultado>.
+  useEffect(() => {
+    if (!avisoGoogle || !usuario) return;
+    window.history.replaceState({}, "", window.location.pathname);
+    setPantalla("integraciones");
+  }, [avisoGoogle, usuario]);
+
+  // Invitacion a un equipo: el enlace del correo abre la app con ?invitacion=<token>.
+  useEffect(() => {
+    if (!invitacion || !usuario) return;
+    const limpiarUrl = () => window.history.replaceState({}, "", window.location.pathname);
+    api
+      .equipoAceptarInvitacion(invitacion)
+      .then(async () => {
+        limpiarUrl();
+        setInvitacion(null);
+        const r = await api.yo();
+        setUsuario(r.usuario);
+        setPantalla("equipo");
+      })
+      .catch((e) => {
+        limpiarUrl();
+        setInvitacion(null);
+        setErrorGeneral(e.message);
+      });
+  }, [invitacion, usuario]);
 
   const irA = (p) => {
     if (window.location.pathname === "/suscripcion") window.history.replaceState({}, "", "/");
@@ -287,7 +324,7 @@ export default function App() {
   const ocupado = estado === "subiendo" || estado === "en_curso";
 
   if (usuario === undefined) return <div className="cargando">Cargando…</div>;
-  if (!usuario) return <Acceso onIngreso={setUsuario} />;
+  if (!usuario) return <Acceso onIngreso={setUsuario} invitacion={invitacion} />;
 
   const estadoIA = !salud ? "" : !salud.ok ? "error" : salud.modo === "simulado" ? "alerta" : "ok";
   const textoIA = salud === null ? "Conectando…" : !salud.ok ? "Servidor no disponible" : salud.modo === "real" ? "Claude conectado" : salud.modo === "gemini" ? `Gemini · ${salud.modelo}` : salud.modo === "local" ? `IA local · ${salud.modelo}` : "Sin IA configurada";
@@ -298,6 +335,8 @@ export default function App() {
     caja: <Caja />,
     comprobantes: <Comprobantes />,
     uif: <Uif onAbrirExpediente={abrirExpediente} esAdmin={usuario.esAdmin} />,
+    equipo: <Equipo usuario={usuario} />,
+    integraciones: <Integraciones usuario={usuario} aviso={avisoGoogle} />,
     agenda: <Agenda />,
     notas: <Notas />,
     biblioteca: <BibliotecaModelos />,
@@ -317,7 +356,10 @@ export default function App() {
           </span>
         </a>
         <nav aria-label="Secciones">
-          {NAV.filter((g) => !g.soloAdmin || usuario.esAdmin).map((g) => (
+          {NAV.filter((g) => !g.soloAdmin || usuario.esAdmin)
+            .map((g) => ({ ...g, items: g.items.filter((i) => puedeVer(usuario, i.rolMinimo)) }))
+            .filter((g) => g.items.length)
+            .map((g) => (
             <div className="nav-grupo" key={g.titulo}>
               <div className="nav-titulo">{g.titulo}</div>
               {g.items.map((i) => (
@@ -373,6 +415,7 @@ export default function App() {
           ) : (
             <div className="principal">
               <section className="columna izquierda" aria-label="Conversación">
+                {estado === "inicio" && <Novedades onIr={irA} onAbrirExpediente={abrirExpediente} />}
                 <ChatLog mensajes={mensajes} />
                 {estado === "inicio" || estado === "fallida" ? (
                   <>

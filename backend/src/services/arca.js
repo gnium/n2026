@@ -105,6 +105,15 @@ export function parsearRespuestaWsaa(xml) {
   return { token, sign, expiration: expiration ? new Date(expiration) : new Date(Date.now() + 11 * 3600 * 1000) };
 }
 
+/** Fecha de vencimiento del certificado, o null si no se puede leer. No lanza: sirve para avisar antes de que venza. */
+export function vencimientoCertificado(certPem) {
+  try {
+    return forge.pki.certificateFromPem(certPem).validity?.notAfter || null;
+  } catch {
+    return null;
+  }
+}
+
 /** Huella SHA-256 del certificado (DER) para indexar el ticket: cada cuenta/certificado tiene su propio TA. */
 export function huellaCertificado(certPem) {
   const cert = forge.pki.certificateFromPem(certPem);

@@ -47,6 +47,7 @@ function borradorVacio(fecha = new Date()) {
     duracionMin: 30,
     recordatorioMinutosAntes: 1440,
     estado: "pendiente",
+    compartido: false,
   };
 }
 
@@ -81,11 +82,13 @@ export default function Agenda() {
     return { desde: inicioGrilla, hasta: sumarDias(inicioGrilla, 42), diasGrilla: dias };
   }, [vista, fechaRef]);
 
+  const [verEquipo, setVerEquipo] = useState(false);
+
   const cargar = async () => {
     setError(null);
     setAviso(null);
     try {
-      setTurnos(await api.turnosListar(toISODate(desde), toISODate(hasta)));
+      setTurnos(await api.turnosListar(toISODate(desde), toISODate(hasta), verEquipo));
     } catch (e) {
       setError(e.message);
     }
@@ -94,7 +97,7 @@ export default function Agenda() {
   useEffect(() => {
     cargar();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [vista, fechaRef]);
+  }, [vista, fechaRef, verEquipo]);
 
   const turnosDelDia = (d) => (turnos || []).filter((t) => toISODate(new Date(t.fechaHora)) === toISODate(d)).sort((a, b) => new Date(a.fechaHora) - new Date(b.fechaHora));
 
@@ -107,6 +110,10 @@ export default function Agenda() {
   const abrirEdicion = (t) => {
     setError(null);
     setAviso(null);
+    if (t.esPropio === false) {
+      setAviso(`Este turno lo agendó ${t.autor || "otra cuenta del equipo"}: solo esa cuenta puede editarlo.`);
+      return;
+    }
     const f = new Date(t.fechaHora);
     setFormulario({
       id: t.id,
@@ -117,6 +124,7 @@ export default function Agenda() {
       duracionMin: t.duracionMin,
       recordatorioMinutosAntes: t.recordatorioMinutosAntes,
       estado: t.estado,
+      compartido: t.compartido,
     });
   };
 
@@ -131,6 +139,7 @@ export default function Agenda() {
         duracionMin: Number(formulario.duracionMin),
         recordatorioMinutosAntes: Number(formulario.recordatorioMinutosAntes),
         estado: formulario.estado,
+        compartido: Boolean(formulario.compartido),
       };
       if (formulario.id) await api.turnoActualizar(formulario.id, datos);
       else await api.turnoCrear(datos);
@@ -188,7 +197,7 @@ export default function Agenda() {
         El título y las notas de cada turno se guardan en texto plano en la base de datos (no cifrados como el índice de protocolo). Evite anotar datos innecesarios; el nombre del cliente alcanza para identificar el turno.
       </p>
       {error && !formulario && <p className="alerta error" role="alert">{error}</p>}
-      {aviso && <p className="alerta ok" role="status">{aviso}</p>}
+      <p className={`alerta ok ${aviso ? "" : "sr-only"}`} role="status">{aviso}</p>
 
       <div className="acciones agenda-toolbar">
         <div className="acciones">
@@ -201,6 +210,10 @@ export default function Agenda() {
           <div className="segmentado" role="group" aria-label="Vista">
             <button type="button" className={vista === "mes" ? "activo" : ""} aria-pressed={vista === "mes"} onClick={() => setVista("mes")}>Mes</button>
             <button type="button" className={vista === "semana" ? "activo" : ""} aria-pressed={vista === "semana"} onClick={() => setVista("semana")}>Semana</button>
+          </div>
+          <div className="segmentado" role="group" aria-label="Turnos que se muestran">
+            <button type="button" className={verEquipo ? "" : "activo"} aria-pressed={!verEquipo} onClick={() => setVerEquipo(false)}>Míos</button>
+            <button type="button" className={verEquipo ? "activo" : ""} aria-pressed={verEquipo} onClick={() => setVerEquipo(true)}>Equipo</button>
           </div>
           <button type="button" className="boton primario" onClick={() => abrirNuevo(diaSeleccionado || new Date())}><Icono nombre="mas" tamano={16} /> Nuevo turno</button>
         </div>
@@ -223,14 +236,14 @@ export default function Agenda() {
                 type="button"
                 key={toISODate(d)}
                 className={`agenda-celda ${delMes ? "" : "fuera-de-mes"} ${esHoy ? "es-hoy" : ""} ${seleccionada ? "seleccionada" : ""}`}
-                aria-label={`${d.toLocaleDateString("es-AR", { weekday: "long", day: "numeric", month: "long" })}${esHoy ? ", hoy" : ""}, ${tDia.length} turno${tDia.length === 1 ? "" : "s"}`}
+                aria-label={`${d.toLocaleDateString("es-AR", { weekday: "long", day: "numeric", month: "long" })}${esHoy ? ", hoy" : ""}, ${tDia.length} turno${tDia.length === 1 ? "" : "s"}${tDia.length ? `: ${tDia.map((t) => `${hora(new Date(t.fechaHora))} ${t.titulo}${t.esPropio === false ? `, agendado por ${t.autor}` : ""}`).join("; ")}` : ""}`}
                 aria-pressed={seleccionada}
                 onClick={() => setDiaSeleccionado(d)}
               >
                 <span className="agenda-celda-numero">{d.getDate()}</span>
                 <span className="agenda-celda-chips">
                   {tDia.slice(0, 3).map((t) => (
-                    <span key={t.id} className={`agenda-chip estado-${t.estado}`}>{hora(new Date(t.fechaHora))} {t.titulo}</span>
+                    <span key={t.id} className={`agenda-chip estado-${t.estado} ${t.esPropio === false ? "ajeno" : ""}`} title={t.esPropio === false ? `${t.titulo} · ${t.autor}` : t.titulo}>{hora(new Date(t.fechaHora))} {t.titulo}{t.esPropio === false && <span className="sr-only"> · agendado por {t.autor}</span>}</span>
                   ))}
                   {tDia.length > 3 && <span className="agenda-chip-mas">+{tDia.length - 3} más</span>}
                 </span>
@@ -273,11 +286,11 @@ export default function Agenda() {
                   <button
                     type="button"
                     key={t.id}
-                    className={`agenda-turno estado-${t.estado}`}
+                    className={`agenda-turno estado-${t.estado} ${t.esPropio === false ? "ajeno" : ""}`}
                     style={{ gridColumn: col + 2, gridRow: `${filaInicio + 2} / span ${span}` }}
                     onClick={() => abrirEdicion(t)}
                   >
-                    <span className="agenda-turno-hora">{hora(inicio)}</span> {t.titulo}
+                    <span className="agenda-turno-hora">{hora(inicio)}</span> {t.titulo}{t.esPropio === false && <span className="agenda-turno-autor"> · {t.autor}</span>}
                   </button>
                 );
               }),
@@ -298,8 +311,8 @@ export default function Agenda() {
             <ul className="agenda-dia-lista">
               {turnosDelDia(diaSeleccionado).map((t) => (
                 <li key={t.id} className={`estado-${t.estado}`}>
-                  <button type="button" className="enlace" onClick={() => abrirEdicion(t)}>{hora(new Date(t.fechaHora))} · {t.titulo}</button>
-                  <select value={t.estado} onChange={(e) => cambiarEstado(t.id, e.target.value)}>
+                  <button type="button" className="enlace" onClick={() => abrirEdicion(t)}>{hora(new Date(t.fechaHora))} · {t.titulo}{t.esPropio === false && ` · ${t.autor}`}</button>
+                  <select value={t.estado} disabled={t.esPropio === false} onChange={(e) => cambiarEstado(t.id, e.target.value)}>
                     {ESTADOS.map((es) => (
                       <option key={es} value={es}>{es}</option>
                     ))}
@@ -356,6 +369,10 @@ export default function Agenda() {
           <label className="campo">
             <span className="campo-titulo">Notas (opcional)</span>
             <textarea rows={2} value={formulario.notas} onChange={(e) => setFormulario({ ...formulario, notas: e.target.value })} maxLength={1000} />
+          </label>
+          <label className="chequeo">
+            <input type="checkbox" checked={Boolean(formulario.compartido)} onChange={(e) => setFormulario({ ...formulario, compartido: e.target.checked })} />
+            Mostrar este turno en la agenda del equipo
           </label>
           <div className="acciones">
             <button type="submit" className="boton primario">Guardar</button>

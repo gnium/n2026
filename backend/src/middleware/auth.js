@@ -2,6 +2,7 @@ import { verificarToken } from "../auth/token.js";
 import { AppError } from "../utils/errores.js";
 import { env } from "../config/env.js";
 import { buscarPorId } from "../auth/repositorio.js";
+import { contexto, alcanza } from "../services/equipo.js";
 
 export const NOMBRE_COOKIE = "notarius_sesion";
 
@@ -47,4 +48,29 @@ export async function requerirAdmin(req, _res, next) {
   } catch (e) {
     next(e);
   }
+}
+
+const MOTIVO = {
+  escribano: "Esta seccion esta reservada a la escribana o el escribano: el protocolo, la caja, los comprobantes y los legajos UIF no son visibles para las cuentas con rol empleado.",
+  titular: "Esta accion la hace la titular del equipo.",
+};
+
+/**
+ * Exige un rol minimo dentro del equipo (empleado < escribano < titular).
+ * Se consulta en cada pedido, como requerirAdmin, porque la titular puede
+ * cambiar el rol despues de emitida la cookie. Deja req.contexto con el rol
+ * y el equipo. Usar siempre DESPUES de requerirAuth.
+ */
+export function requerirRol(minimo) {
+  return async (req, _res, next) => {
+    try {
+      const ctx = await contexto(req.usuario.id); // lanza NO_AUTENTICADO si la cuenta esta desactivada
+      req.contexto = ctx;
+      if (ctx.suspendido) return next(new AppError("CUENTA_SUSPENDIDA", "Su cuenta esta suspendida en el equipo. Hable con la titular.", 403));
+      if (!alcanza(ctx.rol, minimo)) return next(new AppError("PROHIBIDO", MOTIVO[minimo] || "No tiene permiso para esta accion.", 403));
+      next();
+    } catch (e) {
+      next(e);
+    }
+  };
 }

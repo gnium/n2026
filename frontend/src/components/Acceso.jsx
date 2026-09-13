@@ -6,10 +6,11 @@ import Icono from "./Iconos.jsx";
  * Pantallas de acceso: ingresar, crear cuenta, olvide mi contrasena y
  * restablecer (cuando la URL trae ?token=...).
  */
-export default function Acceso({ onIngreso }) {
+export default function Acceso({ onIngreso, invitacion = null }) {
   const tokenUrl = new URLSearchParams(window.location.search).get("token");
   const [vista, setVista] = useState(tokenUrl ? "restablecer" : "login");
   const [form, setForm] = useState({ email: "", password: "", password2: "", nombre: "", codigo: "" });
+  const [inv, setInv] = useState(null);
   const [error, setError] = useState(null);
   const [aviso, setAviso] = useState(null);
   const [cargando, setCargando] = useState(false);
@@ -18,6 +19,18 @@ export default function Acceso({ onIngreso }) {
     setError(null);
     setAviso(null);
   }, [vista]);
+
+  // Con una invitacion vigente se prellena el correo: la acepta la app apenas ingresa.
+  useEffect(() => {
+    if (!invitacion) return;
+    api
+      .invitacionVer(invitacion)
+      .then((i) => {
+        setInv(i);
+        setForm((f) => ({ ...f, email: i.email }));
+      })
+      .catch((e) => setError(e.message));
+  }, [invitacion]);
 
   const campo = (k) => ({ value: form[k], onChange: (e) => setForm({ ...form, [k]: e.target.value }) });
 
@@ -32,7 +45,7 @@ export default function Acceso({ onIngreso }) {
         onIngreso(r.usuario);
       } else if (vista === "registro") {
         if (form.password !== form.password2) throw new Error("Las contraseñas no coinciden.");
-        const r = await api.registro({ email: form.email, password: form.password, nombre: form.nombre, codigo: form.codigo });
+        const r = await api.registro({ email: form.email, password: form.password, nombre: form.nombre, codigo: form.codigo, invitacion: invitacion || undefined });
         onIngreso(r.usuario);
       } else if (vista === "recuperar") {
         const r = await api.recuperar(form.email);
@@ -61,6 +74,12 @@ export default function Acceso({ onIngreso }) {
         </div>
         <p className="subtitulo">IA para escribanías: la escritura lista para revisar, los datos en tu escribanía.</p>
         <h2>{titulo}</h2>
+
+        {inv && (
+          <p className="alerta ok" role="status">
+            Lo invitaron a <b>{inv.equipo}</b> como <b>{inv.rol === "escribano" ? "Escribano/a" : "Empleado/a"}</b>. Ingrese con <b>{inv.email}</b> (o cree la cuenta con ese correo) y la invitación se acepta sola.
+          </p>
+        )}
 
         <form onSubmit={enviar} className="acceso-form">
           {vista !== "restablecer" && (
@@ -100,11 +119,7 @@ export default function Acceso({ onIngreso }) {
               {error}
             </p>
           )}
-          {aviso && (
-            <p className="alerta ok" role="status">
-              {aviso}
-            </p>
-          )}
+          <p className={`alerta ok ${aviso ? "" : "sr-only"}`} role="status">{aviso}</p>
 
           <button type="submit" className="boton primario" disabled={cargando}>
             {cargando ? "Un momento…" : titulo}

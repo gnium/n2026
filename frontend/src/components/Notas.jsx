@@ -47,7 +47,7 @@ export default function Notas() {
   return (
     <div className="notas">
       <h2>Notas</h2>
-      <p className="nota">Se guardan en texto plano en la base de datos. Una nota compartida la ven todas las cuentas de esta instalación; una nota propia solo la ve quien la escribió.</p>
+      <p className="nota">Se guardan en texto plano en la base de datos. Una nota compartida la ven los integrantes de su equipo; una nota propia solo la ve quien la escribió.</p>
       {error && <p className="alerta error" role="alert">{error}</p>}
 
       <form className="nota-composer" onSubmit={guardar}>
@@ -55,7 +55,7 @@ export default function Notas() {
         <div className="acciones">
           <label className="chequeo">
             <input type="checkbox" checked={compartida} onChange={(e) => setCompartida(e.target.checked)} />
-            Compartir con el resto de la escribanía
+            Compartir con el equipo
           </label>
           <button type="submit" className="boton primario">Guardar</button>
         </div>
