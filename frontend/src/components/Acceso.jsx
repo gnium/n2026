@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { api } from "../api.js";
-import Icono from "./Iconos.jsx";
 
 /**
  * Pantallas de acceso: ingresar, crear cuenta, olvide mi contrasena y
@@ -69,7 +68,7 @@ export default function Acceso({ onIngreso, invitacion = null }) {
     <div className="acceso">
       <div className="acceso-caja">
         <div className="sidebar-marca">
-          <span className="marca-sello" aria-hidden="true"><Icono nombre="sello" tamano={20} /></span>
+          <img className="marca-sello" src="/favicon.svg" width="34" height="34" alt="" />
           <strong>Doy Fe</strong>
         </div>
         <p className="subtitulo">IA para escribanías: la escritura lista para revisar, los datos en tu escribanía.</p>
@@ -143,6 +142,9 @@ export default function Acceso({ onIngreso, invitacion = null }) {
             </button>
           )}
         </nav>
+        <p className="acceso-legal">
+          <a href="/inicio.html">Qué es Doy Fe</a> · <a href="/privacidad.html">Privacidad</a> · <a href="/condiciones.html">Condiciones</a>
+        </p>
       </div>
     </div>
   );

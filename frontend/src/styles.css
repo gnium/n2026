@@ -415,6 +415,8 @@ table select { min-height: 32px; padding: 4px 8px; width: auto; }
 .acceso-form label { display: flex; flex-direction: column; gap: var(--s1); font-weight: 500; font-size: var(--t-sm); }
 .acceso-form label small { font-weight: 400; color: var(--ink-3); }
 .acceso-enlaces { display: flex; gap: var(--s3); flex-wrap: wrap; margin-top: var(--s2); }
+.acceso-legal { margin-top: var(--s4); padding-top: var(--s3); border-top: 1px solid var(--border); font-size: var(--t-xs); color: var(--ink-3); }
+.acceso-legal a { color: var(--ink-2); }
 
 /* ---------- configuración ---------- */
 .configuracion { display: flex; flex-direction: column; gap: var(--s4); }

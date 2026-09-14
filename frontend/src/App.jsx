@@ -354,7 +354,7 @@ export default function App() {
     <div className="shell">
       <aside className="sidebar">
         <a className="sidebar-marca" href="/" onClick={(e) => { e.preventDefault(); irA("principal"); }}>
-          <span className="marca-sello" aria-hidden="true"><Icono nombre="sello" tamano={20} /></span>
+          <img className="marca-sello" src="/favicon.svg" width="34" height="34" alt="" />
           <span>
             <strong>Doy Fe</strong>
             <small>IA para escribanías</small>
