@@ -1,0 +1,20 @@
+# Lo que nunca debe entrar en la imagen. database/ y frontend/public/ SI entran.
+.git
+.gitignore
+**/node_modules
+**/dist
+**/.DS_Store
+
+# Secretos: las credenciales se cargan como variables del servicio, no en la imagen.
+.env
+*.env.bak
+client_secret*.json
+TMP/
+certs/
+
+# Material de trabajo que el backend no lee en tiempo de ejecucion.
+ejemplos/
+docs/
+.claude/
+README.md
+docker-compose.yml

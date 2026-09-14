@@ -10,7 +10,9 @@
   "scripts": {
     "dev": "node --watch src/server.js",
     "start": "node src/server.js",
+    "start:prod": "node scripts/migrar.js && node src/server.js",
     "db:init": "node scripts/initDb.js",
+    "db:migrar": "node scripts/migrar.js",
     "check": "node --check src/server.js && node scripts/smokeTest.js"
   },
   "dependencies": {

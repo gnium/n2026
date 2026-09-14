@@ -37,6 +37,9 @@ import { rutasComprobantes } from "./routes/comprobantes.js";
 import { rutasConfiguracionFiscal } from "./routes/configuracionFiscal.js";
 import { rutasUif } from "./routes/uif.js";
 import { randomBytes } from "node:crypto";
+import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 
 if (!env.auth.secreto) {
   if (process.env.NODE_ENV === "production") {
@@ -46,10 +49,37 @@ if (!env.auth.secreto) {
   env.auth.secreto = randomBytes(32).toString("hex"); // desarrollo: las sesiones caducan al reiniciar
 }
 
+// Despliegue de un solo servicio: si la imagen trae la interfaz ya compilada,
+// la sirve este mismo proceso. Con docker-compose la sirve nginx y esto no se
+// activa. Tener un solo origen evita aflojar la cookie de sesion a SameSite=None.
+const aqui = path.dirname(fileURLToPath(import.meta.url));
+const dirPublico = process.env.FRONTEND_DIST || path.resolve(aqui, "../publico");
+const hayInterfaz = fs.existsSync(path.join(dirPublico, "index.html"));
+
+// Con nginx delante, helmet solo tocaba respuestas JSON y su CSP por omision
+// nunca llegaba a un documento HTML. Sirviendo la interfaz desde aca si llega,
+// y hay que declarar lo que las paginas usan de verdad: tipografias de Google,
+// un script en linea que fija el tema antes de pintar, y estilos en linea.
+const politicaContenido = {
+  useDefaults: true,
+  directives: {
+    "default-src": ["'self'"],
+    "script-src": ["'self'", "'unsafe-inline'"],
+    "style-src": ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+    "font-src": ["'self'", "https://fonts.gstatic.com", "data:"],
+    "img-src": ["'self'", "data:", "blob:"],
+    "connect-src": ["'self'"],
+    "object-src": ["'none'"],
+    "base-uri": ["'self'"],
+    "form-action": ["'self'"],
+    "frame-ancestors": ["'none'"],
+  },
+};
+
 const app = express();
 app.disable("x-powered-by");
 if (env.confiarProxy) app.set("trust proxy", 1);
-app.use(helmet());
+app.use(helmet(hayInterfaz ? { contentSecurityPolicy: politicaContenido } : undefined));
 app.use(cors({ origin: env.frontendOrigin, credentials: true }));
 app.use(express.json({ limit: "1mb" }));
 
@@ -85,6 +115,18 @@ app.use("/api/comprobantes", requerirAuth, requerirRol("escribano"), rutasCompro
 app.use("/api/configuracion-fiscal", requerirAuth, requerirRol("escribano"), rutasConfiguracionFiscal); // datos del emisor y credenciales ARCA (cada cuenta la suya)
 app.use("/api/uif", requerirAuth, requerirRol("escribano"), rutasUif); // legajos, fichas y eventos UIF (parametros: solo admin)
 app.use("/api", requerirAuth, requerirAdmin, rutasConfiguracion);
+
+// La interfaz va despues de todas las rutas de API: asi una ruta /api/ que no
+// existe sigue respondiendo el JSON de error y no el index.html de la SPA.
+if (hayInterfaz) {
+  app.use(express.static(dirPublico, { index: false, maxAge: "1h" }));
+  app.use((req, res, next) => {
+    if (req.method !== "GET" && req.method !== "HEAD") return next();
+    if (req.path.startsWith("/api/")) return next();
+    res.sendFile(path.join(dirPublico, "index.html"));
+  });
+}
+
 app.use((_req, res) => res.status(404).json({ error: { codigo: "NO_ENCONTRADO", mensaje: "Ruta inexistente" } }));
 app.use(manejadorErrores);
 

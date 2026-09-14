@@ -439,6 +439,8 @@ Si un modelo no tiene precio cargado, el costo de esa operación se muestra como
 
 ## 9. Despliegue en internet: Vercel + backend persistente
 
+**Atajo:** si lo único que querés es la app andando en internet, saltá a **9.4**. Es un solo servicio en Railway, sin Vercel y sin Mac mini, con las migraciones aplicándose solas en cada despliegue. Lo que sigue explica las otras dos formas y por qué existen.
+
 ### 9.1 Por qué el backend no va a Vercel
 
 Vercel ejecuta el código en funciones serverless: cada pedido puede caer en una instancia distinta, la memoria no se conserva entre pedidos y hay un límite de duración por función. El backend de Doy Fe depende justamente de lo contrario: los datos reales de los clientes viven **solo en memoria** durante la sesión, el pipeline tarda varios minutos y el progreso viaja por una conexión abierta. Llevarlo a Vercel obligaría a guardar el mapa de datos reales en un almacén externo, lo que rompe la regla de privacidad.
@@ -489,10 +491,48 @@ SMTP_HOST=... SMTP_USER=... SMTP_PASS=... SMTP_FROM=...   # para el correo de re
 4. Exponer el backend con HTTPS sin abrir puertos del router: **Cloudflare Tunnel** (gratis). Instalar `cloudflared`, `cloudflared tunnel login`, crear un túnel que apunte a `http://localhost:3001` y asignarle un subdominio (`api.tu-dominio.com`). Esa es la URL que va en `vercel.json`. Alternativa sin dominio propio: `cloudflared tunnel --url http://localhost:3001` da una URL temporal `*.trycloudflare.com`, útil para probar.
 5. En `FRONTEND_ORIGIN` del backend poner la URL de Vercel (en `docker-compose.yml` se arma a partir de `FRONTEND_PORT_HOST`; para producción definí `FRONTEND_ORIGIN` explícitamente en `.env` y agregalo al `environment` del servicio, o dejá el proxy de Vercel, que hace que el origen visto por el backend sea el mismo).
 
-### 9.4 Backend en Railway / Render (alternativa sin Mac mini)
+### 9.4 Railway: todo en un solo servicio (la opción más corta)
 
-- Railway: New Project → Deploy from GitHub → Root Directory `backend` (usa el `Dockerfile`). Agregar el plugin **MySQL** y ejecutar `database/01_schema.sql`, `02_seed.sql` y `03_auth.sql` una vez (Railway → MySQL → Data / o `npm run db:init` con las variables `DB_*` apuntando a la instancia). Variables: las mismas de 8.3 más `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`, `TRUST_PROXY=1`, `PORT=3001`.
-- La URL pública que te da Railway es la que va en `vercel.json`.
+Esta alternativa reemplaza a las dos anteriores: **no hace falta Vercel ni la Mac mini**. El [Dockerfile](Dockerfile) de la raíz compila la interfaz y la mete en la misma imagen que el backend, que la sirve él mismo. Queda un único dominio, así que la cookie de sesión sigue siendo de mismo origen y no hay que aflojarla a `SameSite=None` ni configurar CORS.
+
+**1. Crear el proyecto.** En railway.app → **New Project** → **Deploy from GitHub repo** → elegir el repositorio. Dejar el *Root Directory* vacío: la imagen se construye desde la raíz, porque necesita `frontend/`, `backend/` y `database/` juntos. Railway detecta el `Dockerfile` y el [railway.json](railway.json), que ya trae el chequeo de salud apuntando a `/api/salud`.
+
+**2. Agregar la base.** En el mismo proyecto: **+ New** → **Database** → **Add MySQL**.
+
+**3. Cargar las variables** en el servicio de la app (pestaña *Variables*). Las cuatro de la base conviene escribirlas como referencias, así siguen funcionando si Railway rota la contraseña:
+
+| Variable | Valor |
+|---|---|
+| `DB_HOST` | `${{MySQL.MYSQLHOST}}` |
+| `DB_PORT` | `${{MySQL.MYSQLPORT}}` |
+| `DB_USER` | `${{MySQL.MYSQLUSER}}` |
+| `DB_PASSWORD` | `${{MySQL.MYSQLPASSWORD}}` |
+| `JWT_SECRET` | el resultado de `openssl rand -hex 32` |
+| `APP_URL` | la URL pública del servicio, sin barra final |
+| `FRONTEND_ORIGIN` | la misma URL |
+| `COOKIE_SECURE` | `1` |
+| `TRUST_PROXY` | `1` |
+| `CODIGO_REGISTRO` | un código propio, para que no se registre cualquiera |
+| `ANTHROPIC_API_KEY` | opcional: sin clave arranca en modo simulado y se carga después desde Configuración |
+
+`PORT` lo inyecta Railway solo, no hay que definirlo. `DB_NAME` tampoco: la base es siempre `notarius`, porque los archivos de `database/` la crean y la seleccionan ellos mismos, aunque el complemento de Railway traiga una base `railway` de fábrica. Y `MYSQLDATABASE` se ignora a propósito por el mismo motivo.
+
+**4. Generar el dominio.** *Settings* → *Networking* → **Generate Domain**. Esa URL es la que va en `APP_URL` y `FRONTEND_ORIGIN`; al cambiarlas, Railway redespliega.
+
+**5. Las migraciones se aplican solas.** El contenedor ejecuta `node scripts/migrar.js` antes de escuchar. Ese script lleva registro en la tabla `migraciones` y aplica cada archivo de `database/` **una sola vez**, lo que importa porque los seeds insertan sin `IGNORE` y fallarían al repetirse. Si la migración falla, el contenedor no arranca y el error queda en el log del despliegue, en vez de aparecer después como un error suelto. Sobre una base que ya tenía tablas pero no el registro, adopta los archivos como aplicados sin ejecutarlos, así que es seguro correrlo contra una instalación vieja.
+
+Para agregar una migración más adelante alcanza con sumar `database/17_*.sql` y desplegar: se aplica en el arranque siguiente.
+
+**6. Primera cuenta.** Entrar a la URL y crear la cuenta: la primera queda como administradora y como operadora de la plataforma. Después conviene poner `REGISTRO_ABIERTO=0` y repartir el `CODIGO_REGISTRO`.
+
+**7. Google.** En Google Cloud, agregar `https://tu-dominio/api/google/callback` a los URI de redireccionamiento autorizados del cliente OAuth. No hace falta tocar los orígenes de JavaScript.
+
+Dos advertencias:
+
+- **`JWT_SECRET` no se puede cambiar después.** De él se derivan las llaves de cifrado de la clave de IA, las credenciales de ARCA y los tokens de Google. Si cambia, todo eso queda ilegible y hay que volver a cargarlo.
+- **El disco del contenedor es efímero.** Hoy no molesta, porque la app no escribe archivos: los PDF se generan en memoria y los datos reales de cada sesión también viven solo ahí.
+
+**Render o Fly** funcionan igual con el mismo `Dockerfile`: lo único que cambia es de dónde salen las variables de la base.
 
 ### 9.5 Cuentas: registro, ingreso, recuperación
 

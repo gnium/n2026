@@ -52,11 +52,15 @@ export const env = {
     fallbacks: process.env.CLAUDE_FALLBACKS !== "0",
     modo: (process.env.CLAUDE_MODE || "auto").toLowerCase(), // auto | real | mock
   },
+  // Las MYSQL* son las que publica el complemento MySQL de Railway; se usan solo
+  // como respaldo si no hay DB_*. El nombre de la base queda afuera a proposito:
+  // los .sql de database/ hacen `USE notarius`, asi que la base es siempre esa,
+  // aunque el proveedor traiga otra creada de fabrica.
   db: {
-    host: process.env.DB_HOST || "127.0.0.1",
-    port: num(process.env.DB_PORT, 3306),
-    user: process.env.DB_USER || "notarius",
-    password: process.env.DB_PASSWORD || "notarius",
+    host: process.env.DB_HOST || process.env.MYSQLHOST || "127.0.0.1",
+    port: num(process.env.DB_PORT || process.env.MYSQLPORT, 3306),
+    user: process.env.DB_USER || process.env.MYSQLUSER || "notarius",
+    password: process.env.DB_PASSWORD || process.env.MYSQLPASSWORD || "notarius",
     database: process.env.DB_NAME || "notarius",
     reintentos: num(process.env.DB_CONNECT_RETRIES, 20),
   },

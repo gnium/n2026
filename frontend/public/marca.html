@@ -1,0 +1,672 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Doy Fe · Marca</title>
+<meta name="description" content="Identidad de marca de Doy Fe: isotipo, versiones, color, tipografía, aplicaciones y voz.">
+<meta name="theme-color" content="#24466b">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap">
+<style>
+:root{
+  --azul:#24466b;--azul-h:#1c3856;--tinta:#1b1f24;--tinta-2:#566069;--papel:#f3f4f1;--blanco:#fff;--borde:#dadcd6;
+  --oro:#9a7b3f;--oro-c:#c9a45c;--senal:#3d6f9e;--verde:#24663f;--arena:#e9e4d8;--noche:#14171a;
+  --serif:"Source Serif 4",Georgia,"Times New Roman",serif;--sans:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;--mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+  --gutter:clamp(16px,4vw,56px);--max:1280px;--ease:cubic-bezier(.2,.7,.2,1);
+  color-scheme:light;
+}
+*,*::before,*::after{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:72px}
+body{margin:0;background:var(--papel);color:var(--tinta);font:16px/1.55 var(--sans);-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;overflow-x:hidden}
+img{max-width:100%;display:block}
+h1,h2,h3{font-family:var(--serif);font-weight:600;line-height:1.15;margin:0;letter-spacing:-.01em}
+p{margin:0}
+a{color:inherit}
+code{font-family:var(--mono);font-size:.9em}
+:focus-visible{outline:2px solid var(--senal);outline-offset:3px;border-radius:4px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.saltar{position:absolute;left:12px;top:-60px;z-index:100;background:var(--blanco);color:var(--azul);padding:10px 14px;border-radius:8px;font-weight:600}
+.saltar:focus{top:12px}
+.eyebrow{font:500 12px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase}
+
+/* barra */
+.barra{position:fixed;inset:0 0 auto;z-index:50;transition:background .35s var(--ease),box-shadow .35s var(--ease),color .35s}
+.barra-in{max-width:var(--max);margin:0 auto;padding:14px var(--gutter);display:flex;align-items:center;gap:32px}
+.barra-logo{display:block;height:30px;flex:none}
+.barra-logo img{height:30px;width:auto}
+.barra .logo-norm{display:none}
+.barra-nav{display:flex;gap:4px;margin-inline:auto}
+.barra-nav a{color:rgb(255 255 255 / .82);text-decoration:none;font-size:14px;font-weight:500;padding:7px 11px;border-radius:999px;transition:background .2s,color .2s}
+.barra-nav a:hover{background:rgb(255 255 255 / .1);color:#fff}
+.barra-ver{font:500 11px/1 var(--mono);letter-spacing:.1em;text-transform:uppercase;color:rgb(255 255 255 / .7)}
+.barra.solida{background:rgb(243 244 241 / .97);box-shadow:0 1px 0 var(--borde)}
+.barra.solida .logo-inv{display:none}.barra.solida .logo-norm{display:block}
+.barra.solida .barra-nav a{color:var(--tinta-2)}
+.barra.solida .barra-nav a:hover,.barra.solida .barra-nav a.activa{background:#e4e7e1;color:var(--tinta)}
+.barra.solida .barra-ver{color:var(--tinta-2)}
+
+/* portada */
+.portada{background:var(--azul);color:#fff;min-height:min(100vh,940px);display:flex;flex-direction:column;position:relative;overflow:hidden}
+.portada::after{content:"";position:absolute;right:-18vw;top:-22vw;width:70vw;height:70vw;border-radius:50%;border:1px solid rgb(255 255 255 / .07);pointer-events:none}
+.portada::before{content:"";position:absolute;right:-8vw;top:-12vw;width:50vw;height:50vw;border-radius:50%;border:1px solid rgb(255 255 255 / .06);pointer-events:none}
+.portada-in{flex:1;max-width:var(--max);width:100%;margin:0 auto;padding:128px var(--gutter) 56px;display:grid;grid-template-columns:1.1fr .9fr;gap:48px;align-items:center;position:relative;z-index:1}
+.portada .eyebrow{color:#c8d3df;margin-bottom:28px}
+.portada h1{font-size:clamp(44px,6.4vw,92px);line-height:1.02;letter-spacing:-.025em;max-width:11ch}
+.portada-bajada{margin-top:28px;font-size:clamp(17px,1.5vw,20px);line-height:1.6;color:#d5dde6;max-width:48ch}
+.portada-arte{display:flex;flex-direction:column;align-items:center;gap:32px}
+.hero-sello{width:min(100%,400px);height:auto;overflow:visible}
+.leyenda{list-style:none;margin:0;padding:0;display:flex;gap:22px;flex-wrap:wrap;justify-content:center;font:500 12px/1 var(--mono);letter-spacing:.06em;color:#c8d3df}
+.leyenda li{display:flex;align-items:center;gap:8px}
+.leyenda span{width:22px;height:22px;border-radius:50%;border:1px solid rgb(255 255 255 / .35);display:grid;place-items:center;font-size:11px;color:#fff}
+.leyenda li:last-child span{border-color:var(--oro-c);color:var(--oro-c)}
+.indice{position:relative;z-index:1;border-top:1px solid rgb(255 255 255 / .14)}
+.indice ol{list-style:none;margin:0 auto;padding:0 var(--gutter);max-width:var(--max);display:grid;grid-template-columns:repeat(8,1fr)}
+.indice a{display:flex;flex-direction:column;gap:6px;padding:20px 12px 22px 0;text-decoration:none;color:#fff;font-size:14px;font-weight:500;border-right:1px solid rgb(255 255 255 / .08);transition:color .2s}
+.indice li:last-child a{border-right:0}
+.indice a span{font:500 11px/1 var(--mono);color:#aebccb;letter-spacing:.08em}
+.indice a:hover{color:var(--oro-c)}
+
+/* animación del sello */
+.js .h-ring{stroke-dasharray:232;stroke-dashoffset:232;animation:dibujar 1.5s var(--ease) .25s forwards}
+.js .h-d{opacity:0;transform:translateY(6px);transform-box:fill-box;animation:aparecer .8s var(--ease) 1.05s forwards}
+.js .h-dot{opacity:0;transform:translateY(-34px);transform-box:fill-box;animation:caer .75s cubic-bezier(.3,1.5,.5,1) 1.7s forwards}
+@keyframes dibujar{to{stroke-dashoffset:0}}
+@keyframes aparecer{to{opacity:1;transform:none}}
+@keyframes caer{0%{opacity:0;transform:translateY(-34px)}40%{opacity:1}100%{opacity:1;transform:none}}
+
+/* secciones */
+.sec{padding-block:clamp(72px,10vw,140px)}
+.sec-blanca{background:var(--blanco)}
+#isotipo{padding-bottom:0}
+.sec-arena{background:var(--arena)}
+.sec-tinta{background:var(--tinta);color:#e7e9ec}
+.sec-in>*,.portada-in>*,.constr-wrap>*,.apps>*,.tipo-par>*,.evolucion .sec-in>*{min-width:0}
+.sec-in{max-width:var(--max);margin:0 auto;padding-inline:var(--gutter)}
+.sec-cab{display:grid;grid-template-columns:120px 1fr;column-gap:24px;align-items:baseline;margin-bottom:clamp(40px,6vw,72px);border-top:1px solid currentColor;border-color:var(--borde);padding-top:20px}
+.sec-tinta .sec-cab{border-color:#343b43}
+.sec-cab .num{font:500 13px/1 var(--mono);letter-spacing:.08em;color:var(--oro);grid-row:span 2;padding-top:14px}
+.sec-tinta .num{color:var(--oro-c)}
+.sec-cab h2{font-size:clamp(40px,5.4vw,76px);letter-spacing:-.025em;line-height:1}
+.sec-cab p{margin-top:16px;font-size:clamp(17px,1.4vw,20px);color:var(--tinta-2);max-width:52ch}
+.sec-tinta .sec-cab p{color:#a3abb4}
+.sec-cuerpo{margin-left:144px}
+.sub{font-size:28px;margin:72px 0 24px}
+
+/* idea */
+.cita{margin:0 0 56px}
+.cita p{font-family:var(--serif);font-weight:400;font-size:clamp(28px,3.4vw,50px);line-height:1.18;letter-spacing:-.015em;max-width:24ch}
+.cita em{font-style:normal;color:var(--azul);font-weight:600}
+.cita footer{margin-top:18px;font:500 12px/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--tinta-2)}
+.promesa{display:grid;grid-template-columns:1fr 1fr;gap:40px;padding:36px 0;border-top:1px solid var(--borde);border-bottom:1px solid var(--borde);margin-bottom:56px}
+.promesa h3{font-family:var(--mono);font-weight:500;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--tinta-2);margin-bottom:12px}
+.promesa p{font-size:18px;line-height:1.6;max-width:46ch}
+.rasgos{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+.rasgo{background:var(--blanco);border:1px solid var(--borde);border-radius:16px;padding:24px;display:flex;flex-direction:column;gap:12px;transition:transform .3s var(--ease),box-shadow .3s var(--ease),border-color .3s}
+.rasgo:hover{transform:translateY(-4px);box-shadow:0 14px 30px rgb(20 24 30 / .08);border-color:#c3c8c0}
+.rasgo-n{font:500 12px/1 var(--mono);color:var(--oro)}
+.rasgo h3{font-size:26px}
+.rasgo p{font-size:15px;color:var(--tinta)}
+.rasgo p b{font-weight:600;color:var(--azul)}
+.rasgo p.no{color:var(--tinta-2)}.rasgo p.no b{color:var(--tinta-2)}
+.posicion{margin-top:56px;font-size:clamp(19px,1.7vw,23px);line-height:1.55;max-width:62ch;padding-left:24px;border-left:3px solid var(--oro)}
+.posicion span{display:block;font:500 12px/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--tinta-2);margin-bottom:12px}
+
+/* isotipo */
+.constr-wrap{display:grid;grid-template-columns:1.15fr .85fr;gap:48px;align-items:center}
+.constr-panel{background:var(--papel);border-radius:20px;padding:clamp(16px,3vw,40px)}
+.constr{width:100%;height:auto;display:block}
+.constr .an{font:500 4.2px var(--mono)}
+.anatomia{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.anatomia li{display:grid;grid-template-columns:44px 1fr;gap:18px;padding:24px 0;border-top:1px solid var(--borde)}
+.anatomia li:last-child{border-bottom:1px solid var(--borde)}
+.an-letra{width:44px;height:44px;border-radius:50%;background:var(--azul);color:#fff;display:grid;place-items:center;font:500 14px/1 var(--mono)}
+.an-letra.oro{background:var(--oro)}
+.anatomia h3{font-size:24px;margin-bottom:6px}
+.anatomia p{color:var(--tinta-2);font-size:16px}
+.evolucion{background:var(--tinta);color:#e7e9ec;margin-top:clamp(72px,10vw,140px);padding-block:clamp(56px,8vw,100px)}
+.evolucion .sec-in{display:grid;grid-template-columns:.8fr 1.2fr;gap:56px;align-items:center}
+.evo-txt .eyebrow{color:var(--oro-c);margin-bottom:18px}
+.evo-txt h3{font-size:clamp(34px,4vw,54px);letter-spacing:-.02em}
+.evo-txt>p{margin-top:18px;color:#b4bcc5;font-size:17px;max-width:44ch}
+.prueba{margin-top:32px;background:#232a31;border:1px solid #343b43;border-radius:16px;padding:20px}
+.prueba label{display:flex;justify-content:space-between;font-size:14px;font-weight:500;color:#e7e9ec}
+.prueba output{font-family:var(--mono);color:var(--oro-c)}
+.prueba input{width:100%;margin:14px 0 6px;accent-color:#7ea6d0}
+.prueba-arte{height:176px;display:grid;place-items:center}
+.prueba-arte svg,.prueba-arte img{transition:width .15s,height .15s}
+#prueba-chica{display:none}
+.prueba.chica #prueba-v2{display:none}.prueba.chica #prueba-chica{display:block}
+.prueba-nota{font-size:13px;color:#a3abb4;text-align:center}
+.escala{display:grid;grid-template-columns:36px repeat(5,auto);gap:0 clamp(12px,2.4vw,32px);align-items:end;justify-content:start;overflow-x:auto;padding-bottom:4px}
+.esc-rot{display:grid;grid-template-rows:1fr 1fr;height:100%;font:500 12px/1 var(--mono);color:#a3abb4;letter-spacing:.08em;padding-bottom:30px}
+.esc-rot span{display:flex;align-items:center}
+.esc-col{display:grid;grid-template-rows:auto auto auto;justify-items:center;gap:16px}
+.esc-cel{height:136px;display:flex;align-items:center}
+.esc-lbl{font:500 12px/1 var(--mono);color:#a3abb4;padding-top:6px;white-space:nowrap}
+
+/* versiones */
+.versiones{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.ver{margin:0;border-radius:18px;overflow:hidden;display:flex;flex-direction:column;min-height:300px;border:1px solid transparent}
+.ver.ancho2{grid-column:span 2}
+.ver-arte{flex:1;display:grid;place-items:center;padding:40px}
+.ver figcaption{display:flex;justify-content:space-between;gap:12px;padding:14px 20px;font-size:13px;border-top:1px solid rgb(0 0 0 / .08)}
+.ver figcaption span{opacity:.78;text-align:right}
+.v-azul{background:var(--azul);color:#fff}.v-azul figcaption{border-color:rgb(255 255 255 / .14)}
+.v-tinta{background:var(--tinta);color:#fff}.v-tinta figcaption{border-color:rgb(255 255 255 / .12)}
+.v-papel{background:var(--blanco);border-color:var(--borde)}
+.v-blanco{background:var(--blanco);border-color:var(--borde)}
+.v-arena{background:var(--arena)}
+.h-lg{height:88px;width:auto}.h-md{height:72px;width:auto}.vert{height:160px;width:auto}
+.mono-demo{color:var(--tinta);display:block}
+.mono-demo svg{display:block}
+.ver:hover .ver-arte>*{transform:scale(1.035)}
+.ver-arte>*{transition:transform .5s var(--ease)}
+.reglas{display:grid;grid-template-columns:1.2fr .8fr;gap:16px;margin-top:16px}
+.resguardo,.minimos{background:var(--blanco);border:1px solid var(--borde);border-radius:18px;padding:28px}
+.resguardo{display:grid;grid-template-columns:auto 1fr;gap:28px;align-items:center}
+.resguardo h3,.minimos h3{font-size:22px;margin-bottom:8px}
+.resguardo p{color:var(--tinta-2)}
+.resguardo b{color:var(--tinta)}
+.resg-arte{background:#e6edf5;border-radius:10px;padding:0;border:1px dashed var(--senal)}
+.resg-caja{padding:15px;background:var(--blanco);margin:15px;outline:1px dashed var(--senal)}
+.resg-caja img{height:60px;width:auto}
+.minimos ul{list-style:none;margin:12px 0 0;padding:0;display:flex;flex-direction:column;gap:14px}
+.minimos li{display:grid;grid-template-columns:110px 1fr;align-items:center;gap:12px;font-size:14px;color:var(--tinta-2)}
+.minimos li b{color:var(--tinta);margin-right:6px;font-family:var(--mono);font-weight:500}
+.min-arte{display:flex;align-items:center;min-height:28px}
+.malos{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.mal{margin:0;background:var(--blanco);border:1px solid var(--borde);border-radius:18px;overflow:hidden}
+.mal-arte{height:190px;display:grid;place-items:center;position:relative}
+.tacha{position:absolute;inset:18px;width:calc(100% - 36px);height:calc(100% - 36px);pointer-events:none}
+.mal figcaption{display:flex;gap:10px;align-items:center;padding:14px 18px;border-top:1px solid var(--borde);font-size:14px}
+.x{width:18px;height:18px;border-radius:50%;background:#a1261f;flex:none;position:relative}
+.x::before,.x::after{content:"";position:absolute;left:8px;top:4px;width:2px;height:10px;background:#fff;transform:rotate(45deg)}
+.x::after{transform:rotate(-45deg)}
+.fuente-mala{display:flex;align-items:center;gap:12px;font:700 34px/1 Arial,Helvetica,sans-serif;color:var(--tinta);letter-spacing:.02em}
+
+/* color */
+.paleta{display:grid;grid-template-columns:repeat(10,1fr);grid-auto-rows:minmax(220px,auto);margin-bottom:56px}
+.sw{padding:22px;display:flex;flex-direction:column;justify-content:space-between;gap:28px;border-right:1px solid rgb(0 0 0 / .05)}
+.sw{grid-column:span 2}.sw.ancho4{grid-column:span 4}.sw.ancho3{grid-column:span 3}
+.sw-borde{box-shadow:inset 0 0 0 1px var(--borde)}
+.sw b{display:block;font-family:var(--serif);font-size:24px;font-weight:600;line-height:1.1}
+.sw>div>span{display:block;margin-top:6px;font-size:13px;opacity:.85}
+.sw dl{margin:0;display:grid;gap:6px;font:400 12px/1.3 var(--mono)}
+.sw dl div{display:flex;justify-content:space-between;gap:10px;border-top:1px solid currentColor;border-color:rgb(127 127 127 / .3);padding-top:6px}
+.sw dt{opacity:.75}.sw dd{margin:0;text-align:right}
+.proporcion{display:flex;height:56px;border-radius:12px;overflow:hidden;border:1px solid var(--borde)}
+.proporcion-lbl{margin:12px 0 48px;font:400 13px/1.4 var(--mono);color:var(--tinta-2)}
+.tabla-wrap{overflow-x:auto;border:1px solid var(--borde);border-radius:16px}
+.contraste{width:100%;border-collapse:collapse;font-size:15px;min-width:560px}
+.contraste caption{text-align:left;padding:18px 20px;color:var(--tinta-2);font-size:14px;border-bottom:1px solid var(--borde)}
+.contraste th{text-align:left;font:500 11px/1 var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--tinta-2);padding:14px 20px;background:var(--papel)}
+.contraste td{padding:12px 20px;border-top:1px solid var(--borde)}
+.contraste code{background:var(--papel);padding:2px 6px;border-radius:5px}
+.par{display:inline-grid;place-items:center;width:44px;height:32px;border-radius:7px;border:1px solid var(--borde);font:600 16px/1 var(--serif)}
+.num-r{font-family:var(--mono);white-space:nowrap}
+.nivel{display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:600;white-space:nowrap}
+.nivel.ok{background:#e3f1e8;color:#1d5434}.nivel.med{background:#fbf0dc;color:#6e4200}.nivel.bad{background:#fbe6e4;color:#8a2019}
+
+/* tipografía */
+.tipo{background:var(--blanco);border:1px solid var(--borde);border-radius:20px;padding:clamp(24px,3.4vw,44px);position:relative;overflow:hidden}
+.tipo-serif{display:grid;grid-template-columns:auto 1fr;gap:clamp(24px,4vw,64px);align-items:center;margin-bottom:16px}
+.tipo-aa{font-family:var(--serif);font-weight:600;font-size:clamp(120px,15vw,220px);line-height:.8;color:var(--azul);letter-spacing:-.04em}
+.tipo h3{font-size:30px}
+.tipo-uso{margin-top:6px;font:400 13px/1.5 var(--mono);color:var(--tinta-2)}
+.tipo-muestra{margin-top:22px;font-family:var(--serif);font-size:clamp(24px,2.6vw,36px);line-height:1.2}
+.tipo-glifos{margin-top:22px;font-family:var(--serif);font-size:18px;color:var(--tinta-2);letter-spacing:.04em;line-height:1.7;word-break:break-all}
+.tipo-par{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.tipo-sans .tipo-aa{font-family:var(--sans);font-weight:600;font-size:96px;margin-bottom:24px}
+.tipo-sans .tipo-muestra{font-family:var(--sans);font-weight:500;font-size:24px}
+.tipo-mono{background:var(--azul);color:#fff;border-color:var(--azul)}
+.tipo-mono .tipo-aa{font-family:var(--mono);font-weight:500;font-size:96px;color:var(--oro-c);margin-bottom:24px}
+.tipo-mono h3{font-family:var(--mono);font-weight:500;font-size:26px}
+.tipo-mono .tipo-uso{color:#c8d3df}
+.escala-t{list-style:none;padding:0;margin:22px 0 0;display:flex;flex-direction:column}
+.escala-t li{padding:8px 0;border-top:1px solid var(--borde);line-height:1.25}
+.datos{margin:24px 0 0;display:flex;flex-direction:column}
+.datos div{display:flex;justify-content:space-between;gap:16px;padding:12px 0;border-top:1px solid rgb(255 255 255 / .16);font-family:var(--mono)}
+.datos dt{color:#c8d3df;font-size:13px}.datos dd{margin:0;font-size:17px}
+
+/* aplicaciones */
+.apps{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.app{margin:0;background:var(--blanco);border-radius:20px;overflow:hidden;display:flex;flex-direction:column}
+.app>div:first-child{flex:1}
+.app figcaption{padding:16px 22px;border-top:1px solid var(--borde);display:flex;flex-direction:column;gap:2px;font-size:14px}
+.app figcaption span{color:var(--tinta-2)}
+.apps-col{display:grid;gap:16px}
+.app-google{grid-row:span 1}
+.mock-google{background:#eef0f3;padding:28px;display:grid;place-items:center}
+.mock-google>*{width:100%;max-width:400px}
+.mg-top{display:flex;align-items:center;gap:10px;background:#fff;border-radius:14px 14px 0 0;padding:14px 18px;font-size:13px;color:#5f6368;border-bottom:1px solid #e3e5e8}
+.mg-acct{width:22px;height:22px;border-radius:50%;background:#c9ced6}
+.mg-body{background:#fff;border-radius:0 0 14px 14px;padding:24px 22px;box-shadow:0 12px 30px rgb(20 24 30 / .08)}
+.mg-logo{width:56px;height:56px;border-radius:50%;margin-bottom:14px}
+.mg-t{font-size:21px;line-height:1.25;color:#202124}
+.mg-mail{display:inline-block;margin:10px 0 18px;font-size:13px;border:1px solid #dadce0;border-radius:999px;padding:3px 10px;color:#3c4043}
+.mg-body ul{list-style:none;margin:0;padding:0;border-top:1px solid #e3e5e8}
+.mg-body li{display:flex;gap:12px;align-items:center;padding:12px 0;border-bottom:1px solid #e3e5e8;font-size:14px;color:#3c4043}
+.mg-body li svg{color:#5f6368;flex:none}
+.mg-legal{margin-top:14px;font-size:12px;color:#5f6368}
+.mg-btns{display:flex;justify-content:flex-end;gap:10px;margin-top:18px;font-size:14px;font-weight:500}
+.mg-btns span{padding:8px 16px;border-radius:999px;color:#1a4f8a}
+.mg-btns .pri{background:#1a4f8a;color:#fff}
+.mock-tab{background:#dfe3e8;padding:18px 18px 0}
+.mt-bar{display:flex;align-items:end;gap:6px}
+.mt-dots{display:flex;gap:6px;padding:0 10px 14px 2px}
+.mt-dots i{width:10px;height:10px;border-radius:50%;background:#b9c0c8}
+.mt-tab{display:flex;align-items:center;gap:8px;background:#fff;border-radius:10px 10px 0 0;padding:9px 12px;font-size:13px;color:var(--tinta);min-width:0;white-space:nowrap;overflow:hidden}
+.mt-tab img{flex:none}
+.mt-x{width:8px;height:8px;margin-left:10px;border-radius:2px;background:#c3c8ce;flex:none}
+.mt-off{background:transparent;color:#5f6368}
+.mt-url{background:#fff;padding:10px 12px 22px}
+.mt-url span{display:block;background:#f0f2f4;border-radius:999px;padding:7px 14px;font-size:13px;color:#3c4043;font-family:var(--mono)}
+.mock-perfil{padding:0 0 20px}
+.mp-portada{background:var(--azul);height:96px;align-items:flex-start!important;padding-top:18px!important;display:flex;align-items:center;justify-content:flex-end;padding:0 22px}
+.mp-portada img{height:34px;width:auto;opacity:.95}
+.mp-body{display:flex;align-items:flex-end;gap:14px;padding:0 22px;margin-top:-38px}
+.mp-body>div{padding-bottom:4px}
+.mp-avatar{width:76px;height:76px;border-radius:50%;border:4px solid #fff}
+.mp-body b{display:block;font-size:17px;margin-top:44px}.mp-body span{font-size:13px;color:var(--tinta-2)}
+.mock-perfil>p{padding:14px 22px 0;font-size:14px;color:var(--tinta)}
+.mock-firma{padding:28px}
+.mf-cuerpo{font-size:15px;color:var(--tinta);padding-bottom:22px;border-bottom:1px dashed var(--borde)}
+.mf-firma{padding-top:20px;display:flex;flex-direction:column;gap:2px;font-size:14px}
+.mf-firma span{color:var(--tinta-2)}.mf-firma u{color:var(--azul);text-underline-offset:3px}
+.mf-firma img{margin-top:14px;height:auto}
+.mock-side{background:var(--blanco);padding:22px;display:flex;flex-direction:column;gap:18px;border-right:1px solid var(--borde)}
+.ms-marca{display:flex;align-items:center;gap:12px}
+.ms-marca b{display:block;font-family:var(--serif);font-size:21px;line-height:1.1}
+.ms-marca span{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--tinta-2)}
+.mock-side ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px}
+.mock-side li{display:flex;align-items:center;gap:12px;padding:9px 12px;border-radius:8px;font-size:14px;font-weight:500;color:var(--tinta-2)}
+.mock-side li.on{background:#e6edf5;color:#1c3856}
+
+/* voz */
+.voz-cab{display:grid;grid-template-columns:1fr 1fr;gap:32px;font:500 12px/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;padding-bottom:16px}
+.voz-cab span:first-child{color:#8fd1a8}.voz-cab span:last-child{color:#f0a39c}
+.voz{list-style:none;margin:0;padding:0}
+.voz li{display:grid;grid-template-columns:1fr 1fr;gap:32px;padding:24px 0;border-top:1px solid #343b43}
+.si{font-family:var(--serif);font-size:clamp(20px,2vw,28px);line-height:1.25;color:#fff}
+.nosi{font-family:var(--serif);font-size:clamp(20px,2vw,28px);line-height:1.25;color:#8e97a0;text-decoration:line-through;text-decoration-color:rgb(240 163 156 / .7);text-decoration-thickness:1.5px}
+.reglas-voz{list-style:none;margin:40px 0 0;padding:0;display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+.reglas-voz li{border:1px solid #343b43;border-radius:14px;padding:18px;font-size:14px;color:#c3cad2}
+
+/* descargas */
+.descargas{list-style:none;margin:0;padding:0;border-top:1px solid var(--borde)}
+.descargas a{display:grid;grid-template-columns:64px 1fr 90px 80px 40px;gap:20px;align-items:center;padding:14px 8px;border-bottom:1px solid var(--borde);text-decoration:none;transition:background .2s,padding .3s var(--ease)}
+.descargas a:hover{background:var(--blanco);padding-left:16px}
+.dl-prev{width:64px;height:48px;border-radius:10px;background:var(--blanco);border:1px solid var(--borde);display:grid;place-items:center;padding:6px}
+.dl-prev img{max-height:34px;width:auto}
+.dl-nom{font:500 15px/1.3 var(--mono)}
+.dl-nom small{display:block;font:400 14px/1.4 var(--sans);color:var(--tinta-2);margin-top:2px}
+.dl-fmt,.dl-kb{font:400 13px/1 var(--mono);color:var(--tinta-2)}
+.dl-ic{width:36px;height:36px;border-radius:50%;border:1px solid var(--borde);display:grid;place-items:center;color:var(--azul);transition:background .2s,color .2s}
+.descargas a:hover .dl-ic{background:var(--azul);color:#fff;border-color:var(--azul)}
+
+/* pie */
+.pie{background:var(--azul);color:#d5dde6}
+.pie-in{max-width:var(--max);margin:0 auto;padding:48px var(--gutter);display:flex;flex-wrap:wrap;gap:24px 40px;align-items:center}
+.pie-logo{height:34px;width:auto}
+.pie p{font-size:14px;flex:1;min-width:240px}
+.pie code{color:#fff}
+.pie nav{display:flex;gap:20px}
+.pie nav a{color:#fff;font-size:14px;text-underline-offset:4px}
+
+/* revelado */
+.js .rv{opacity:0;transform:translateY(22px);transition:opacity .8s var(--ease),transform .8s var(--ease);transition-delay:var(--d,0ms)}
+.js .rv.visto{opacity:1;transform:none}
+.estatico .rv{opacity:1!important;transform:none!important;transition:none!important}
+.estatico .h-ring,.estatico .h-d,.estatico .h-dot{animation:none!important;opacity:1!important;transform:none!important;stroke-dashoffset:0!important}
+
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  .js .rv{opacity:1;transform:none;transition:none}
+  .js .h-ring,.js .h-d,.js .h-dot{animation:none;opacity:1;transform:none;stroke-dashoffset:0}
+  *{transition-duration:0s!important}
+}
+
+/* responsive */
+@media (max-width:1100px){
+  .barra-nav{display:none}
+  .barra-ver{margin-left:auto}
+  .indice ol{grid-template-columns:repeat(4,1fr)}
+  .indice li:nth-child(4) a{border-right:0}
+  .sec-cuerpo{margin-left:0}
+  .rasgos{grid-template-columns:1fr 1fr}
+  .paleta{grid-template-columns:repeat(6,1fr)}
+  .sw.ancho4,.sw.ancho3{grid-column:span 3}.sw{grid-column:span 2}
+  .evolucion .sec-in{grid-template-columns:1fr}
+  .reglas-voz{grid-template-columns:1fr 1fr}
+}
+@media (max-width:860px){
+  .portada-in{grid-template-columns:1fr;padding-top:104px;gap:40px}
+  .portada-arte{order:-1;align-items:flex-start}
+  .hero-sello{width:190px}
+  .leyenda{display:none}
+  .sec-cab{grid-template-columns:1fr}
+  .sec-cab .num{grid-row:auto;padding:0 0 14px}
+  .promesa,.constr-wrap,.reglas,.tipo-par,.apps{grid-template-columns:1fr}
+  .versiones,.malos{grid-template-columns:1fr 1fr}
+  .ver.ancho2{grid-column:span 2}
+  .resguardo{grid-template-columns:1fr}
+  .tipo-serif{grid-template-columns:1fr}
+}
+@media (max-width:560px){
+  .indice ol{grid-template-columns:1fr 1fr}
+  .indice li:nth-child(odd) a{border-right:1px solid rgb(255 255 255 / .08)}
+  .indice li:nth-child(even) a{border-right:0}
+  .indice a{padding:14px 10px 14px 0;border-bottom:1px solid rgb(255 255 255 / .08)}
+  .barra-ver{display:none}
+  .rasgos,.versiones,.malos,.reglas-voz{grid-template-columns:1fr}
+  .ver.ancho2{grid-column:auto}
+  .ver{min-height:220px}
+  .ver figcaption{flex-direction:column;gap:2px}.ver figcaption span{text-align:left}
+  .h-lg{height:60px}.h-md{height:52px}.vert{height:130px}
+  .paleta{grid-template-columns:1fr 1fr}
+  .sw,.sw.ancho4,.sw.ancho3{grid-column:span 1}.sw.ancho4{grid-column:span 2}
+  .sw{min-height:180px}
+  .sw:last-child{grid-column:span 2}
+  .escala{gap:0 10px}
+  .voz li,.voz-cab{grid-template-columns:1fr;gap:8px}
+  .voz-cab span:last-child{display:none}
+  .nosi::before{content:"No: ";text-decoration:none;display:inline-block;font:500 11px/1 var(--mono);letter-spacing:.1em;text-transform:uppercase;color:#f0a39c;margin-right:6px;vertical-align:middle}
+  .descargas a{grid-template-columns:52px 1fr 36px;gap:12px}
+  .dl-prev{width:52px}
+  .dl-fmt,.dl-kb{display:none}
+  .tipo-aa{font-size:110px}
+  .escala .esc-cel{height:124px}
+}
+
+.dl-prev.dl-osc{background:var(--azul);border-color:var(--azul)}
+.minimos li>span:last-child b{display:block;margin:0 0 2px}
+
+</style>
+<script>document.documentElement.classList.add('js');if(/[?&]static\b/.test(location.search))document.documentElement.classList.add('estatico');</script>
+</head>
+<body>
+<a class="saltar" href="#contenido">Saltar al contenido</a>
+
+<header class="barra" id="barra">
+  <div class="barra-in">
+    <a class="barra-logo" href="#portada" aria-label="Doy Fe, ir al inicio"><img src="/logo/doyfe-horizontal-invertido.svg" alt="" class="logo-inv"><img src="/logo/doyfe-horizontal.svg" alt="" class="logo-norm"></a>
+    <nav class="barra-nav" aria-label="Secciones"><a href="#idea">Idea</a><a href="#isotipo">Isotipo</a><a href="#versiones">Versiones</a><a href="#color">Color</a><a href="#tipografia">Tipografía</a><a href="#aplicaciones">Aplicaciones</a><a href="#voz">Voz</a><a href="#descargas">Descargas</a></nav>
+    <span class="barra-ver">Marca · v2 · 2026</span>
+  </div>
+</header>
+
+<main id="contenido">
+
+<section class="portada" id="portada" aria-labelledby="portada-t">
+  <div class="portada-in">
+    <div class="portada-txt">
+      <p class="eyebrow">Identidad de marca · Edición 2026</p>
+      <h1 id="portada-t">Un sello reducido a lo esencial.</h1>
+      <p class="portada-bajada">La letra, el círculo y la firma. Esta guía reúne cómo se ve, cómo suena y cómo se usa Doy Fe: software notarial con inteligencia artificial para escribanías de la República Argentina.</p>
+    </div>
+    <div class="portada-arte">
+      <svg viewBox="0 0 120 120" class="hero-sello" role="img" aria-label="Isotipo de Doy Fe"><path class="h-ring" d="M41.15 98.65A43.00 43.00 0 1 1 78.85 98.65" fill="none" stroke="#fff" stroke-width="8" stroke-linecap="round"/><path class="h-d" fill="#fff" d="M43.23 81V79.8L47.91 79.23Q47.97 77.33 48.03 75.12Q48.1 71.77 48.1 68.1V51.59Q48.1 48.11 48.03 44.82Q47.97 42.61 47.91 40.77L43.23 40.2V39H59.04Q65.17 39 69.6 41.47Q74.03 43.93 76.4 48.58Q78.77 53.23 78.77 59.87Q78.77 66.64 76.21 71.35Q73.65 76.07 69.16 78.53Q64.67 81 58.85 81ZM54.86 40.58Q54.8 42.54 54.74 44.82Q54.67 48.11 54.64 51.62Q54.61 55.13 54.61 58.42V61.2Q54.61 64.49 54.64 68.13Q54.67 71.77 54.74 75.12Q54.8 77.46 54.86 79.42H58.15Q62.58 79.42 65.59 77.02Q68.59 74.61 70.14 70.25Q71.69 65.88 71.69 60Q71.69 50.32 68.27 45.45Q64.86 40.58 58.53 40.58Z"/><circle class="h-dot" cx="60" cy="103" r="7" fill="#c9a45c"/></svg>
+      <ol class="leyenda" aria-hidden="true"><li><span>A</span>Anillo · el sello</li><li><span>B</span>Letra · la D del nombre</li><li><span>C</span>Punto · la firma</li></ol>
+    </div>
+  </div>
+  <nav class="indice" aria-label="Índice"><ol><li><a href="#idea"><span>01</span>Idea</a></li><li><a href="#isotipo"><span>02</span>Isotipo</a></li><li><a href="#versiones"><span>03</span>Versiones</a></li><li><a href="#color"><span>04</span>Color</a></li><li><a href="#tipografia"><span>05</span>Tipografía</a></li><li><a href="#aplicaciones"><span>06</span>Aplicaciones</a></li><li><a href="#voz"><span>07</span>Voz</a></li><li><a href="#descargas"><span>08</span>Descargas</a></li></ol></nav>
+</section>
+
+<section class="sec" id="idea" aria-labelledby="idea-t">
+  <div class="sec-in">
+    <header class="sec-cab rv"><span class="num">01</span><h2 id="idea-t">Idea</h2><p>Por qué existe la marca y cómo se comporta.</p></header>
+    <div class="sec-cuerpo">
+      <blockquote class="cita rv"><p>Que la escribanía trabaje con herramientas actuales <em>sin resignar el secreto profesional.</em></p><footer>Propósito</footer></blockquote>
+      <div class="promesa rv">
+        <div><h3>Promesa</h3><p>Doy Fe prepara, ordena y lleva la cuenta; la escribana o el escribano revisa y firma. Los datos de sus requirentes no salen de su escribanía sin anonimizar.</p></div>
+        <div><h3>El nombre</h3><p>"Doy fe" es la fórmula con la que el escribano da fe pública. La marca no se apropia de ese acto: lo acompaña. Por eso nunca decimos que el sistema "da fe" ni "certifica".</p></div>
+      </div>
+      <div class="rasgos"><article class="rasgo rv" style="--d:0ms"><span class="rasgo-n">1</span><h3>Reservada</h3><p><b>Es.</b> Discreta con los datos; explica qué se guarda y dónde.</p><p class="no"><b>No es.</b> Misteriosa ni alarmista con la seguridad.</p></article><article class="rasgo rv" style="--d:80ms"><span class="rasgo-n">2</span><h3>Precisa</h3><p><b>Es.</b> Vocabulario notarial correcto; cifras y plazos exactos.</p><p class="no"><b>No es.</b> Técnica por lucirse; jerga de software.</p></article><article class="rasgo rv" style="--d:160ms"><span class="rasgo-n">3</span><h3>Colega</h3><p><b>Es.</b> De igual a igual, con respeto por el oficio.</p><p class="no"><b>No es.</b> Condescendiente ni "amigable" forzada.</p></article><article class="rasgo rv" style="--d:240ms"><span class="rasgo-n">4</span><h3>Confiable</h3><p><b>Es.</b> Dice lo que hace y lo que no hace; admite límites.</p><p class="no"><b>No es.</b> Grandilocuente; no promete automatizar el criterio.</p></article></div>
+      <p class="posicion rv"><span>Posicionamiento</span>Para escribanías argentinas que quieren sumar IA sin exponer a sus requirentes, Doy Fe es la plataforma de gestión notarial que anonimiza antes de procesar: la privacidad como punto de partida, no como opción.</p>
+    </div>
+  </div>
+</section>
+
+<section class="sec sec-blanca" id="isotipo" aria-labelledby="isotipo-t">
+  <div class="sec-in">
+    <header class="sec-cab rv"><span class="num">02</span><h2 id="isotipo-t">Isotipo</h2><p>Tres elementos sobre una grilla de 120 unidades. Nada más.</p></header>
+    <div class="sec-cuerpo">
+      <div class="constr-wrap">
+        <div class="constr-panel rv"><svg viewBox="-16 -8 172 136" class="constr" role="img" aria-label="Construcción del isotipo sobre una grilla de 120 unidades: anillo de radio 43 y trazo 8 con apertura de 52 grados, D de altura 42 y punto de radio 7"><circle cx="60" cy="60" r="47" fill="none" stroke="#3d6f9e" stroke-width=".3"/>
+  <circle cx="60" cy="60" r="39" fill="none" stroke="#3d6f9e" stroke-width=".3"/>
+  <path d="M60 -6V126M-6 60H126" stroke="#3d6f9e" stroke-width=".3" stroke-dasharray="1.6 1.2"/><path d="M0 0V120M0 0H120" stroke="#c9ced6" stroke-width=".6"/><path d="M10 0V120M0 10H120" stroke="#c9ced6" stroke-width=".3"/><path d="M20 0V120M0 20H120" stroke="#c9ced6" stroke-width=".3"/><path d="M30 0V120M0 30H120" stroke="#c9ced6" stroke-width=".3"/><path d="M40 0V120M0 40H120" stroke="#c9ced6" stroke-width=".3"/><path d="M50 0V120M0 50H120" stroke="#c9ced6" stroke-width=".3"/><path d="M60 0V120M0 60H120" stroke="#c9ced6" stroke-width=".6"/><path d="M70 0V120M0 70H120" stroke="#c9ced6" stroke-width=".3"/><path d="M80 0V120M0 80H120" stroke="#c9ced6" stroke-width=".3"/><path d="M90 0V120M0 90H120" stroke="#c9ced6" stroke-width=".3"/><path d="M100 0V120M0 100H120" stroke="#c9ced6" stroke-width=".3"/><path d="M110 0V120M0 110H120" stroke="#c9ced6" stroke-width=".3"/><path d="M120 0V120M0 120H120" stroke="#c9ced6" stroke-width=".6"/><g><path class="ring" d="M41.15 98.65A43.00 43.00 0 1 1 78.85 98.65" fill="none" stroke="#24466b" stroke-width="8" stroke-linecap="round"/><path class="d" fill="#24466b" d="M43.23 81V79.8L47.91 79.23Q47.97 77.33 48.03 75.12Q48.1 71.77 48.1 68.1V51.59Q48.1 48.11 48.03 44.82Q47.97 42.61 47.91 40.77L43.23 40.2V39H59.04Q65.17 39 69.6 41.47Q74.03 43.93 76.4 48.58Q78.77 53.23 78.77 59.87Q78.77 66.64 76.21 71.35Q73.65 76.07 69.16 78.53Q64.67 81 58.85 81ZM54.86 40.58Q54.8 42.54 54.74 44.82Q54.67 48.11 54.64 51.62Q54.61 55.13 54.61 58.42V61.2Q54.61 64.49 54.64 68.13Q54.67 71.77 54.74 75.12Q54.8 77.46 54.86 79.42H58.15Q62.58 79.42 65.59 77.02Q68.59 74.61 70.14 70.25Q71.69 65.88 71.69 60Q71.69 50.32 68.27 45.45Q64.86 40.58 58.53 40.58Z"/><circle class="dot" cx="60" cy="103" r="7" fill="#9a7b3f"/></g>
+  <g stroke="#9a7b3f" stroke-width=".4" fill="none"><path d="M38.52 104.04L35.45 110.33M81.48 104.04L84.55 110.33"/>
+  <path d="M37.20 106.74A52 52 0 0 0 82.80 106.74"/></g>
+  <text x="60" y="121" class="an" text-anchor="middle" fill="#9a7b3f">52°</text>
+  <g stroke="#3d6f9e" stroke-width=".4" fill="none">
+    <path d="M60 60L29.59 29.59"/><circle cx="60" cy="60" r=".9" fill="#3d6f9e" stroke="none"/>
+    <path d="M103 60H132M107 60H132"/><path d="M99 56V64M107 56V64"/>
+    <path d="M-2 39H28M-2 81H28M2 39V81"/>
+    <path d="M67 103H132"/>
+  </g>
+  <text x="32.59" y="38.59" class="an" fill="#3d6f9e">r 43</text>
+  <text x="134" y="61.2" class="an" fill="#3d6f9e">trazo 8</text>
+  <text x="-4" y="61.2" class="an" fill="#3d6f9e" text-anchor="end">42</text>
+  <text x="134" y="104.2" class="an" fill="#3d6f9e">r 7</text></svg></div>
+        <ol class="anatomia">
+          <li class="rv" style="--d:0ms"><span class="an-letra">A</span><div><h3>Anillo abierto</h3><p>Radio 43, trazo 8, extremos redondeados y una apertura de 52° abajo. Es el borde del sello.</p></div></li>
+          <li class="rv" style="--d:90ms"><span class="an-letra">B</span><div><h3>La D</h3><p>Source Serif 4 semibold, la misma letra del wordmark, con altura de mayúscula 42 y centrada ópticamente.</p></div></li>
+          <li class="rv" style="--d:180ms"><span class="an-letra oro">C</span><div><h3>El punto</h3><p>Radio 7, en la apertura. Cierra el círculo: el acto se completa cuando el escribano da fe. Es el único dorado del logo.</p></div></li>
+        </ol>
+      </div>
+    </div>
+  </div>
+  <div class="evolucion" aria-labelledby="evo-t">
+    <div class="sec-in">
+      <div class="evo-txt rv">
+        <p class="eyebrow">Evolución</p>
+        <h3 id="evo-t">De 76 elementos a 3.</h3>
+        <p>La primera versión tenía 72 marcas finas en el anillo. Por debajo de 40 px se empastaban y el conjunto se leía como la esfera de un reloj. La versión 2 conserva la idea del sello y gana lectura hasta 24 px; por debajo, se usa la D sola.</p>
+        <div class="prueba">
+          <label for="tam">Probar tamaño <output id="tam-out" for="tam">48 px</output></label>
+          <input type="range" id="tam" min="16" max="160" value="48">
+          <div class="prueba-arte" aria-hidden="true"><span id="prueba-v2"><svg viewBox="0 0 120 120" width="48" height="48" aria-hidden="true" focusable="false" ><rect width="120" height="120" rx="26" fill="#24466b"/><path class="ring" d="M41.15 98.65A43.00 43.00 0 1 1 78.85 98.65" fill="none" stroke="#fff" stroke-width="8" stroke-linecap="round"/><path class="d" fill="#fff" d="M43.23 81V79.8L47.91 79.23Q47.97 77.33 48.03 75.12Q48.1 71.77 48.1 68.1V51.59Q48.1 48.11 48.03 44.82Q47.97 42.61 47.91 40.77L43.23 40.2V39H59.04Q65.17 39 69.6 41.47Q74.03 43.93 76.4 48.58Q78.77 53.23 78.77 59.87Q78.77 66.64 76.21 71.35Q73.65 76.07 69.16 78.53Q64.67 81 58.85 81ZM54.86 40.58Q54.8 42.54 54.74 44.82Q54.67 48.11 54.64 51.62Q54.61 55.13 54.61 58.42V61.2Q54.61 64.49 54.64 68.13Q54.67 71.77 54.74 75.12Q54.8 77.46 54.86 79.42H58.15Q62.58 79.42 65.59 77.02Q68.59 74.61 70.14 70.25Q71.69 65.88 71.69 60Q71.69 50.32 68.27 45.45Q64.86 40.58 58.53 40.58Z"/><circle class="dot" cx="60" cy="103" r="7" fill="#c9a45c"/></svg></span><span id="prueba-chica"><img src="/favicon.svg" alt="" width="48" height="48"></span></div>
+          <p class="prueba-nota" id="prueba-nota">Isotipo completo.</p>
+        </div>
+      </div>
+      <div class="escala rv" role="img" aria-label="Comparación de la versión 1 y la versión 2 a 120, 48, 32, 24 y 16 píxeles">
+        <div class="esc-rot"><span>v1</span><span>v2</span></div>
+        <div class="esc-col"><div class="esc-cel"><svg viewBox="0 0 120 120" width="120" height="120" aria-hidden="true" focusable="false" ><rect width="120" height="120" rx="26" fill="#24466b"/><circle cx="60" cy="60" r="46" fill="none" stroke="#fff" stroke-width="3.2"/><path d="M60.00 22.50L60.00 18.80 M63.27 22.64L63.59 18.96 M66.51 23.07L67.15 19.43 M69.71 23.78L70.66 20.20 M72.83 24.76L74.09 21.28 M75.85 26.01L77.41 22.66 M78.75 27.52L80.60 24.32 M81.51 29.28L83.63 26.25 M84.10 31.27L86.48 28.44 M86.52 33.48L89.13 30.87 M88.73 35.90L91.56 33.52 M90.72 38.49L93.75 36.37 M92.48 41.25L95.68 39.40 M93.99 44.15L97.34 42.59 M95.24 47.17L98.72 45.91 M96.22 50.29L99.80 49.34 M96.93 53.49L100.57 52.85 M97.36 56.73L101.04 56.41 M97.50 60.00L101.20 60.00 M97.36 63.27L101.04 63.59 M96.93 66.51L100.57 67.15 M96.22 69.71L99.80 70.66 M95.24 72.83L98.72 74.09 M93.99 75.85L97.34 77.41 M92.48 78.75L95.68 80.60 M90.72 81.51L93.75 83.63 M88.73 84.10L91.56 86.48 M86.52 86.52L89.13 89.13 M84.10 88.73L86.48 91.56 M81.51 90.72L83.63 93.75 M78.75 92.48L80.60 95.68 M75.85 93.99L77.41 97.34 M72.83 95.24L74.09 98.72 M69.71 96.22L70.66 99.80 M66.51 96.93L67.15 100.57 M63.27 97.36L63.59 101.04 M60.00 97.50L60.00 101.20 M56.73 97.36L56.41 101.04 M53.49 96.93L52.85 100.57 M50.29 96.22L49.34 99.80 M47.17 95.24L45.91 98.72 M44.15 93.99L42.59 97.34 M41.25 92.48L39.40 95.68 M38.49 90.72L36.37 93.75 M35.90 88.73L33.52 91.56 M33.48 86.52L30.87 89.13 M31.27 84.10L28.44 86.48 M29.28 81.51L26.25 83.63 M27.52 78.75L24.32 80.60 M26.01 75.85L22.66 77.41 M24.76 72.83L21.28 74.09 M23.78 69.71L20.20 70.66 M23.07 66.51L19.43 67.15 M22.64 63.27L18.96 63.59 M22.50 60.00L18.80 60.00 M22.64 56.73L18.96 56.41 M23.07 53.49L19.43 52.85 M23.78 50.29L20.20 49.34 M24.76 47.17L21.28 45.91 M26.01 44.15L22.66 42.59 M27.52 41.25L24.32 39.40 M29.28 38.49L26.25 36.37 M31.27 35.90L28.44 33.52 M33.48 33.48L30.87 30.87 M35.90 31.27L33.52 28.44 M38.49 29.28L36.37 26.25 M41.25 27.52L39.40 24.32 M44.15 26.01L42.59 22.66 M47.17 24.76L45.91 21.28 M50.29 23.78L49.34 20.20 M53.49 23.07L52.85 19.43 M56.73 22.64L56.41 18.96" stroke="#fff" stroke-width="1.1" fill="none"/><path fill="#fff" transform="translate(1.905 2.857) scale(0.9524)" d="M43.23 81V79.8L47.91 79.23Q47.97 77.33 48.03 75.12Q48.1 71.77 48.1 68.1V51.59Q48.1 48.11 48.03 44.82Q47.97 42.61 47.91 40.77L43.23 40.2V39H59.04Q65.17 39 69.6 41.47Q74.03 43.93 76.4 48.58Q78.77 53.23 78.77 59.87Q78.77 66.64 76.21 71.35Q73.65 76.07 69.16 78.53Q64.67 81 58.85 81ZM54.86 40.58Q54.8 42.54 54.74 44.82Q54.67 48.11 54.64 51.62Q54.61 55.13 54.61 58.42V61.2Q54.61 64.49 54.64 68.13Q54.67 71.77 54.74 75.12Q54.8 77.46 54.86 79.42H58.15Q62.58 79.42 65.59 77.02Q68.59 74.61 70.14 70.25Q71.69 65.88 71.69 60Q71.69 50.32 68.27 45.45Q64.86 40.58 58.53 40.58Z"/><circle cx="60" cy="106" r="6.8" fill="#24466b"/><circle cx="60" cy="106" r="4.2" fill="#c9a45c"/></svg></div><div class="esc-cel"><svg viewBox="0 0 120 120" width="120" height="120" aria-hidden="true" focusable="false" ><rect width="120" height="120" rx="26" fill="#24466b"/><path class="ring" d="M41.15 98.65A43.00 43.00 0 1 1 78.85 98.65" fill="none" stroke="#fff" stroke-width="8" stroke-linecap="round"/><path class="d" fill="#fff" d="M43.23 81V79.8L47.91 79.23Q47.97 77.33 48.03 75.12Q48.1 71.77 48.1 68.1V51.59Q48.1 48.11 48.03 44.82Q47.97 42.61 47.91 40.77L43.23 40.2V39H59.04Q65.17 39 69.6 41.47Q74.03 43.93 76.4 48.58Q78.77 53.23 78.77 59.87Q78.77 66.64 76.21 71.35Q73.65 76.07 69.16 78.53Q64.67 81 58.85 81ZM54.86 40.58Q54.8 42.54 54.74 44.82Q54.67 48.11 54.64 51.62Q54.61 55.13 54.61 58.42V61.2Q54.61 64.49 54.64 68.13Q54.67 71.77 54.74 75.12Q54.8 77.46 54.86 79.42H58.15Q62.58 79.42 65.59 77.02Q68.59 74.61 70.14 70.25Q71.69 65.88 71.69 60Q71.69 50.32 68.27 45.45Q64.86 40.58 58.53 40.58Z"/><circle class="dot" cx="60" cy="103" r="7" fill="#c9a45c"/></svg></div><span class="esc-lbl">120 px</span></div><div class="esc-col"><div class="esc-cel"><svg viewBox="0 0 120 120" width="48" height="48" aria-hidden="true" focusable="false" ><rect width="120" height="120" rx="26" fill="#24466b"/><circle cx="60" cy="60" r="46" fill="none" stroke="#fff" stroke-width="3.2"/><path d="M60.00 22.50L60.00 18.80 M63.27 22.64L63.59 18.96 M66.51 23.07L67.15 19.43 M69.71 23.78L70.66 20.20 M72.83 24.76L74.09 21.28 M75.85 26.01L77.41 22.66 M78.75 27.52L80.60 24.32 M81.51 29.28L83.63 26.25 M84.10 31.27L86.48 28.44 M86.52 33.48L89.13 30.87 M88.73 35.90L91.56 33.52 M90.72 38.49L93.75 36.37 M92.48 41.25L95.68 39.40 M93.99 44.15L97.34 42.59 M95.24 47.17L98.72 45.91 M96.22 50.29L99.80 49.34 M96.93 53.49L100.57 52.85 M97.36 56.73L101.04 56.41 M97.50 60.00L101.20 60.00 M97.36 63.27L101.04 63.59 M96.93 66.51L100.57 67.15 M96.22 69.71L99.80 70.66 M95.24 72.83L98.72 74.09 M93.99 75.85L97.34 77.41 M92.48 78.75L95.68 80.60 M90.72 81.51L93.75 83.63 M88.73 84.10L91.56 86.48 M86.52 86.52L89.13 89.13 M84.10 88.73L86.48 91.56 M81.51 90.72L83.63 93.75 M78.75 92.48L80.60 95.68 M75.85 93.99L77.41 97.34 M72.83 95.24L74.09 98.72 M69.71 96.22L70.66 99.80 M66.51 96.93L67.15 100.57 M63.27 97.36L63.59 101.04 M60.00 97.50L60.00 101.20 M56.73 97.36L56.41 101.04 M53.49 96.93L52.85 100.57 M50.29 96.22L49.34 99.80 M47.17 95.24L45.91 98.72 M44.15 93.99L42.59 97.34 M41.25 92.48L39.40 95.68 M38.49 90.72L36.37 93.75 M35.90 88.73L33.52 91.56 M33.48 86.52L30.87 89.13 M31.27 84.10L28.44 86.48 M29.28 81.51L26.25 83.63 M27.52 78.75L24.32 80.60 M26.01 75.85L22.66 77.41 M24.76 72.83L21.28 74.09 M23.78 69.71L20.20 70.66 M23.07 66.51L19.43 67.15 M22.64 63.27L18.96 63.59 M22.50 60.00L18.80 60.00 M22.64 56.73L18.96 56.41 M23.07 53.49L19.43 52.85 M23.78 50.29L20.20 49.34 M24.76 47.17L21.28 45.91 M26.01 44.15L22.66 42.59 M27.52 41.25L24.32 39.40 M29.28 38.49L26.25 36.37 M31.27 35.90L28.44 33.52 M33.48 33.48L30.87 30.87 M35.90 31.27L33.52 28.44 M38.49 29.28L36.37 26.25 M41.25 27.52L39.40 24.32 M44.15 26.01L42.59 22.66 M47.17 24.76L45.91 21.28 M50.29 23.78L49.34 20.20 M53.49 23.07L52.85 19.43 M56.73 22.64L56.41 18.96" stroke="#fff" stroke-width="1.1" fill="none"/><path fill="#fff" transform="translate(1.905 2.857) scale(0.9524)" d="M43.23 81V79.8L47.91 79.23Q47.97 77.33 48.03 75.12Q48.1 71.77 48.1 68.1V51.59Q48.1 48.11 48.03 44.82Q47.97 42.61 47.91 40.77L43.23 40.2V39H59.04Q65.17 39 69.6 41.47Q74.03 43.93 76.4 48.58Q78.77 53.23 78.77 59.87Q78.77 66.64 76.21 71.35Q73.65 76.07 69.16 78.53Q64.67 81 58.85 81ZM54.86 40.58Q54.8 42.54 54.74 44.82Q54.67 48.11 54.64 51.62Q54.61 55.13 54.61 58.42V61.2Q54.61 64.49 54.64 68.13Q54.67 71.77 54.74 75.12Q54.8 77.46 54.86 79.42H58.15Q62.58 79.42 65.59 77.02Q68.59 74.61 70.14 70.25Q71.69 65.88 71.69 60Q71.69 50.32 68.27 45.45Q64.86 40.58 58.53 40.58Z"/><circle cx="60" cy="106" r="6.8" fill="#24466b"/><circle cx="60" cy="106" r="4.2" fill="#c9a45c"/></svg></div><div class="esc-cel"><svg viewBox="0 0 120 120" width="48" height="48" aria-hidden="true" focusable="false" ><rect width="120" height="120" rx="26" fill="#24466b"/><path class="ring" d="M41.15 98.65A43.00 43.00 0 1 1 78.85 98.65" fill="none" stroke="#fff" stroke-width="8" stroke-linecap="round"/><path class="d" fill="#fff" d="M43.23 81V79.8L47.91 79.23Q47.97 77.33 48.03 75.12Q48.1 71.77 48.1 68.1V51.59Q48.1 48.11 48.03 44.82Q47.97 42.61 47.91 40.77L43.23 40.2V39H59.04Q65.17 39 69.6 41.47Q74.03 43.93 76.4 48.58Q78.77 53.23 78.77 59.87Q78.77 66.64 76.21 71.35Q73.65 76.07 69.16 78.53Q64.67 81 58.85 81ZM54.86 40.58Q54.8 42.54 54.74 44.82Q54.67 48.11 54.64 51.62Q54.61 55.13 54.61 58.42V61.2Q54.61 64.49 54.64 68.13Q54.67 71.77 54.74 75.12Q54.8 77.46 54.86 79.42H58.15Q62.58 79.42 65.59 77.02Q68.59 74.61 70.14 70.25Q71.69 65.88 71.69 60Q71.69 50.32 68.27 45.45Q64.86 40.58 58.53 40.58Z"/><circle class="dot" cx="60" cy="103" r="7" fill="#c9a45c"/></svg></div><span class="esc-lbl">48 px</span></div><div class="esc-col"><div class="esc-cel"><svg viewBox="0 0 120 120" width="32" height="32" aria-hidden="true" focusable="false" ><rect width="120" height="120" rx="26" fill="#24466b"/><circle cx="60" cy="60" r="46" fill="none" stroke="#fff" stroke-width="3.2"/><path d="M60.00 22.50L60.00 18.80 M63.27 22.64L63.59 18.96 M66.51 23.07L67.15 19.43 M69.71 23.78L70.66 20.20 M72.83 24.76L74.09 21.28 M75.85 26.01L77.41 22.66 M78.75 27.52L80.60 24.32 M81.51 29.28L83.63 26.25 M84.10 31.27L86.48 28.44 M86.52 33.48L89.13 30.87 M88.73 35.90L91.56 33.52 M90.72 38.49L93.75 36.37 M92.48 41.25L95.68 39.40 M93.99 44.15L97.34 42.59 M95.24 47.17L98.72 45.91 M96.22 50.29L99.80 49.34 M96.93 53.49L100.57 52.85 M97.36 56.73L101.04 56.41 M97.50 60.00L101.20 60.00 M97.36 63.27L101.04 63.59 M96.93 66.51L100.57 67.15 M96.22 69.71L99.80 70.66 M95.24 72.83L98.72 74.09 M93.99 75.85L97.34 77.41 M92.48 78.75L95.68 80.60 M90.72 81.51L93.75 83.63 M88.73 84.10L91.56 86.48 M86.52 86.52L89.13 89.13 M84.10 88.73L86.48 91.56 M81.51 90.72L83.63 93.75 M78.75 92.48L80.60 95.68 M75.85 93.99L77.41 97.34 M72.83 95.24L74.09 98.72 M69.71 96.22L70.66 99.80 M66.51 96.93L67.15 100.57 M63.27 97.36L63.59 101.04 M60.00 97.50L60.00 101.20 M56.73 97.36L56.41 101.04 M53.49 96.93L52.85 100.57 M50.29 96.22L49.34 99.80 M47.17 95.24L45.91 98.72 M44.15 93.99L42.59 97.34 M41.25 92.48L39.40 95.68 M38.49 90.72L36.37 93.75 M35.90 88.73L33.52 91.56 M33.48 86.52L30.87 89.13 M31.27 84.10L28.44 86.48 M29.28 81.51L26.25 83.63 M27.52 78.75L24.32 80.60 M26.01 75.85L22.66 77.41 M24.76 72.83L21.28 74.09 M23.78 69.71L20.20 70.66 M23.07 66.51L19.43 67.15 M22.64 63.27L18.96 63.59 M22.50 60.00L18.80 60.00 M22.64 56.73L18.96 56.41 M23.07 53.49L19.43 52.85 M23.78 50.29L20.20 49.34 M24.76 47.17L21.28 45.91 M26.01 44.15L22.66 42.59 M27.52 41.25L24.32 39.40 M29.28 38.49L26.25 36.37 M31.27 35.90L28.44 33.52 M33.48 33.48L30.87 30.87 M35.90 31.27L33.52 28.44 M38.49 29.28L36.37 26.25 M41.25 27.52L39.40 24.32 M44.15 26.01L42.59 22.66 M47.17 24.76L45.91 21.28 M50.29 23.78L49.34 20.20 M53.49 23.07L52.85 19.43 M56.73 22.64L56.41 18.96" stroke="#fff" stroke-width="1.1" fill="none"/><path fill="#fff" transform="translate(1.905 2.857) scale(0.9524)" d="M43.23 81V79.8L47.91 79.23Q47.97 77.33 48.03 75.12Q48.1 71.77 48.1 68.1V51.59Q48.1 48.11 48.03 44.82Q47.97 42.61 47.91 40.77L43.23 40.2V39H59.04Q65.17 39 69.6 41.47Q74.03 43.93 76.4 48.58Q78.77 53.23 78.77 59.87Q78.77 66.64 76.21 71.35Q73.65 76.07 69.16 78.53Q64.67 81 58.85 81ZM54.86 40.58Q54.8 42.54 54.74 44.82Q54.67 48.11 54.64 51.62Q54.61 55.13 54.61 58.42V61.2Q54.61 64.49 54.64 68.13Q54.67 71.77 54.74 75.12Q54.8 77.46 54.86 79.42H58.15Q62.58 79.42 65.59 77.02Q68.59 74.61 70.14 70.25Q71.69 65.88 71.69 60Q71.69 50.32 68.27 45.45Q64.86 40.58 58.53 40.58Z"/><circle cx="60" cy="106" r="6.8" fill="#24466b"/><circle cx="60" cy="106" r="4.2" fill="#c9a45c"/></svg></div><div class="esc-cel"><svg viewBox="0 0 120 120" width="32" height="32" aria-hidden="true" focusable="false" ><rect width="120" height="120" rx="26" fill="#24466b"/><path class="ring" d="M41.15 98.65A43.00 43.00 0 1 1 78.85 98.65" fill="none" stroke="#fff" stroke-width="8" stroke-linecap="round"/><path class="d" fill="#fff" d="M43.23 81V79.8L47.91 79.23Q47.97 77.33 48.03 75.12Q48.1 71.77 48.1 68.1V51.59Q48.1 48.11 48.03 44.82Q47.97 42.61 47.91 40.77L43.23 40.2V39H59.04Q65.17 39 69.6 41.47Q74.03 43.93 76.4 48.58Q78.77 53.23 78.77 59.87Q78.77 66.64 76.21 71.35Q73.65 76.07 69.16 78.53Q64.67 81 58.85 81ZM54.86 40.58Q54.8 42.54 54.74 44.82Q54.67 48.11 54.64 51.62Q54.61 55.13 54.61 58.42V61.2Q54.61 64.49 54.64 68.13Q54.67 71.77 54.74 75.12Q54.8 77.46 54.86 79.42H58.15Q62.58 79.42 65.59 77.02Q68.59 74.61 70.14 70.25Q71.69 65.88 71.69 60Q71.69 50.32 68.27 45.45Q64.86 40.58 58.53 40.58Z"/><circle class="dot" cx="60" cy="103" r="7" fill="#c9a45c"/></svg></div><span class="esc-lbl">32 px</span></div><div class="esc-col"><div class="esc-cel"><svg viewBox="0 0 120 120" width="24" height="24" aria-hidden="true" focusable="false" ><rect width="120" height="120" rx="26" fill="#24466b"/><circle cx="60" cy="60" r="46" fill="none" stroke="#fff" stroke-width="3.2"/><path d="M60.00 22.50L60.00 18.80 M63.27 22.64L63.59 18.96 M66.51 23.07L67.15 19.43 M69.71 23.78L70.66 20.20 M72.83 24.76L74.09 21.28 M75.85 26.01L77.41 22.66 M78.75 27.52L80.60 24.32 M81.51 29.28L83.63 26.25 M84.10 31.27L86.48 28.44 M86.52 33.48L89.13 30.87 M88.73 35.90L91.56 33.52 M90.72 38.49L93.75 36.37 M92.48 41.25L95.68 39.40 M93.99 44.15L97.34 42.59 M95.24 47.17L98.72 45.91 M96.22 50.29L99.80 49.34 M96.93 53.49L100.57 52.85 M97.36 56.73L101.04 56.41 M97.50 60.00L101.20 60.00 M97.36 63.27L101.04 63.59 M96.93 66.51L100.57 67.15 M96.22 69.71L99.80 70.66 M95.24 72.83L98.72 74.09 M93.99 75.85L97.34 77.41 M92.48 78.75L95.68 80.60 M90.72 81.51L93.75 83.63 M88.73 84.10L91.56 86.48 M86.52 86.52L89.13 89.13 M84.10 88.73L86.48 91.56 M81.51 90.72L83.63 93.75 M78.75 92.48L80.60 95.68 M75.85 93.99L77.41 97.34 M72.83 95.24L74.09 98.72 M69.71 96.22L70.66 99.80 M66.51 96.93L67.15 100.57 M63.27 97.36L63.59 101.04 M60.00 97.50L60.00 101.20 M56.73 97.36L56.41 101.04 M53.49 96.93L52.85 100.57 M50.29 96.22L49.34 99.80 M47.17 95.24L45.91 98.72 M44.15 93.99L42.59 97.34 M41.25 92.48L39.40 95.68 M38.49 90.72L36.37 93.75 M35.90 88.73L33.52 91.56 M33.48 86.52L30.87 89.13 M31.27 84.10L28.44 86.48 M29.28 81.51L26.25 83.63 M27.52 78.75L24.32 80.60 M26.01 75.85L22.66 77.41 M24.76 72.83L21.28 74.09 M23.78 69.71L20.20 70.66 M23.07 66.51L19.43 67.15 M22.64 63.27L18.96 63.59 M22.50 60.00L18.80 60.00 M22.64 56.73L18.96 56.41 M23.07 53.49L19.43 52.85 M23.78 50.29L20.20 49.34 M24.76 47.17L21.28 45.91 M26.01 44.15L22.66 42.59 M27.52 41.25L24.32 39.40 M29.28 38.49L26.25 36.37 M31.27 35.90L28.44 33.52 M33.48 33.48L30.87 30.87 M35.90 31.27L33.52 28.44 M38.49 29.28L36.37 26.25 M41.25 27.52L39.40 24.32 M44.15 26.01L42.59 22.66 M47.17 24.76L45.91 21.28 M50.29 23.78L49.34 20.20 M53.49 23.07L52.85 19.43 M56.73 22.64L56.41 18.96" stroke="#fff" stroke-width="1.1" fill="none"/><path fill="#fff" transform="translate(1.905 2.857) scale(0.9524)" d="M43.23 81V79.8L47.91 79.23Q47.97 77.33 48.03 75.12Q48.1 71.77 48.1 68.1V51.59Q48.1 48.11 48.03 44.82Q47.97 42.61 47.91 40.77L43.23 40.2V39H59.04Q65.17 39 69.6 41.47Q74.03 43.93 76.4 48.58Q78.77 53.23 78.77 59.87Q78.77 66.64 76.21 71.35Q73.65 76.07 69.16 78.53Q64.67 81 58.85 81ZM54.86 40.58Q54.8 42.54 54.74 44.82Q54.67 48.11 54.64 51.62Q54.61 55.13 54.61 58.42V61.2Q54.61 64.49 54.64 68.13Q54.67 71.77 54.74 75.12Q54.8 77.46 54.86 79.42H58.15Q62.58 79.42 65.59 77.02Q68.59 74.61 70.14 70.25Q71.69 65.88 71.69 60Q71.69 50.32 68.27 45.45Q64.86 40.58 58.53 40.58Z"/><circle cx="60" cy="106" r="6.8" fill="#24466b"/><circle cx="60" cy="106" r="4.2" fill="#c9a45c"/></svg></div><div class="esc-cel"><svg viewBox="0 0 120 120" width="24" height="24" aria-hidden="true" focusable="false" ><rect width="120" height="120" rx="26" fill="#24466b"/><path class="ring" d="M41.15 98.65A43.00 43.00 0 1 1 78.85 98.65" fill="none" stroke="#fff" stroke-width="8" stroke-linecap="round"/><path class="d" fill="#fff" d="M43.23 81V79.8L47.91 79.23Q47.97 77.33 48.03 75.12Q48.1 71.77 48.1 68.1V51.59Q48.1 48.11 48.03 44.82Q47.97 42.61 47.91 40.77L43.23 40.2V39H59.04Q65.17 39 69.6 41.47Q74.03 43.93 76.4 48.58Q78.77 53.23 78.77 59.87Q78.77 66.64 76.21 71.35Q73.65 76.07 69.16 78.53Q64.67 81 58.85 81ZM54.86 40.58Q54.8 42.54 54.74 44.82Q54.67 48.11 54.64 51.62Q54.61 55.13 54.61 58.42V61.2Q54.61 64.49 54.64 68.13Q54.67 71.77 54.74 75.12Q54.8 77.46 54.86 79.42H58.15Q62.58 79.42 65.59 77.02Q68.59 74.61 70.14 70.25Q71.69 65.88 71.69 60Q71.69 50.32 68.27 45.45Q64.86 40.58 58.53 40.58Z"/><circle class="dot" cx="60" cy="103" r="7" fill="#c9a45c"/></svg></div><span class="esc-lbl">24 px</span></div><div class="esc-col"><div class="esc-cel"><svg viewBox="0 0 120 120" width="16" height="16" aria-hidden="true" focusable="false" ><rect width="120" height="120" rx="26" fill="#24466b"/><circle cx="60" cy="60" r="46" fill="none" stroke="#fff" stroke-width="3.2"/><path d="M60.00 22.50L60.00 18.80 M63.27 22.64L63.59 18.96 M66.51 23.07L67.15 19.43 M69.71 23.78L70.66 20.20 M72.83 24.76L74.09 21.28 M75.85 26.01L77.41 22.66 M78.75 27.52L80.60 24.32 M81.51 29.28L83.63 26.25 M84.10 31.27L86.48 28.44 M86.52 33.48L89.13 30.87 M88.73 35.90L91.56 33.52 M90.72 38.49L93.75 36.37 M92.48 41.25L95.68 39.40 M93.99 44.15L97.34 42.59 M95.24 47.17L98.72 45.91 M96.22 50.29L99.80 49.34 M96.93 53.49L100.57 52.85 M97.36 56.73L101.04 56.41 M97.50 60.00L101.20 60.00 M97.36 63.27L101.04 63.59 M96.93 66.51L100.57 67.15 M96.22 69.71L99.80 70.66 M95.24 72.83L98.72 74.09 M93.99 75.85L97.34 77.41 M92.48 78.75L95.68 80.60 M90.72 81.51L93.75 83.63 M88.73 84.10L91.56 86.48 M86.52 86.52L89.13 89.13 M84.10 88.73L86.48 91.56 M81.51 90.72L83.63 93.75 M78.75 92.48L80.60 95.68 M75.85 93.99L77.41 97.34 M72.83 95.24L74.09 98.72 M69.71 96.22L70.66 99.80 M66.51 96.93L67.15 100.57 M63.27 97.36L63.59 101.04 M60.00 97.50L60.00 101.20 M56.73 97.36L56.41 101.04 M53.49 96.93L52.85 100.57 M50.29 96.22L49.34 99.80 M47.17 95.24L45.91 98.72 M44.15 93.99L42.59 97.34 M41.25 92.48L39.40 95.68 M38.49 90.72L36.37 93.75 M35.90 88.73L33.52 91.56 M33.48 86.52L30.87 89.13 M31.27 84.10L28.44 86.48 M29.28 81.51L26.25 83.63 M27.52 78.75L24.32 80.60 M26.01 75.85L22.66 77.41 M24.76 72.83L21.28 74.09 M23.78 69.71L20.20 70.66 M23.07 66.51L19.43 67.15 M22.64 63.27L18.96 63.59 M22.50 60.00L18.80 60.00 M22.64 56.73L18.96 56.41 M23.07 53.49L19.43 52.85 M23.78 50.29L20.20 49.34 M24.76 47.17L21.28 45.91 M26.01 44.15L22.66 42.59 M27.52 41.25L24.32 39.40 M29.28 38.49L26.25 36.37 M31.27 35.90L28.44 33.52 M33.48 33.48L30.87 30.87 M35.90 31.27L33.52 28.44 M38.49 29.28L36.37 26.25 M41.25 27.52L39.40 24.32 M44.15 26.01L42.59 22.66 M47.17 24.76L45.91 21.28 M50.29 23.78L49.34 20.20 M53.49 23.07L52.85 19.43 M56.73 22.64L56.41 18.96" stroke="#fff" stroke-width="1.1" fill="none"/><path fill="#fff" transform="translate(1.905 2.857) scale(0.9524)" d="M43.23 81V79.8L47.91 79.23Q47.97 77.33 48.03 75.12Q48.1 71.77 48.1 68.1V51.59Q48.1 48.11 48.03 44.82Q47.97 42.61 47.91 40.77L43.23 40.2V39H59.04Q65.17 39 69.6 41.47Q74.03 43.93 76.4 48.58Q78.77 53.23 78.77 59.87Q78.77 66.64 76.21 71.35Q73.65 76.07 69.16 78.53Q64.67 81 58.85 81ZM54.86 40.58Q54.8 42.54 54.74 44.82Q54.67 48.11 54.64 51.62Q54.61 55.13 54.61 58.42V61.2Q54.61 64.49 54.64 68.13Q54.67 71.77 54.74 75.12Q54.8 77.46 54.86 79.42H58.15Q62.58 79.42 65.59 77.02Q68.59 74.61 70.14 70.25Q71.69 65.88 71.69 60Q71.69 50.32 68.27 45.45Q64.86 40.58 58.53 40.58Z"/><circle cx="60" cy="106" r="6.8" fill="#24466b"/><circle cx="60" cy="106" r="4.2" fill="#c9a45c"/></svg></div><div class="esc-cel"><svg viewBox="0 0 120 120" width="16" height="16" aria-hidden="true" focusable="false" ><rect width="120" height="120" rx="26" fill="#24466b"/><path class="ring" d="M41.15 98.65A43.00 43.00 0 1 1 78.85 98.65" fill="none" stroke="#fff" stroke-width="8" stroke-linecap="round"/><path class="d" fill="#fff" d="M43.23 81V79.8L47.91 79.23Q47.97 77.33 48.03 75.12Q48.1 71.77 48.1 68.1V51.59Q48.1 48.11 48.03 44.82Q47.97 42.61 47.91 40.77L43.23 40.2V39H59.04Q65.17 39 69.6 41.47Q74.03 43.93 76.4 48.58Q78.77 53.23 78.77 59.87Q78.77 66.64 76.21 71.35Q73.65 76.07 69.16 78.53Q64.67 81 58.85 81ZM54.86 40.58Q54.8 42.54 54.74 44.82Q54.67 48.11 54.64 51.62Q54.61 55.13 54.61 58.42V61.2Q54.61 64.49 54.64 68.13Q54.67 71.77 54.74 75.12Q54.8 77.46 54.86 79.42H58.15Q62.58 79.42 65.59 77.02Q68.59 74.61 70.14 70.25Q71.69 65.88 71.69 60Q71.69 50.32 68.27 45.45Q64.86 40.58 58.53 40.58Z"/><circle class="dot" cx="60" cy="103" r="7" fill="#c9a45c"/></svg></div><span class="esc-lbl">16 px</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="sec" id="versiones" aria-labelledby="versiones-t">
+  <div class="sec-in">
+    <header class="sec-cab rv"><span class="num">03</span><h2 id="versiones-t">Versiones</h2><p>Una marca, seis formas de aparecer. Elegí según el fondo, no según el gusto.</p></header>
+    <div class="sec-cuerpo">
+      <div class="versiones"><figure class="ver v-azul rv ancho2"><div class="ver-arte"><img src="/logo/doyfe-horizontal-invertido.svg" alt="" class="h-lg"></div><figcaption><b>Horizontal invertido</b><span>Sobre azul pizarra o tinta.</span></figcaption></figure><figure class="ver v-papel rv "><div class="ver-arte"><img src="/logo/doyfe-isotipo.svg" alt="" width="132" height="132"></div><figcaption><b>Isotipo de app</b><span>Íconos, avatares, espacios cuadrados.</span></figcaption></figure><figure class="ver v-blanco rv ancho2"><div class="ver-arte"><img src="/logo/doyfe-horizontal.svg" alt="" class="h-md"></div><figcaption><b>Horizontal</b><span>Encabezados, documentos, correo.</span></figcaption></figure><figure class="ver v-arena rv "><div class="ver-arte"><img src="/logo/doyfe-vertical.svg" alt="" class="vert"></div><figcaption><b>Vertical</b><span>Portadas y piezas cuadradas.</span></figcaption></figure><figure class="ver v-tinta rv ancho2"><div class="ver-arte"><img src="/logo/doyfe-horizontal-invertido.svg" alt="" class="h-md"></div><figcaption><b>Invertido sobre tinta</b><span>Tema oscuro y pies de página.</span></figcaption></figure><figure class="ver v-blanco rv "><div class="ver-arte"><span class="mono-demo"><svg viewBox="0 0 120 120" width="132" height="132" aria-hidden="true" focusable="false" ><path class="ring" d="M41.15 98.65A43.00 43.00 0 1 1 78.85 98.65" fill="none" stroke="currentColor" stroke-width="8" stroke-linecap="round"/><path class="d" fill="currentColor" d="M43.23 81V79.8L47.91 79.23Q47.97 77.33 48.03 75.12Q48.1 71.77 48.1 68.1V51.59Q48.1 48.11 48.03 44.82Q47.97 42.61 47.91 40.77L43.23 40.2V39H59.04Q65.17 39 69.6 41.47Q74.03 43.93 76.4 48.58Q78.77 53.23 78.77 59.87Q78.77 66.64 76.21 71.35Q73.65 76.07 69.16 78.53Q64.67 81 58.85 81ZM54.86 40.58Q54.8 42.54 54.74 44.82Q54.67 48.11 54.64 51.62Q54.61 55.13 54.61 58.42V61.2Q54.61 64.49 54.64 68.13Q54.67 71.77 54.74 75.12Q54.8 77.46 54.86 79.42H58.15Q62.58 79.42 65.59 77.02Q68.59 74.61 70.14 70.25Q71.69 65.88 71.69 60Q71.69 50.32 68.27 45.45Q64.86 40.58 58.53 40.58Z"/><circle class="dot" cx="60" cy="103" r="7" fill="currentColor"/></svg></span></div><figcaption><b>Monocromo</b><span>Un color: sello de goma, fax, impresión.</span></figcaption></figure></div>
+      <div class="reglas">
+        <div class="resguardo rv">
+          <div class="resg-arte" aria-hidden="true"><div class="resg-caja"><img src="/logo/doyfe-horizontal.svg" alt=""></div></div>
+          <div><h3>Área de resguardo</h3><p>Alrededor del logo queda libre un margen igual a <b>0,25 × el diámetro del isotipo</b>. Ni texto, ni bordes, ni otras marcas.</p></div>
+        </div>
+        <div class="minimos rv">
+          <h3>Tamaños mínimos</h3>
+          <ul>
+            <li><span class="min-arte"><svg viewBox="0 0 120 120" width="24" height="24" aria-hidden="true" focusable="false" ><rect width="120" height="120" rx="26" fill="#24466b"/><path class="ring" d="M41.15 98.65A43.00 43.00 0 1 1 78.85 98.65" fill="none" stroke="#fff" stroke-width="8" stroke-linecap="round"/><path class="d" fill="#fff" d="M43.23 81V79.8L47.91 79.23Q47.97 77.33 48.03 75.12Q48.1 71.77 48.1 68.1V51.59Q48.1 48.11 48.03 44.82Q47.97 42.61 47.91 40.77L43.23 40.2V39H59.04Q65.17 39 69.6 41.47Q74.03 43.93 76.4 48.58Q78.77 53.23 78.77 59.87Q78.77 66.64 76.21 71.35Q73.65 76.07 69.16 78.53Q64.67 81 58.85 81ZM54.86 40.58Q54.8 42.54 54.74 44.82Q54.67 48.11 54.64 51.62Q54.61 55.13 54.61 58.42V61.2Q54.61 64.49 54.64 68.13Q54.67 71.77 54.74 75.12Q54.8 77.46 54.86 79.42H58.15Q62.58 79.42 65.59 77.02Q68.59 74.61 70.14 70.25Q71.69 65.88 71.69 60Q71.69 50.32 68.27 45.45Q64.86 40.58 58.53 40.58Z"/><circle class="dot" cx="60" cy="103" r="7" fill="#c9a45c"/></svg></span><span><b>24 px</b> isotipo completo · 8 mm impreso</span></li>
+            <li><span class="min-arte"><img src="/favicon.svg" alt="" width="16" height="16"></span><span><b>16 px</b> marca chica, solo la D</span></li>
+            <li><span class="min-arte"><img src="/logo/doyfe-horizontal.svg" alt="" width="96"></span><span><b>96 px</b> de ancho la horizontal · 25 mm</span></li>
+          </ul>
+        </div>
+      </div>
+      <h3 class="sub rv">Usos incorrectos</h3>
+      <div class="malos"><figure class="mal rv"><div class="mal-arte" ><div style="transform:rotate(-18deg)"><svg viewBox="0 0 120 120" width="96" height="96" aria-hidden="true" focusable="false" ><path class="ring" d="M41.15 98.65A43.00 43.00 0 1 1 78.85 98.65" fill="none" stroke="#24466b" stroke-width="8" stroke-linecap="round"/><path class="d" fill="#24466b" d="M43.23 81V79.8L47.91 79.23Q47.97 77.33 48.03 75.12Q48.1 71.77 48.1 68.1V51.59Q48.1 48.11 48.03 44.82Q47.97 42.61 47.91 40.77L43.23 40.2V39H59.04Q65.17 39 69.6 41.47Q74.03 43.93 76.4 48.58Q78.77 53.23 78.77 59.87Q78.77 66.64 76.21 71.35Q73.65 76.07 69.16 78.53Q64.67 81 58.85 81ZM54.86 40.58Q54.8 42.54 54.74 44.82Q54.67 48.11 54.64 51.62Q54.61 55.13 54.61 58.42V61.2Q54.61 64.49 54.64 68.13Q54.67 71.77 54.74 75.12Q54.8 77.46 54.86 79.42H58.15Q62.58 79.42 65.59 77.02Q68.59 74.61 70.14 70.25Q71.69 65.88 71.69 60Q71.69 50.32 68.27 45.45Q64.86 40.58 58.53 40.58Z"/><circle class="dot" cx="60" cy="103" r="7" fill="#9a7b3f"/></svg></div><svg class="tacha" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><line x1="4" y1="96" x2="96" y2="4" stroke="#a1261f" stroke-opacity=".55" stroke-width="1" vector-effect="non-scaling-stroke"/></svg></div><figcaption><span class="x" aria-hidden="true"></span>No rotar ni inclinar.</figcaption></figure><figure class="mal rv"><div class="mal-arte" ><div style="transform:scaleX(1.45)"><svg viewBox="0 0 120 120" width="96" height="96" aria-hidden="true" focusable="false" ><path class="ring" d="M41.15 98.65A43.00 43.00 0 1 1 78.85 98.65" fill="none" stroke="#24466b" stroke-width="8" stroke-linecap="round"/><path class="d" fill="#24466b" d="M43.23 81V79.8L47.91 79.23Q47.97 77.33 48.03 75.12Q48.1 71.77 48.1 68.1V51.59Q48.1 48.11 48.03 44.82Q47.97 42.61 47.91 40.77L43.23 40.2V39H59.04Q65.17 39 69.6 41.47Q74.03 43.93 76.4 48.58Q78.77 53.23 78.77 59.87Q78.77 66.64 76.21 71.35Q73.65 76.07 69.16 78.53Q64.67 81 58.85 81ZM54.86 40.58Q54.8 42.54 54.74 44.82Q54.67 48.11 54.64 51.62Q54.61 55.13 54.61 58.42V61.2Q54.61 64.49 54.64 68.13Q54.67 71.77 54.74 75.12Q54.8 77.46 54.86 79.42H58.15Q62.58 79.42 65.59 77.02Q68.59 74.61 70.14 70.25Q71.69 65.88 71.69 60Q71.69 50.32 68.27 45.45Q64.86 40.58 58.53 40.58Z"/><circle class="dot" cx="60" cy="103" r="7" fill="#9a7b3f"/></svg></div><svg class="tacha" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><line x1="4" y1="96" x2="96" y2="4" stroke="#a1261f" stroke-opacity=".55" stroke-width="1" vector-effect="non-scaling-stroke"/></svg></div><figcaption><span class="x" aria-hidden="true"></span>No estirar ni comprimir.</figcaption></figure><figure class="mal rv"><div class="mal-arte" ><div style="filter:drop-shadow(6px 8px 6px rgb(0 0 0 / .45))"><svg viewBox="0 0 120 120" width="96" height="96" aria-hidden="true" focusable="false" ><path class="ring" d="M41.15 98.65A43.00 43.00 0 1 1 78.85 98.65" fill="none" stroke="#24466b" stroke-width="8" stroke-linecap="round"/><path class="d" fill="#24466b" d="M43.23 81V79.8L47.91 79.23Q47.97 77.33 48.03 75.12Q48.1 71.77 48.1 68.1V51.59Q48.1 48.11 48.03 44.82Q47.97 42.61 47.91 40.77L43.23 40.2V39H59.04Q65.17 39 69.6 41.47Q74.03 43.93 76.4 48.58Q78.77 53.23 78.77 59.87Q78.77 66.64 76.21 71.35Q73.65 76.07 69.16 78.53Q64.67 81 58.85 81ZM54.86 40.58Q54.8 42.54 54.74 44.82Q54.67 48.11 54.64 51.62Q54.61 55.13 54.61 58.42V61.2Q54.61 64.49 54.64 68.13Q54.67 71.77 54.74 75.12Q54.8 77.46 54.86 79.42H58.15Q62.58 79.42 65.59 77.02Q68.59 74.61 70.14 70.25Q71.69 65.88 71.69 60Q71.69 50.32 68.27 45.45Q64.86 40.58 58.53 40.58Z"/><circle class="dot" cx="60" cy="103" r="7" fill="#9a7b3f"/></svg></div><svg class="tacha" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><line x1="4" y1="96" x2="96" y2="4" stroke="#a1261f" stroke-opacity=".55" stroke-width="1" vector-effect="non-scaling-stroke"/></svg></div><figcaption><span class="x" aria-hidden="true"></span>No agregar sombras ni efectos.</figcaption></figure><figure class="mal rv"><div class="mal-arte" ><svg viewBox="0 0 120 120" width="96" height="96" aria-hidden="true" focusable="false" ><path class="ring" d="M41.15 98.65A43.00 43.00 0 1 1 78.85 98.65" fill="none" stroke="#9a7b3f" stroke-width="8" stroke-linecap="round"/><path class="d" fill="#9a7b3f" d="M43.23 81V79.8L47.91 79.23Q47.97 77.33 48.03 75.12Q48.1 71.77 48.1 68.1V51.59Q48.1 48.11 48.03 44.82Q47.97 42.61 47.91 40.77L43.23 40.2V39H59.04Q65.17 39 69.6 41.47Q74.03 43.93 76.4 48.58Q78.77 53.23 78.77 59.87Q78.77 66.64 76.21 71.35Q73.65 76.07 69.16 78.53Q64.67 81 58.85 81ZM54.86 40.58Q54.8 42.54 54.74 44.82Q54.67 48.11 54.64 51.62Q54.61 55.13 54.61 58.42V61.2Q54.61 64.49 54.64 68.13Q54.67 71.77 54.74 75.12Q54.8 77.46 54.86 79.42H58.15Q62.58 79.42 65.59 77.02Q68.59 74.61 70.14 70.25Q71.69 65.88 71.69 60Q71.69 50.32 68.27 45.45Q64.86 40.58 58.53 40.58Z"/><circle class="dot" cx="60" cy="103" r="7" fill="#24466b"/></svg><svg class="tacha" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><line x1="4" y1="96" x2="96" y2="4" stroke="#a1261f" stroke-opacity=".55" stroke-width="1" vector-effect="non-scaling-stroke"/></svg></div><figcaption><span class="x" aria-hidden="true"></span>No usar el dorado como color principal.</figcaption></figure><figure class="mal rv"><div class="mal-arte" ><div class="fuente-mala"><svg viewBox="0 0 120 120" width="56" height="56" aria-hidden="true" focusable="false" ><path class="ring" d="M41.15 98.65A43.00 43.00 0 1 1 78.85 98.65" fill="none" stroke="#24466b" stroke-width="8" stroke-linecap="round"/><path class="d" fill="#24466b" d="M43.23 81V79.8L47.91 79.23Q47.97 77.33 48.03 75.12Q48.1 71.77 48.1 68.1V51.59Q48.1 48.11 48.03 44.82Q47.97 42.61 47.91 40.77L43.23 40.2V39H59.04Q65.17 39 69.6 41.47Q74.03 43.93 76.4 48.58Q78.77 53.23 78.77 59.87Q78.77 66.64 76.21 71.35Q73.65 76.07 69.16 78.53Q64.67 81 58.85 81ZM54.86 40.58Q54.8 42.54 54.74 44.82Q54.67 48.11 54.64 51.62Q54.61 55.13 54.61 58.42V61.2Q54.61 64.49 54.64 68.13Q54.67 71.77 54.74 75.12Q54.8 77.46 54.86 79.42H58.15Q62.58 79.42 65.59 77.02Q68.59 74.61 70.14 70.25Q71.69 65.88 71.69 60Q71.69 50.32 68.27 45.45Q64.86 40.58 58.53 40.58Z"/><circle class="dot" cx="60" cy="103" r="7" fill="#9a7b3f"/></svg><span>Doy Fe</span></div><svg class="tacha" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><line x1="4" y1="96" x2="96" y2="4" stroke="#a1261f" stroke-opacity=".55" stroke-width="1" vector-effect="non-scaling-stroke"/></svg></div><figcaption><span class="x" aria-hidden="true"></span>No cambiar la tipografía del wordmark.</figcaption></figure><figure class="mal rv"><div class="mal-arte" style="background:#1b1f24"><svg viewBox="0 0 120 120" width="96" height="96" aria-hidden="true" focusable="false" ><path class="ring" d="M41.15 98.65A43.00 43.00 0 1 1 78.85 98.65" fill="none" stroke="#24466b" stroke-width="8" stroke-linecap="round"/><path class="d" fill="#24466b" d="M43.23 81V79.8L47.91 79.23Q47.97 77.33 48.03 75.12Q48.1 71.77 48.1 68.1V51.59Q48.1 48.11 48.03 44.82Q47.97 42.61 47.91 40.77L43.23 40.2V39H59.04Q65.17 39 69.6 41.47Q74.03 43.93 76.4 48.58Q78.77 53.23 78.77 59.87Q78.77 66.64 76.21 71.35Q73.65 76.07 69.16 78.53Q64.67 81 58.85 81ZM54.86 40.58Q54.8 42.54 54.74 44.82Q54.67 48.11 54.64 51.62Q54.61 55.13 54.61 58.42V61.2Q54.61 64.49 54.64 68.13Q54.67 71.77 54.74 75.12Q54.8 77.46 54.86 79.42H58.15Q62.58 79.42 65.59 77.02Q68.59 74.61 70.14 70.25Q71.69 65.88 71.69 60Q71.69 50.32 68.27 45.45Q64.86 40.58 58.53 40.58Z"/><circle class="dot" cx="60" cy="103" r="7" fill="#9a7b3f"/></svg><svg class="tacha" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><line x1="4" y1="96" x2="96" y2="4" stroke="#a1261f" stroke-opacity=".55" stroke-width="1" vector-effect="non-scaling-stroke"/></svg></div><figcaption><span class="x" aria-hidden="true"></span>No usar azul sobre fondos oscuros.</figcaption></figure></div>
+    </div>
+  </div>
+</section>
+
+<section class="sec sec-blanca" id="color" aria-labelledby="color-t">
+  <div class="sec-in">
+    <header class="sec-cab rv"><span class="num">04</span><h2 id="color-t">Color</h2><p>Papel y blanco dominan. La tinta escribe, el azul actúa y el dorado apenas firma.</p></header>
+  </div>
+  <div class="paleta"><div class="sw rv ancho4" style="--d:0ms;background:#24466b;color:#fff"><div><b>Azul pizarra</b><span>Marca, acción primaria</span></div><dl><div><dt>HEX</dt><dd>#24466B</dd></div><div><dt>RGB</dt><dd>36, 70, 107</dd></div><div><dt>vs. blanco</dt><dd>9,71 : 1</dd></div></dl></div><div class="sw rv ancho3" style="--d:60ms;background:#1b1f24;color:#fff"><div><b>Tinta</b><span>Texto principal</span></div><dl><div><dt>HEX</dt><dd>#1B1F24</dd></div><div><dt>RGB</dt><dd>27, 31, 36</dd></div><div><dt>vs. blanco</dt><dd>16,56 : 1</dd></div></dl></div><div class="sw rv ancho3 sw-borde" style="--d:120ms;background:#f3f4f1;color:#1b1f24"><div><b>Papel</b><span>Fondo general</span></div><dl><div><dt>HEX</dt><dd>#F3F4F1</dd></div><div><dt>RGB</dt><dd>243, 244, 241</dd></div><div><dt>vs. tinta</dt><dd>15,00 : 1</dd></div></dl></div><div class="sw rv  sw-borde" style="--d:180ms;background:#ffffff;color:#1b1f24"><div><b>Blanco</b><span>Superficies, tarjetas</span></div><dl><div><dt>HEX</dt><dd>#FFFFFF</dd></div><div><dt>RGB</dt><dd>255, 255, 255</dd></div><div><dt>vs. tinta</dt><dd>16,56 : 1</dd></div></dl></div><div class="sw rv " style="--d:240ms;background:#9a7b3f;color:#fff"><div><b>Dorado de sello</b><span>Solo detalles</span></div><dl><div><dt>HEX</dt><dd>#9A7B3F</dd></div><div><dt>RGB</dt><dd>154, 123, 63</dd></div><div><dt>vs. blanco</dt><dd>3,98 : 1</dd></div></dl></div><div class="sw rv " style="--d:300ms;background:#3d6f9e;color:#fff"><div><b>Azul señal</b><span>Estados de IA en curso</span></div><dl><div><dt>HEX</dt><dd>#3D6F9E</dd></div><div><dt>RGB</dt><dd>61, 111, 158</dd></div><div><dt>vs. blanco</dt><dd>5,30 : 1</dd></div></dl></div><div class="sw rv " style="--d:360ms;background:#24663f;color:#fff"><div><b>Verificado</b><span>Firmado, conciliado</span></div><dl><div><dt>HEX</dt><dd>#24663F</dd></div><div><dt>RGB</dt><dd>36, 102, 63</dd></div><div><dt>vs. blanco</dt><dd>6,89 : 1</dd></div></dl></div><div class="sw rv " style="--d:420ms;background:#7ea6d0;color:#1b1f24"><div><b>Azul · tema oscuro</b><span>Acento en oscuro</span></div><dl><div><dt>HEX</dt><dd>#7EA6D0</dd></div><div><dt>RGB</dt><dd>126, 166, 208</dd></div><div><dt>vs. tinta</dt><dd>6,51 : 1</dd></div></dl></div></div>
+  <div class="sec-in">
+    <div class="sec-cuerpo">
+      <div class="proporcion rv" aria-label="Proporción orientativa de color por pantalla" role="img"><span style="flex:46;background:#f3f4f1"></span><span style="flex:26;background:#fff"></span><span style="flex:16;background:#1b1f24"></span><span style="flex:10;background:#24466b"></span><span style="flex:2;background:#9a7b3f"></span></div>
+      <p class="proporcion-lbl rv">Proporción orientativa por pantalla: papel 46 · blanco 26 · tinta 16 · azul 10 · dorado 2.</p>
+      <div class="tabla-wrap rv">
+        <table class="contraste">
+          <caption>Contraste WCAG 2.x, calculado con luminancia relativa. AA texto normal desde 4,5; gráficos y texto grande desde 3; AAA desde 7.</caption>
+          <thead><tr><th scope="col"><span class="sr">Muestra</span></th><th scope="col">Par</th><th scope="col">Relación</th><th scope="col">Nivel</th></tr></thead>
+          <tbody><tr><td><span class="par" style="background:#ffffff;color:#24466b">Aa</span></td><td><code>#24466b</code> sobre <code>#ffffff</code></td><td class="num-r">9,71 : 1</td><td><span class="nivel ok">AAA</span></td></tr><tr><td><span class="par" style="background:#f3f4f1;color:#24466b">Aa</span></td><td><code>#24466b</code> sobre <code>#f3f4f1</code></td><td class="num-r">8,79 : 1</td><td><span class="nivel ok">AAA</span></td></tr><tr><td><span class="par" style="background:#24466b;color:#ffffff">Aa</span></td><td><code>#ffffff</code> sobre <code>#24466b</code></td><td class="num-r">9,71 : 1</td><td><span class="nivel ok">AAA</span></td></tr><tr><td><span class="par" style="background:#f3f4f1;color:#1b1f24">Aa</span></td><td><code>#1b1f24</code> sobre <code>#f3f4f1</code></td><td class="num-r">15,00 : 1</td><td><span class="nivel ok">AAA</span></td></tr><tr><td><span class="par" style="background:#ffffff;color:#566069">Aa</span></td><td><code>#566069</code> sobre <code>#ffffff</code></td><td class="num-r">6,42 : 1</td><td><span class="nivel ok">AA</span></td></tr><tr><td><span class="par" style="background:#ffffff;color:#3d6f9e">Aa</span></td><td><code>#3d6f9e</code> sobre <code>#ffffff</code></td><td class="num-r">5,30 : 1</td><td><span class="nivel ok">AA</span></td></tr><tr><td><span class="par" style="background:#f3f4f1;color:#3d6f9e">Aa</span></td><td><code>#3d6f9e</code> sobre <code>#f3f4f1</code></td><td class="num-r">4,80 : 1</td><td><span class="nivel ok">AA</span></td></tr><tr><td><span class="par" style="background:#ffffff;color:#9a7b3f">Aa</span></td><td><code>#9a7b3f</code> sobre <code>#ffffff</code></td><td class="num-r">3,98 : 1</td><td><span class="nivel med">Solo gráficos</span></td></tr><tr><td><span class="par" style="background:#24466b;color:#c9a45c">Aa</span></td><td><code>#c9a45c</code> sobre <code>#24466b</code></td><td class="num-r">4,14 : 1</td><td><span class="nivel med">Solo gráficos</span></td></tr><tr><td><span class="par" style="background:#14171a;color:#7ea6d0">Aa</span></td><td><code>#7ea6d0</code> sobre <code>#14171a</code></td><td class="num-r">7,07 : 1</td><td><span class="nivel ok">AAA</span></td></tr><tr><td><span class="par" style="background:#14171a;color:#24466b">Aa</span></td><td><code>#24466b</code> sobre <code>#14171a</code></td><td class="num-r">1,85 : 1</td><td><span class="nivel bad">No cumple</span></td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="sec" id="tipografia" aria-labelledby="tipografia-t">
+  <div class="sec-in">
+    <header class="sec-cab rv"><span class="num">05</span><h2 id="tipografia-t">Tipografía</h2><p>Una serif para dar fe, una sans para trabajar y una mono para los números que importan.</p></header>
+    <div class="sec-cuerpo">
+      <article class="tipo tipo-serif rv">
+        <div class="tipo-aa" aria-hidden="true">Aa</div>
+        <div class="tipo-info"><h3>Source Serif 4</h3><p class="tipo-uso">Semibold 600 · Wordmark, titulares editoriales y vista de documentos.</p>
+        <p class="tipo-muestra">Escritura de compraventa con constitución de usufructo</p>
+        <p class="tipo-glifos" aria-hidden="true">ABCDEFGHIJKLMNÑOPQRSTUVWXYZ<br>abcdefghijklmnñopqrstuvwxyz 0123456789</p></div>
+      </article>
+      <div class="tipo-par">
+        <article class="tipo tipo-sans rv">
+          <div class="tipo-aa" aria-hidden="true">Aa</div>
+          <h3>IBM Plex Sans</h3><p class="tipo-uso">400 · 500 · 600 · Toda la interfaz.</p>
+          <p class="tipo-muestra">Expedientes pendientes de firma</p>
+          <ul class="escala-t"><li style="font-size:28px">Título 28</li><li style="font-size:22px">Título 22</li><li style="font-size:18px">Destacado 18</li><li style="font-size:16px">Texto base 16</li><li style="font-size:14px">Secundario 14</li><li style="font-size:12px">Etiqueta 12</li></ul>
+        </article>
+        <article class="tipo tipo-mono rv">
+          <div class="tipo-aa" aria-hidden="true">01</div>
+          <h3>IBM Plex Mono</h3><p class="tipo-uso">400 · CUIT, CAE, folios y montos en tablas.</p>
+          <dl class="datos">
+            <div><dt>CUIT</dt><dd>20-12345678-9</dd></div>
+            <div><dt>CAE</dt><dd>74123456789012</dd></div>
+            <div><dt>Escritura</dt><dd>N.º 128 · Folio 412</dd></div>
+            <div><dt>Total</dt><dd>$ 1.250.000,00</dd></div>
+          </dl>
+        </article>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="sec sec-arena" id="aplicaciones" aria-labelledby="aplicaciones-t">
+  <div class="sec-in">
+    <header class="sec-cab rv"><span class="num">06</span><h2 id="aplicaciones-t">Aplicaciones</h2><p>La marca donde realmente vive: pantallas ajenas, pestañas, avatares y correos.</p></header>
+    <div class="sec-cuerpo">
+      <div class="apps">
+        <figure class="app app-google rv">
+          <div class="mock-google" aria-hidden="true">
+            <div class="mg-top"><span class="mg-acct"></span><span>Acceder con su cuenta</span></div>
+            <div class="mg-body">
+              <img src="/logo/doyfe-google-120.png" alt="" width="56" height="56" class="mg-logo">
+              <p class="mg-t">Doy Fe quiere acceder a su cuenta</p>
+              <p class="mg-mail">escribania@ejemplo.com.ar</p>
+              <ul><li><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M3 5h18v16H3zM3 10h18M8 3v4M16 3v4" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/></svg>Ver, editar y crear eventos en sus calendarios</li><li><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8zM14 2v6h6M8 13h8M8 17h5" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/></svg>Ver y administrar los archivos de Drive que crea esta app</li></ul>
+              <p class="mg-legal">Revise la <u>Política de privacidad</u> y las <u>Condiciones del servicio</u> de Doy Fe.</p>
+              <div class="mg-btns"><span>Cancelar</span><span class="pri">Continuar</span></div>
+            </div>
+          </div>
+          <figcaption><b>Consentimiento de Google</b><span>PNG 120 × 120 a sangre. Nombre exacto: "Doy Fe".</span></figcaption>
+        </figure>
+        <div class="apps-col">
+          <figure class="app rv">
+            <div class="mock-tab" aria-hidden="true">
+              <div class="mt-bar"><span class="mt-dots"><i></i><i></i><i></i></span><span class="mt-tab"><img src="/favicon.svg" alt="" width="16" height="16">Doy Fe · IA para escribanías<i class="mt-x"></i></span><span class="mt-tab mt-off">Nueva pestaña</span></div>
+              <div class="mt-url"><span>doyfe.ar</span></div>
+            </div>
+            <figcaption><b>Pestaña del navegador</b><span>Marca chica a 16 px: solo la D.</span></figcaption>
+          </figure>
+          <figure class="app rv">
+            <div class="mock-perfil" aria-hidden="true">
+              <div class="mp-portada"><img src="/logo/doyfe-horizontal-invertido.svg" alt=""></div>
+              <div class="mp-body"><img src="/logo/doyfe-512.png" alt="" class="mp-avatar"><div><b>Doy Fe</b><span>@doyfe.ar</span></div></div>
+              <p>Gestión notarial con IA y privacidad. Minutas listas para revisar, protocolo, caja y UIF.</p>
+            </div>
+            <figcaption><b>Perfil en redes</b><span>Isotipo en recorte circular; el nombre lo pone la red.</span></figcaption>
+          </figure>
+        </div>
+        <figure class="app rv">
+          <div class="mock-firma" aria-hidden="true">
+            <p class="mf-cuerpo">Quedo a disposición para coordinar la firma del jueves.</p>
+            <div class="mf-firma"><b>Nombre Apellido</b><span>Cargo · Doy Fe</span><u>doyfe.ar</u><img src="/logo/doyfe-horizontal.svg" alt="" width="120"></div>
+          </div>
+          <figcaption><b>Firma de correo</b><span>Texto primero; si se bloquean las imágenes, se lee igual.</span></figcaption>
+        </figure>
+        <figure class="app rv">
+          <div class="mock-side" aria-hidden="true">
+            <div class="ms-marca"><img src="/favicon.svg" alt="" width="34" height="34"><div><b>Doy Fe</b><span>IA para escribanías</span></div></div>
+            <ul><li class="on"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8zM14 2v6h6M8 13h8M8 17h5" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/></svg>Nueva minuta</li><li><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M4 19V5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2zm0 0a2 2 0 0 0 2 2h13" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/></svg>Protocolo</li><li><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M3 5h18v16H3zM3 10h18M8 3v4M16 3v4" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/></svg>Agenda</li><li><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/></svg>Clientes</li><li><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M2 7h20v10H2zM12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/></svg>Caja</li></ul>
+          </div>
+          <figcaption><b>Barra lateral de la app</b><span>Marca chica a 34 px con el wordmark en serif.</span></figcaption>
+        </figure>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="sec sec-tinta" id="voz" aria-labelledby="voz-t">
+  <div class="sec-in">
+    <header class="sec-cab rv"><span class="num">07</span><h2 id="voz-t">Voz</h2><p>Sobria, precisa, de colega a colega. La IA sugiere; decide el profesional.</p></header>
+    <div class="sec-cuerpo">
+      <div class="voz-cab rv" aria-hidden="true"><span>Decimos</span><span>No decimos</span></div>
+      <ul class="voz"><li class="rv" style="--d:0ms"><p class="si">Minuta lista para revisar</p><p class="nosi">Escritura automática</p></li><li class="rv" style="--d:50ms"><p class="si">Los nombres y DNI se anonimizan antes de enviar el texto al modelo</p><p class="nosi">Sus datos están 100 % seguros</p></li><li class="rv" style="--d:100ms"><p class="si">Borrador sugerido; la revisión es suya</p><p class="nosi">La IA redacta por usted</p></li><li class="rv" style="--d:150ms"><p class="si">Comprobante emitido. CAE 74123456789012</p><p class="nosi">¡Listo! ¡Tu factura ya salió!</p></li><li class="rv" style="--d:200ms"><p class="si">No se guardan copias fuera de su cuenta</p><p class="nosi">Seguridad de nivel militar</p></li><li class="rv" style="--d:250ms"><p class="si">Integración con Google Calendar y Drive</p><p class="nosi">Revolucionamos la escribanía</p></li></ul>
+      <ul class="reglas-voz rv"><li>Sin emojis ni signos de exclamación en la interfaz.</li><li>"21 %" con espacio; "$ 1.250.000,00".</li><li>Nunca "garantizado", "infalible" ni "cero riesgo".</li><li>"Doy Fe" siempre con espacio y dos mayúsculas.</li></ul>
+    </div>
+  </div>
+</section>
+
+<section class="sec" id="descargas" aria-labelledby="descargas-t">
+  <div class="sec-in">
+    <header class="sec-cab rv"><span class="num">08</span><h2 id="descargas-t">Descargas</h2><p>Todos los archivos están convertidos a trazos: no dependen de fuentes instaladas.</p></header>
+    <div class="sec-cuerpo"><ul class="descargas"><li class="rv"><a href="/logo/doyfe-isotipo.svg" download><span class="dl-prev"><img src="/logo/doyfe-isotipo.svg" alt="" loading="lazy"></span><span class="dl-nom">doyfe-isotipo.svg<small>Isotipo de app sobre azul</small></span><span class="dl-fmt">SVG</span><span class="dl-kb">0,9 KB</span><span class="dl-ic" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18"><path d="M12 4v11m0 0l-4.5-4.5M12 15l4.5-4.5M5 19h14" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/></svg></span></a></li><li class="rv"><a href="/logo/doyfe-sello.svg" download><span class="dl-prev"><img src="/logo/doyfe-sello.svg" alt="" loading="lazy"></span><span class="dl-nom">doyfe-sello.svg<small>Isotipo sin fondo, para claro</small></span><span class="dl-fmt">SVG</span><span class="dl-kb">0,9 KB</span><span class="dl-ic" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18"><path d="M12 4v11m0 0l-4.5-4.5M12 15l4.5-4.5M5 19h14" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/></svg></span></a></li><li class="rv"><a href="/logo/doyfe-horizontal.svg" download><span class="dl-prev"><img src="/logo/doyfe-horizontal.svg" alt="" loading="lazy"></span><span class="dl-nom">doyfe-horizontal.svg<small>Horizontal para fondos claros</small></span><span class="dl-fmt">SVG</span><span class="dl-kb">3,8 KB</span><span class="dl-ic" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18"><path d="M12 4v11m0 0l-4.5-4.5M12 15l4.5-4.5M5 19h14" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/></svg></span></a></li><li class="rv"><a href="/logo/doyfe-horizontal-invertido.svg" download><span class="dl-prev dl-osc"><img src="/logo/doyfe-horizontal-invertido.svg" alt="" loading="lazy"></span><span class="dl-nom">doyfe-horizontal-invertido.svg<small>Horizontal para fondos oscuros</small></span><span class="dl-fmt">SVG</span><span class="dl-kb">3,8 KB</span><span class="dl-ic" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18"><path d="M12 4v11m0 0l-4.5-4.5M12 15l4.5-4.5M5 19h14" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/></svg></span></a></li><li class="rv"><a href="/logo/doyfe-vertical.svg" download><span class="dl-prev"><img src="/logo/doyfe-vertical.svg" alt="" loading="lazy"></span><span class="dl-nom">doyfe-vertical.svg<small>Vertical</small></span><span class="dl-fmt">SVG</span><span class="dl-kb">3,9 KB</span><span class="dl-ic" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18"><path d="M12 4v11m0 0l-4.5-4.5M12 15l4.5-4.5M5 19h14" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/></svg></span></a></li><li class="rv"><a href="/logo/doyfe-mono.svg" download><span class="dl-prev"><img src="/logo/doyfe-mono.svg" alt="" loading="lazy"></span><span class="dl-nom">doyfe-mono.svg<small>Monocromo, currentColor</small></span><span class="dl-fmt">SVG</span><span class="dl-kb">0,9 KB</span><span class="dl-ic" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18"><path d="M12 4v11m0 0l-4.5-4.5M12 15l4.5-4.5M5 19h14" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/></svg></span></a></li><li class="rv"><a href="/favicon.svg" download><span class="dl-prev"><img src="/favicon.svg" alt="" loading="lazy"></span><span class="dl-nom">favicon.svg<small>Marca chica, solo la D</small></span><span class="dl-fmt">SVG</span><span class="dl-kb">0,7 KB</span><span class="dl-ic" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18"><path d="M12 4v11m0 0l-4.5-4.5M12 15l4.5-4.5M5 19h14" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/></svg></span></a></li><li class="rv"><a href="/logo/doyfe-google-120.png" download><span class="dl-prev"><img src="/logo/doyfe-google-120.png" alt="" loading="lazy"></span><span class="dl-nom">doyfe-google-120.png<small>Pantalla de consentimiento de Google</small></span><span class="dl-fmt">PNG 120</span><span class="dl-kb">6,1 KB</span><span class="dl-ic" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18"><path d="M12 4v11m0 0l-4.5-4.5M12 15l4.5-4.5M5 19h14" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/></svg></span></a></li><li class="rv"><a href="/logo/doyfe-512.png" download><span class="dl-prev"><img src="/logo/doyfe-512.png" alt="" loading="lazy"></span><span class="dl-nom">doyfe-512.png<small>Avatares de redes</small></span><span class="dl-fmt">PNG 512</span><span class="dl-kb">31,0 KB</span><span class="dl-ic" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18"><path d="M12 4v11m0 0l-4.5-4.5M12 15l4.5-4.5M5 19h14" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/></svg></span></a></li><li class="rv"><a href="/apple-touch-icon.png" download><span class="dl-prev"><img src="/apple-touch-icon.png" alt="" loading="lazy"></span><span class="dl-nom">apple-touch-icon.png<small>Acceso directo en iOS</small></span><span class="dl-fmt">PNG 180</span><span class="dl-kb">9,6 KB</span><span class="dl-ic" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18"><path d="M12 4v11m0 0l-4.5-4.5M12 15l4.5-4.5M5 19h14" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/></svg></span></a></li></ul></div>
+  </div>
+</section>
+
+</main>
+
+<footer class="pie">
+  <div class="pie-in">
+    <img src="/logo/doyfe-horizontal-invertido.svg" alt="Doy Fe" class="pie-logo">
+    <p>Guía de marca, versión 2 · 13 de septiembre de 2026. La referencia completa vive en <code>docs/MARCA.md</code>.</p>
+    <nav aria-label="Enlaces legales"><a href="/inicio.html">Inicio</a><a href="/privacidad.html">Privacidad</a><a href="/condiciones.html">Condiciones</a></nav>
+  </div>
+</footer>
+
+<script>
+(function(){
+  var estatico=document.documentElement.classList.contains('estatico');
+  var rv=document.querySelectorAll('.rv');
+  if(estatico||!('IntersectionObserver' in window)){rv.forEach(function(e){e.classList.add('visto')});}
+  else{
+    var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.classList.add('visto');io.unobserve(e.target);}})},{rootMargin:'0px 0px -8% 0px',threshold:.08});
+    rv.forEach(function(e){io.observe(e)});
+  }
+  var barra=document.getElementById('barra'),portada=document.getElementById('portada');
+  function onScroll(){barra.classList.toggle('solida',window.scrollY>portada.offsetHeight-72);}
+  window.addEventListener('scroll',onScroll,{passive:true});onScroll();
+  if('IntersectionObserver' in window){
+    var links={};document.querySelectorAll('.barra-nav a').forEach(function(a){links[a.getAttribute('href').slice(1)]=a});
+    var so=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){Object.values(links).forEach(function(a){a.classList.remove('activa');a.removeAttribute('aria-current')});var a=links[e.target.id];if(a){a.classList.add('activa');a.setAttribute('aria-current','true')}}})},{rootMargin:'-45% 0px -50% 0px'});
+    document.querySelectorAll('main section[id]').forEach(function(s){so.observe(s)});
+  }
+  var r=document.getElementById('tam'),out=document.getElementById('tam-out'),caja=r&&r.closest('.prueba'),nota=document.getElementById('prueba-nota');
+  if(r){
+    var sv=document.querySelector('#prueba-v2 svg'),im=document.querySelector('#prueba-chica img');
+    function upd(){var v=+r.value;out.textContent=v+' px';sv.setAttribute('width',v);sv.setAttribute('height',v);im.width=v;im.height=v;
+      var chica=v<24;caja.classList.toggle('chica',chica);nota.textContent=chica?'Menos de 24 px: se usa la marca chica, solo la D.':'Isotipo completo.';}
+    r.addEventListener('input',upd);upd();
+  }
+})();
+
+</script>
+</body>
+</html>
