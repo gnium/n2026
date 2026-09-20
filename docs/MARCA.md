@@ -93,14 +93,14 @@ Los contornos están convertidos a trazos: ningún SVG depende de fuentes instal
 
 | Versión | Uso | Archivo |
 |---|---|---|
-| Isotipo (app) | Íconos de app, avatares, espacios cuadrados | `frontend/public/logo/doyfe-isotipo.svg` (sello sobre cuadrado redondeado azul) |
-| Sello | Sobre fondos claros, junto a texto | `frontend/public/logo/doyfe-sello.svg` (azul, sin fondo) |
-| Horizontal | Encabezado de la app, landing, firma de correo, documentos | `frontend/public/logo/doyfe-horizontal.svg` |
-| Vertical | Portadas, piezas cuadradas, presentaciones | `frontend/public/logo/doyfe-vertical.svg` |
-| Monocromo | Impresión en un color, sello de goma, fax | `frontend/public/logo/doyfe-mono.svg` (usa `currentColor`: insertado en línea toma el color del texto; como `<img>` sale negro) |
-| Invertido | Sobre azul pizarra o tinta (tema oscuro, pies de página) | `frontend/public/logo/doyfe-horizontal-invertido.svg` |
-| PNG 120×120 | Pantalla de consentimiento de Google | `frontend/public/logo/doyfe-google-120.png` |
-| PNG 512×512 | Avatares de redes, PWA, tiendas | `frontend/public/logo/doyfe-512.png` |
+| Isotipo (app) | Íconos de app, avatares, espacios cuadrados | `landing/logo/doyfe-isotipo.svg` (sello sobre cuadrado redondeado azul) |
+| Sello | Sobre fondos claros, junto a texto | `landing/logo/doyfe-sello.svg` (azul, sin fondo) |
+| Horizontal | Encabezado de la app, landing, firma de correo, documentos | `landing/logo/doyfe-horizontal.svg` |
+| Vertical | Portadas, piezas cuadradas, presentaciones | `landing/logo/doyfe-vertical.svg` |
+| Monocromo | Impresión en un color, sello de goma, fax | `landing/logo/doyfe-mono.svg` (usa `currentColor`: insertado en línea toma el color del texto; como `<img>` sale negro) |
+| Invertido | Sobre azul pizarra o tinta (tema oscuro, pies de página) | `landing/logo/doyfe-horizontal-invertido.svg` |
+| PNG 120×120 | Pantalla de consentimiento de Google | `landing/logo/doyfe-google-120.png` |
+| PNG 512×512 | Avatares de redes, PWA, tiendas | `landing/logo/doyfe-512.png` |
 | Favicon / marca chica | Pestaña del navegador, barra lateral de la app (34 px) | `frontend/public/favicon.svg` (solo la "D" sobre azul) |
 | Apple touch icon | Acceso directo en iOS | `frontend/public/apple-touch-icon.png` (180 × 180) |
 
@@ -200,13 +200,13 @@ Proporción orientativa por pantalla: papel y blanco dominan, tinta para texto, 
 | Campo | Valor |
 |---|---|
 | Nombre de la aplicación | Doy Fe (con espacio y mayúsculas; no "doyfe") |
-| Correo de asistencia | Google solo ofrece la cuenta propia o un grupo de Google que administres. Hoy: `sebastian@cumbre.tech`. Cuando exista, un grupo `soporte@doyfe.ar` |
+| Correo de asistencia | Google solo ofrece la cuenta propia o un grupo de Google que administres. Hoy: `sebastian@cumbre.tech`. Cuando exista, un grupo `soporte@doyfegestion.com` |
 | Logotipo | `doyfe-google-120.png`: 120 × 120 px, PNG, 10 KB, cuadrado a sangre en azul pizarra con el sello blanco, sin transparencia. Todo el dibujo entra en el círculo inscripto, así que resiste el recorte circular de Google |
-| Página principal | `https://doyfe.ar/inicio.html` |
-| Política de privacidad | `https://doyfe.ar/privacidad.html` |
-| Condiciones del servicio | `https://doyfe.ar/condiciones.html` |
-| Dominios autorizados | `doyfe.ar` |
-| Contacto del desarrollador | Casilla técnica en `doyfe.ar` |
+| Página principal | `https://doyfegestion.com` |
+| Política de privacidad | `https://doyfegestion.com/privacidad.html` |
+| Condiciones del servicio | `https://doyfegestion.com/condiciones.html` |
+| Dominios autorizados | `doyfegestion.com` (el CRM vive en `app.doyfegestion.com`) |
+| Contacto del desarrollador | Casilla técnica en `doyfegestion.com` |
 
 Las tres páginas deben estar publicadas, accesibles sin sesión y mostrar el nombre "Doy Fe" igual que en la pantalla de consentimiento, o Google rechaza la verificación. Cambiar el logo reinicia la revisión: definirlo antes de enviarla.
 
