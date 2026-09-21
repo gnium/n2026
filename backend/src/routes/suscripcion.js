@@ -7,6 +7,7 @@ import { pool } from "../config/db.js";
 import { buscarPorId, actualizarSuscripcion } from "../auth/repositorio.js";
 import { crearSuscripcion, cambiarEstadoSuscripcion } from "../services/mercadopago.js";
 import { cargosPendientes } from "../services/facturacion.js";
+import { vista as vistaPrueba } from "../services/prueba.js";
 import { AppError } from "../utils/errores.js";
 
 export const rutasSuscripcion = Router();
@@ -31,6 +32,7 @@ rutasSuscripcion.get("/", async (req, res, next) => {
     const pendientes = await cargosPendientes(req.usuario.id);
     res.json({
       estado: u.estado_suscripcion,
+      prueba: vistaPrueba(u),
       plan,
       proximoCobroEn: u.proximo_cobro_en,
       cargosPendientes: pendientes,

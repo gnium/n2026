@@ -5,11 +5,14 @@ import { api } from "../api.js";
  * Pantallas de acceso: ingresar, crear cuenta, olvide mi contrasena y
  * restablecer (cuando la URL trae ?token=...).
  */
-export default function Acceso({ onIngreso, invitacion = null }) {
+export default function Acceso({ onIngreso, invitacion = null, alta = null }) {
   const tokenUrl = new URLSearchParams(window.location.search).get("token");
-  const [vista, setVista] = useState(tokenUrl ? "restablecer" : "login");
+  // Con una invitacion de la plataforma se entra directo a crear la cuenta:
+  // quien llega por ese enlace todavia no tiene ninguna.
+  const [vista, setVista] = useState(tokenUrl ? "restablecer" : alta ? "registro" : "login");
   const [form, setForm] = useState({ email: "", password: "", password2: "", nombre: "", codigo: "" });
   const [inv, setInv] = useState(null);
+  const [altaInv, setAltaInv] = useState(null);
   const [error, setError] = useState(null);
   const [aviso, setAviso] = useState(null);
   const [cargando, setCargando] = useState(false);
@@ -31,6 +34,18 @@ export default function Acceso({ onIngreso, invitacion = null }) {
       .catch((e) => setError(e.message));
   }, [invitacion]);
 
+  // Invitacion de la plataforma (alta de una escribania nueva, con prueba).
+  useEffect(() => {
+    if (!alta) return;
+    api
+      .altaVer(alta)
+      .then((i) => {
+        setAltaInv(i);
+        setForm((f) => ({ ...f, email: i.email, nombre: f.nombre || i.nombre || "" }));
+      })
+      .catch((e) => setError(e.message));
+  }, [alta]);
+
   const campo = (k) => ({ value: form[k], onChange: (e) => setForm({ ...form, [k]: e.target.value }) });
 
   const enviar = async (e) => {
@@ -44,7 +59,7 @@ export default function Acceso({ onIngreso, invitacion = null }) {
         onIngreso(r.usuario);
       } else if (vista === "registro") {
         if (form.password !== form.password2) throw new Error("Las contraseñas no coinciden.");
-        const r = await api.registro({ email: form.email, password: form.password, nombre: form.nombre, codigo: form.codigo, invitacion: invitacion || undefined });
+        const r = await api.registro({ email: form.email, password: form.password, nombre: form.nombre, codigo: form.codigo, invitacion: invitacion || undefined, alta: alta || undefined });
         onIngreso(r.usuario);
       } else if (vista === "recuperar") {
         const r = await api.recuperar(form.email);
@@ -74,6 +89,12 @@ export default function Acceso({ onIngreso, invitacion = null }) {
         <p className="subtitulo">IA para escribanías: la escritura lista para revisar, los datos en tu escribanía.</p>
         <h2>{titulo}</h2>
 
+        {altaInv && (
+          <p className="alerta ok" role="status">
+            Su acceso a Doy Fe está listo{altaInv.escribania ? ` para ${altaInv.escribania}` : ""}. Cree la cuenta con <b>{altaInv.email}</b> y empieza un período de prueba de <b>{altaInv.diasPrueba} días</b> sin cargo. Al terminar, si no activa una suscripción, la cuenta y todos sus datos se eliminan de forma definitiva.
+          </p>
+        )}
+
         {inv && (
           <p className="alerta ok" role="status">
             Lo invitaron a <b>{inv.equipo}</b> como <b>{inv.rol === "escribano" ? "Escribano/a" : "Empleado/a"}</b>. Ingrese con <b>{inv.email}</b> (o cree la cuenta con ese correo) y la invitación se acepta sola.
@@ -84,7 +105,7 @@ export default function Acceso({ onIngreso, invitacion = null }) {
           {vista !== "restablecer" && (
             <label>
               Correo electrónico
-              <input type="email" autoComplete="email" required {...campo("email")} />
+              <input type="email" autoComplete="email" required readOnly={Boolean(altaInv)} {...campo("email")} />
             </label>
           )}
           {vista === "registro" && (
@@ -106,7 +127,7 @@ export default function Acceso({ onIngreso, invitacion = null }) {
               <input type="password" autoComplete="new-password" required {...campo("password2")} />
             </label>
           )}
-          {vista === "registro" && (
+          {vista === "registro" && !altaInv && (
             <label>
               Código de invitación <small>(solo si la administradora lo configuró)</small>
               <input type="text" {...campo("codigo")} />

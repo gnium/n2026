@@ -17,7 +17,10 @@ rutasWebhookMercadoPago.post("/mercadopago", async (req, res, next) => {
   try {
     validarFirmaWebhook(req);
     const tipo = req.body?.type || req.query?.topic || "desconocido";
-    const dataId = req.body?.data?.id || req.query["data.id"] || req.query.id || null;
+    // SOLO el id de la query: es el unico que entra en el manifiesto que firma
+    // Mercado Pago. Tomarlo del cuerpo significaria actuar sobre un dato que la
+    // firma no cubre, es decir, sobre algo que el emisor pudo cambiar sin romperla.
+    const dataId = req.query["data.id"] || req.query.id || null;
     await pool.query("INSERT INTO mp_eventos (tipo, mp_id) VALUES (?, ?)", [tipo, dataId]).catch(() => {});
 
     if (tipo === "subscription_preapproval" && dataId) {

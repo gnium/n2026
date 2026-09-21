@@ -606,3 +606,54 @@ Esto deja la integración funcionando y probada (creación de suscripción, chec
 - Probar el flujo completo con una cuenta de Mercado Pago real de prueba (yo no pude: hace falta una cuenta y una tarjeta de prueba, algo que solo puede hacer quien la va a operar).
 - Una pantalla de recibos/comprobantes para la escribana o el escribano, y manejo de pagos rechazados (Mercado Pago reintenta solo, pero conviene avisar en la app).
 - Términos de servicio y política de privacidad publicados, acordes a las obligaciones de una escribana o un escribano con esta app (retención de datos, subprocesadores como Anthropic/Google/Mercado Pago).
+
+## 11. Alta por invitación, prueba de 60 días y borrado al vencer
+
+El alta de escribanías es **cerrada**: sin una invitación vigente nadie puede crear una cuenta (el `CODIGO_REGISTRO` compartido sigue funcionando, pero ya no hace falta). Quien opera la plataforma invita desde **Operación → Altas de escribanías**.
+
+### 11.1 El ciclo completo
+
+```
+invitación ──▶ alta ──60 días de prueba──▶ vencida ──15 días de gracia──▶ BORRADO DEFINITIVO
+                  │                           │                              (todo el contenido)
+                  │                           └─ se suscribe ─▶ activa ──────▶ (nunca se borra)
+                  └─ avisos por correo a los 10, 3 y 1 día; al vencer; y 3 días antes del borrado
+```
+
+- **Invitar**: correo (obligatorio), nombre y nombre de la escribanía (opcionales) y días de prueba (60 por omisión). Si se carga la escribanía, al aceptar la invitación queda creado el equipo con esa cuenta como titular. El correo lleva un enlace `?alta=<token>`; del token solo se guarda su `sha256`, y vence a los 14 días. Sin SMTP configurado el panel devuelve el enlace para pasarlo a mano.
+- **Durante la prueba** la cuenta trabaja igual que una suscripta. La pantalla **Suscripción** muestra los días que quedan y qué pasa si no se suscribe.
+- **Al vencer sin suscripción** la cuenta queda **bloqueada para trabajo nuevo** (no puede iniciar documentos) pero **sigue pudiendo entrar, consultar y exportar** durante la gracia: protocolo, comprobantes y caja se exportan desde cada pantalla.
+- **Al vencer la gracia se borra todo**: cuenta, clientes, expedientes, protocolo, caja, comprobantes, legajos UIF, credenciales de ARCA y de Google, y la invitación con la que se dio de alta. No queda copia: solo una fila en `cuentas_eliminadas` con el `sha256` del correo, para poder responder "esa cuenta se borró tal día" sin conservar el dato. Es la contracara de la promesa de privacidad: datos de terceros que ya no hay por qué tener, no se guardan "por las dudas".
+- **Quien se suscribe deja de estar en riesgo**: pasar a `activa` cierra la prueba y levanta la baja programada. Si más adelante cancela, no reaparece una prueba vencida de hace meses: el borrado automático solo alcanza a pruebas que nunca se convirtieron.
+- **El control mira las fechas, no el estado.** `prueba_termina_en` y `eliminacion_programada_en` mandan; `estado_suscripcion` no, porque lo mueve cualquier ida y vuelta con Mercado Pago que la propia cuenta puede disparar (pedir una suscripción la deja `pendiente`, cancelarla la deja `cancelada`). Atar el bloqueo a que el estado dijera `vencida` dejaba salir de la prueba con un pedido cualquiera, sin pagar, y además sacaba a la cuenta del alcance del borrado para siempre.
+
+### 11.2 Parámetros
+
+Están en la tabla `configuracion` (no en `.env`), y se pueden cambiar con SQL:
+
+| clave | por omisión | qué hace |
+| --- | --- | --- |
+| `prueba_dias` | 60 | días de prueba de una cuenta invitada (se puede pisar por invitación) |
+| `prueba_gracia_dias` | 15 | días entre el fin de la prueba y el borrado definitivo |
+| `prueba_borrado_automatico` | 1 | `0` deja las cuentas vencidas a la espera de que el operador confirme el borrado |
+
+La revisión (avisos, vencimientos y borrado) corre sola **cada 6 horas** dentro del backend y es idempotente. El botón **Revisar vencimientos ahora** del panel adelanta esa pasada. El operador también puede borrar una cuenta a mano desde su ficha, escribiendo el correo exacto para confirmar.
+
+> **Antes de invitar a nadie, configurar SMTP.** Sin correo no salen ni la invitación ni los avisos previos al borrado, y borrar datos sin haber avisado no es defendible.
+
+### 11.3 Nota sobre equipos
+
+Si la cuenta borrada era la **titular** de una escribanía, el equipo desaparece con ella y quienes lo integraban quedan sin equipo. Las cuentas de esas personas y los datos de cada una **no se tocan**: en este modelo cada cuenta es dueña de lo suyo.
+
+## 12. Seguridad: decisiones y controles
+
+Lo que sostiene hoy el modelo de acceso, además de lo ya descrito (anonimización antes de llamar al modelo, cifrado en reposo de identificadores y credenciales, panel de operación que solo ve metadatos):
+
+- **Sesiones revocables al instante.** La cookie de sesión (`httpOnly`, `SameSite=Lax`, `Secure` forzado en producción) lleva la `sesion_version` de la cuenta. Desactivar una cuenta o cambiar su contraseña incrementa ese contador, y toda cookie anterior deja de valer en el acto: antes seguían sirviendo hasta 12 h. El estado se consulta en cada pedido, con 5 s de caché.
+- **CSRF por origen.** Todo pedido que modifica algo tiene que declarar un origen conocido (`Sec-Fetch-Site: same-origin`, u `Origin`/`Referer` del propio dominio). Se exceptúa `/api/webhooks`, que no usa cookie: ahí la autenticación es la firma HMAC de Mercado Pago.
+- **Límites de intentos** en ingreso (por correo+IP y por IP), recuperación de contraseña (por IP y por correo: cada pedido manda un correo), alta de cuentas y canje de tokens.
+- **CSP sin `unsafe-inline` para scripts**: el único script en línea de la interfaz se declara por su hash `sha256`, calculado al arrancar.
+- **Tokens que nunca se guardan en claro**: recuperación de contraseña e invitaciones (de equipo y de plataforma) se guardan como `sha256`. En producción los enlaces tampoco se escriben en el log.
+- **`DATA_ENCRYPTION_KEY` separada de `JWT_SECRET`.** Si no se carga se usa `JWT_SECRET`, como antes; cargándola se puede rotar el secreto de sesiones sin volver ilegibles los identificadores de clientes, el protocolo y las credenciales de ARCA.
+- **`TRUST_PROXY=1` detrás de un proxy.** No es cosmético: con `0`, todos los pedidos parecen venir de la misma IP y el límite de intentos castiga a todo el mundo por igual.
+- **Pendiente, a propósito**: segundo factor (MFA) para las cuentas y, con él, la exigencia de MFA para la cuenta operadora.

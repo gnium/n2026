@@ -2,7 +2,18 @@ import { useEffect, useState } from "react";
 import { api } from "../api.js";
 import { formatoUsd } from "./Pipeline.jsx";
 
-const NOMBRE_ESTADO = { sin_suscripcion: "Sin suscripción", pendiente: "Pendiente de autorizar", activa: "Activa", pausada: "Pausada", cancelada: "Cancelada" };
+const NOMBRE_ESTADO = {
+  sin_suscripcion: "Sin suscripción",
+  prueba: "Período de prueba",
+  vencida: "Prueba vencida",
+  pendiente: "Pendiente de autorizar",
+  activa: "Activa",
+  pausada: "Pausada",
+  cancelada: "Cancelada",
+};
+
+const fechaLarga = (v) => new Date(`${String(v).slice(0, 10)}T00:00:00`).toLocaleDateString("es-AR", { day: "2-digit", month: "long", year: "numeric" });
+const dias = (n) => `${n} ${n === 1 ? "día" : "días"}`;
 
 function formatoArs(n) {
   return `AR$ ${Number(n).toLocaleString("es-AR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -76,6 +87,24 @@ export default function Suscripcion() {
       )}
       {aviso && <p className="alerta ok" role="status">{aviso}</p>}
 
+      {estado.prueba?.enPrueba && (
+        <p className={`alerta ${estado.prueba.diasRestantes <= 7 ? "" : "ok"}`} role="status">
+          Está usando Doy Fe en período de prueba: le {estado.prueba.diasRestantes === 1 ? "queda" : "quedan"} <b>{dias(estado.prueba.diasRestantes)}</b>, hasta el {fechaLarga(estado.prueba.terminaEn)}. Para seguir trabajando después de esa fecha, active una suscripción. Si no lo hace, la cuenta se bloquea y, pasado el plazo de aviso, se eliminan de forma definitiva todos sus datos: clientes, expedientes, protocolo, caja, comprobantes y legajos UIF. No guardamos copias.
+        </p>
+      )}
+
+      {estado.prueba?.vencida && (
+        <p className="alerta error" role="alert">
+          Su período de prueba terminó: no puede iniciar documentos nuevos, pero sí entrar, consultar y exportar lo suyo.
+          {estado.prueba.eliminacionEn && (
+            <>
+              {" "}
+              El <b>{fechaLarga(estado.prueba.eliminacionEn)}</b> {estado.prueba.diasHastaEliminacion > 0 ? `(en ${dias(estado.prueba.diasHastaEliminacion)})` : "(hoy)"} se eliminan de forma definitiva la cuenta y todo su contenido. Active una suscripción para conservarlo.
+            </>
+          )}
+        </p>
+      )}
+
       <div className="consumo-cards">
         <div className="consumo-card">
           <span className="consumo-card-valor">{formatoArs(estado.totalPendienteArs)}</span>
@@ -86,8 +115,10 @@ export default function Suscripcion() {
           <span className="consumo-card-etiqueta">plan actual{estado.plan ? ` · ${formatoArs(estado.plan.precioMensualArs)}/mes` : ""}</span>
         </div>
         <div className="consumo-card">
-          <span className="consumo-card-valor">{estado.proximoCobroEn ? new Date(estado.proximoCobroEn).toLocaleDateString("es-AR") : "—"}</span>
-          <span className="consumo-card-etiqueta">próximo cobro</span>
+          <span className="consumo-card-valor">
+            {estado.proximoCobroEn ? new Date(estado.proximoCobroEn).toLocaleDateString("es-AR") : estado.prueba?.terminaEn ? new Date(`${estado.prueba.terminaEn}T00:00:00`).toLocaleDateString("es-AR") : "—"}
+          </span>
+          <span className="consumo-card-etiqueta">{estado.proximoCobroEn || !estado.prueba?.terminaEn ? "próximo cobro" : estado.prueba.enPrueba ? "fin de la prueba" : "prueba terminada"}</span>
         </div>
       </div>
 

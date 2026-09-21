@@ -17,7 +17,7 @@ import { randomBytes } from "node:crypto";
 import { pool } from "../config/db.js";
 import { AppError } from "../utils/errores.js";
 import { env } from "../config/env.js";
-import { enviarCorreo } from "./correo.js";
+import { enviarCorreo, escaparHtml } from "./correo.js";
 import { sha256 } from "../auth/repositorio.js";
 import { logger } from "../utils/logger.js";
 
@@ -151,7 +151,9 @@ export async function invitar(usuarioId, { email, rol }) {
     para: destino,
     asunto: `Invitacion a ${ctx.equipoNombre} en Doy Fe`,
     texto,
-    html: `<p>${ctx.nombre || ctx.email} lo invita a sumarse a <b>${ctx.equipoNombre}</b> en Doy Fe como <b>${rol}</b>.</p><p><a href="${enlace}">Aceptar la invitacion</a></p><p>Vence en ${DIAS_INVITACION} dias.</p>`,
+    // Nombre de la persona y del equipo son texto que carga un usuario: escapado,
+    // no se convierten en etiquetas dentro del correo de otra persona.
+    html: `<p>${escaparHtml(ctx.nombre || ctx.email)} lo invita a sumarse a <b>${escaparHtml(ctx.equipoNombre)}</b> en Doy Fe como <b>${escaparHtml(rol)}</b>.</p><p><a href="${escaparHtml(enlace)}">Aceptar la invitacion</a></p><p>Vence en ${DIAS_INVITACION} dias.</p>`,
   });
   // El enlace lleva el token en claro: solo se devuelve si no se pudo enviar el correo.
   return { enviado, enlace: enviado ? null : enlace, email: destino, rol, equipo: await obtener(usuarioId) };

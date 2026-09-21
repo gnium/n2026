@@ -1,7 +1,7 @@
 import { verificarToken } from "../auth/token.js";
 import { AppError } from "../utils/errores.js";
 import { env } from "../config/env.js";
-import { buscarPorId } from "../auth/repositorio.js";
+import { buscarPorId, estadoCuenta } from "../auth/repositorio.js";
 import { contexto, alcanza } from "../services/equipo.js";
 
 export const NOMBRE_COOKIE = "notarius_sesion";
@@ -25,13 +25,31 @@ export function opcionesCookie(maxAgeSegundos) {
   };
 }
 
-/** Exige sesion valida; deja req.usuario = { id, email }. */
-export function requerirAuth(req, _res, next) {
-  const token = leerCookies(req)[NOMBRE_COOKIE] || (req.headers.authorization || "").replace(/^Bearer\s+/i, "");
-  const payload = verificarToken(token);
-  if (!payload?.sub) return next(new AppError("NO_AUTENTICADO", "Debe iniciar sesion.", 401));
-  req.usuario = { id: payload.sub, email: payload.email };
-  next();
+/**
+ * Exige sesion valida; deja req.usuario = { id, email }.
+ *
+ * La firma del token no alcanza: tambien se comprueba contra la base que la
+ * cuenta siga activa y que el token lleve la version de sesion vigente. Asi,
+ * desactivar una cuenta o cambiar su contrasena corta las cookies ya emitidas
+ * en el acto, en vez de dejarlas vivas hasta que venzan (hasta 12 h). El
+ * estado se cachea 5 s para no agregar una consulta por pedido en las
+ * pantallas que sondean.
+ */
+export async function requerirAuth(req, _res, next) {
+  try {
+    const token = leerCookies(req)[NOMBRE_COOKIE] || (req.headers.authorization || "").replace(/^Bearer\s+/i, "");
+    const payload = verificarToken(token);
+    if (!payload?.sub) throw new AppError("NO_AUTENTICADO", "Debe iniciar sesion.", 401);
+    const cuenta = await estadoCuenta(payload.sub);
+    if (!cuenta || !cuenta.activo) throw new AppError("NO_AUTENTICADO", "La sesion ya no es valida.", 401);
+    if (Number(payload.v || 0) !== Number(cuenta.sesion_version || 0)) {
+      throw new AppError("NO_AUTENTICADO", "La sesion se cerro. Vuelva a ingresar.", 401);
+    }
+    req.usuario = { id: cuenta.id, email: cuenta.email };
+    next();
+  } catch (e) {
+    next(e);
+  }
 }
 
 /**

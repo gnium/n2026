@@ -8,7 +8,20 @@ import { fechaCorta } from "./Expedientes.jsx";
 
 const PERIODOS = [["30", "30 días"], ["90", "90 días"], ["365", "12 meses"]];
 const NOMBRE_ROL = { root: "Operador", titular: "Titular", escribano: "Escribano/a", empleado: "Empleado/a" };
-const NOMBRE_SUSCRIPCION = { sin_suscripcion: "sin suscripción", pendiente: "pendiente", activa: "activa", pausada: "pausada", cancelada: "cancelada" };
+const NOMBRE_SUSCRIPCION = {
+  sin_suscripcion: "sin suscripción",
+  prueba: "en prueba",
+  vencida: "prueba vencida",
+  pendiente: "pendiente",
+  activa: "activa",
+  pausada: "pausada",
+  cancelada: "cancelada",
+};
+const ESTADO_INVITACION = { pendiente: "pendiente", aceptada: "aceptada", vencida: "vencida", cancelada: "cancelada" };
+// La prueba manda sobre el estado de Mercado Pago: una cuenta puede figurar
+// "pendiente" de autorizar y estar igual dentro de su período de prueba.
+const textoSuscripcion = (c) => (c.enPrueba ? "en prueba" : c.pruebaVencida ? "prueba vencida" : NOMBRE_SUSCRIPCION[c.suscripcion] || c.suscripcion);
+const soloFecha = (v) => (v ? new Date(v).toLocaleDateString("es-AR", { day: "2-digit", month: "2-digit", year: "2-digit" }) : "—");
 const cuando = (v) => (v ? new Date(v).toLocaleString("es-AR", { day: "2-digit", month: "2-digit", year: "2-digit", hour: "2-digit", minute: "2-digit" }) : "nunca");
 // En esta pantalla el cero es un dato contable, no una promoción: "gratis" acá confunde.
 const usd = (n) => (Number(n) > 0 ? formatoUsd(n) : "US$ 0,00");
@@ -28,15 +41,27 @@ export default function Soporte() {
   const [soloProblemas, setSoloProblemas] = useState(false);
   const [detalle, setDetalle] = useState(null);
   const [aDesactivar, setADesactivar] = useState(null);
+  const [invitaciones, setInvitaciones] = useState([]);
+  const [alta, setAlta] = useState({ email: "", nombre: "", escribania: "", diasPrueba: 60 });
+  const [enlaceAlta, setEnlaceAlta] = useState(null);
+  const [aCancelar, setACancelar] = useState(null);
+  const [confirmacionBorrado, setConfirmacionBorrado] = useState("");
+  const [borrando, setBorrando] = useState(false);
+  const [ocupado, setOcupado] = useState(false);
   const [error, setError] = useState(null);
   const [aviso, setAviso] = useState("");
 
   const cargar = async () => {
     setError(null);
     try {
-      const [r, c] = await Promise.all([api.soporteResumen(dias), api.soporteCuentas({ dias, q, problemas: soloProblemas ? "1" : "" })]);
+      const [r, c, i] = await Promise.all([
+        api.soporteResumen(dias),
+        api.soporteCuentas({ dias, q, problemas: soloProblemas ? "1" : "" }),
+        api.soporteInvitaciones(),
+      ]);
       setResumen(r);
       setLista(c.cuentas);
+      setInvitaciones(i);
     } catch (e) {
       setError(e.message);
     }
@@ -72,6 +97,83 @@ export default function Soporte() {
       await cargar();
     } catch (e) {
       setError(e.message);
+    }
+  };
+
+  const invitar = async (e) => {
+    e.preventDefault();
+    setError(null);
+    setEnlaceAlta(null);
+    setOcupado(true);
+    try {
+      const r = await api.soporteInvitar(alta);
+      setInvitaciones(r.invitaciones);
+      setAlta({ email: "", nombre: "", escribania: "", diasPrueba: alta.diasPrueba });
+      // Sin SMTP configurado el backend devuelve el enlace para pasarlo a mano.
+      if (r.enviado) setAviso(`Invitación enviada a ${r.email} con ${r.diasPrueba} días de prueba.`);
+      else setEnlaceAlta({ email: r.email, enlace: r.enlace });
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setOcupado(false);
+    }
+  };
+
+  const reenviar = async (inv) => {
+    setError(null);
+    setEnlaceAlta(null);
+    setOcupado(true);
+    try {
+      const r = await api.soporteReenviarInvitacion(inv.id);
+      setInvitaciones(r.invitaciones);
+      if (r.enviado) setAviso(`Invitación reenviada a ${r.email}.`);
+      else setEnlaceAlta({ email: r.email, enlace: r.enlace });
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setOcupado(false);
+    }
+  };
+
+  const cancelarInvitacion = async (inv) => {
+    setACancelar(null);
+    setError(null);
+    try {
+      const r = await api.soporteCancelarInvitacion(inv.id);
+      setInvitaciones(r.invitaciones);
+      setAviso(`Invitación a ${inv.email} cancelada: ese enlace ya no sirve.`);
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
+  const revisarVencimientos = async () => {
+    setError(null);
+    setOcupado(true);
+    try {
+      const r = await api.soporteRevisarPruebas();
+      setAviso(`Revisión hecha: ${r.avisos} aviso(s), ${r.vencidas} prueba(s) vencida(s), ${r.eliminadas} cuenta(s) eliminada(s).`);
+      await cargar();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setOcupado(false);
+    }
+  };
+
+  const eliminarDefinitivamente = async () => {
+    setError(null);
+    setBorrando(true);
+    try {
+      const r = await api.soporteEliminarCuenta(detalle.id, confirmacionBorrado);
+      setAviso(`Cuenta eliminada de forma definitiva (${r.filas} registros borrados).`);
+      setDetalle(null);
+      setConfirmacionBorrado("");
+      await cargar();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setBorrando(false);
     }
   };
 
@@ -114,11 +216,110 @@ export default function Soporte() {
           <span className="nota">{plural(resumen.uso.fallidas, "fallido")} · costo de IA {usd(resumen.uso.costoIaUsd)}</span>
         </div>
         <div className="consumo-card">
+          <span className="consumo-card-valor">{resumen.prueba.enPrueba}</span>
+          <span className="consumo-card-etiqueta">en período de prueba</span>
+          <span className="nota">
+            {resumen.prueba.porVencer} vence{resumen.prueba.porVencer === 1 ? "" : "n"} en 7 días · {plural(resumen.prueba.vencidas, "vencida", "vencidas")}
+            {resumen.prueba.aEliminar > 0 && <> · <b>{resumen.prueba.aEliminar} a eliminar</b></>}
+          </span>
+        </div>
+        <div className="consumo-card">
           <span className="consumo-card-valor">{formatoMonto(resumen.facturacion.montoArs, "ARS")}</span>
           <span className="consumo-card-etiqueta">facturado por uso</span>
           <span className="nota">{resumen.facturacion.cargos} cargos · suscripciones activas: {resumen.suscripciones.activa || 0}</span>
         </div>
       </div>
+
+      <section className="bloque" aria-labelledby="soporte-altas-titulo">
+        <div className="protocolo-cabecera">
+          <h3 id="soporte-altas-titulo">Altas de escribanías <span className="etiqueta">{invitaciones.filter((i) => i.estado === "pendiente").length} pendientes</span></h3>
+          <button type="button" className="boton discreto chico" disabled={ocupado} onClick={revisarVencimientos}>
+            Revisar vencimientos ahora
+          </button>
+        </div>
+        <p className="nota">
+          El alta es cerrada: sin invitación no se puede crear una cuenta. Cada invitación abre un período de prueba y, al terminar sin suscripción, la cuenta queda bloqueada y sus datos se eliminan al vencer el plazo de gracia. Los avisos por correo y el borrado corren solos; el botón de arriba adelanta esa pasada.
+        </p>
+
+        <form className="acciones agenda-toolbar" onSubmit={invitar}>
+          <label>
+            Correo
+            <input type="email" required placeholder="escribania@ejemplo.com" value={alta.email} onChange={(e) => setAlta({ ...alta, email: e.target.value })} />
+          </label>
+          <label>
+            Nombre <small>(opcional)</small>
+            <input type="text" value={alta.nombre} onChange={(e) => setAlta({ ...alta, nombre: e.target.value })} />
+          </label>
+          <label>
+            Escribanía <small>(opcional)</small>
+            <input type="text" placeholder="Escribanía Pérez" value={alta.escribania} onChange={(e) => setAlta({ ...alta, escribania: e.target.value })} />
+          </label>
+          <label>
+            Días de prueba
+            <input type="number" min="1" max="365" value={alta.diasPrueba} onChange={(e) => setAlta({ ...alta, diasPrueba: Number(e.target.value) })} />
+          </label>
+          <button type="submit" className="boton primario" disabled={ocupado}>
+            <Icono nombre="mas" tamano={16} /> Invitar
+          </button>
+        </form>
+
+        {enlaceAlta && (
+          <p className="alerta" role="status">
+            No hay SMTP configurado, así que el correo no salió. Pásele este enlace a {enlaceAlta.email} por un medio seguro: <code>{enlaceAlta.enlace}</code>
+          </p>
+        )}
+
+        {invitaciones.length === 0 ? (
+          <p className="vacio">Todavía no se invitó a ninguna escribanía.</p>
+        ) : (
+          <div className="tabla-scroll">
+            <table aria-labelledby="soporte-altas-titulo">
+              <thead>
+                <tr>
+                  <th scope="col">Invitada</th>
+                  <th scope="col">Escribanía</th>
+                  <th scope="col">Estado</th>
+                  <th scope="col" className="num">Prueba</th>
+                  <th scope="col">Vence</th>
+                  <th scope="col"><span className="sr-only">Acciones</span></th>
+                </tr>
+              </thead>
+              <tbody>
+                {invitaciones.map((i) => (
+                  <tr key={i.id}>
+                    <th scope="row">
+                      {i.nombre || i.email}
+                      {i.nombre && <span className="recaudo-meta">{i.email}</span>}
+                    </th>
+                    <td>{i.escribania || "—"}</td>
+                    <td>
+                      <span className={`etiqueta ${i.estado === "aceptada" ? "ok" : i.estado === "pendiente" ? "" : "riesgo-alto"}`}>{ESTADO_INVITACION[i.estado]}</span>
+                    </td>
+                    <td className="num">{i.diasPrueba} días</td>
+                    <td>{soloFecha(i.expiraEn)}</td>
+                    <td>
+                      {i.estado === "pendiente" || i.estado === "vencida" ? (
+                        <div className="acciones">
+                          <button type="button" className="enlace" disabled={ocupado} onClick={() => reenviar(i)} aria-label={`Reenviar la invitación a ${i.email}`}>
+                            reenviar
+                          </button>
+                          {i.estado === "pendiente" && (
+                            <button type="button" className="enlace" onClick={() => setACancelar(i)} aria-label={`Cancelar la invitación a ${i.email}`}>
+                              cancelar
+                            </button>
+                          )}
+                        </div>
+                      ) : (
+                        "—"
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
 
       <section className="bloque" aria-labelledby="soporte-embudo-titulo">
         <h3 id="soporte-embudo-titulo">Embudo de las cuentas creadas en el período</h3>
@@ -161,7 +362,14 @@ export default function Soporte() {
                       <span className="recaudo-meta">{c.email}{c.activo ? "" : " · desactivada"}</span>
                     </th>
                     <td>{c.equipo || "—"}<span className="recaudo-meta">{NOMBRE_ROL[c.rol] || c.rol}</span></td>
-                    <td>{c.plan || "—"}<span className="recaudo-meta">{NOMBRE_SUSCRIPCION[c.suscripcion] || c.suscripcion}</span></td>
+                    <td>
+                      {c.plan || "—"}
+                      <span className="recaudo-meta">
+                        {textoSuscripcion(c)}
+                        {c.enPrueba && c.pruebaTerminaEn && ` hasta ${soloFecha(c.pruebaTerminaEn)}`}
+                        {c.pruebaVencida && c.eliminacionEn && ` · se borra el ${soloFecha(c.eliminacionEn)}`}
+                      </span>
+                    </td>
                     <td>{cuando(c.ultimoAcceso)}</td>
                     <td className="num">{c.documentos}{c.fallidas > 0 && <span className="etiqueta riesgo-alto">{c.fallidas} con error</span>}</td>
                     <td>
@@ -194,11 +402,40 @@ export default function Soporte() {
             </div>
           </div>
           <p className="nota">
-            {detalle.email} · alta {fechaCorta(String(detalle.creadoEn).slice(0, 10))} · último acceso {cuando(detalle.ultimoAcceso)} · {detalle.equipo ? `${detalle.equipo} (${NOMBRE_ROL[detalle.rol] || detalle.rol})` : "sin escribanía"} · plan {detalle.plan || "—"} ({NOMBRE_SUSCRIPCION[detalle.suscripcion] || detalle.suscripcion})
+            {detalle.email} · alta {fechaCorta(String(detalle.creadoEn).slice(0, 10))} · último acceso {cuando(detalle.ultimoAcceso)} · {detalle.equipo ? `${detalle.equipo} (${NOMBRE_ROL[detalle.rol] || detalle.rol})` : "sin escribanía"} · plan {detalle.plan || "—"} ({textoSuscripcion(detalle)})
           </p>
           <p className="ayuda">
             Volumen cargado: {plural(detalle.volumen.clientes, "cliente")}, {plural(detalle.volumen.expedientes, "expediente")}, {plural(detalle.volumen.comprobantes, "comprobante")}. Son conteos: el contenido no se puede consultar desde acá.
           </p>
+
+          {(detalle.enPrueba || detalle.pruebaVencida) && (
+            <p className={`alerta ${detalle.pruebaVencida ? "error" : ""}`} role="status">
+              {detalle.enPrueba
+                ? `En período de prueba hasta el ${soloFecha(detalle.pruebaTerminaEn)}. Si no activa una suscripción, queda bloqueada y sus datos se eliminan al vencer el plazo de gracia.`
+                : `Prueba vencida. La cuenta y todo su contenido se eliminan de forma definitiva el ${soloFecha(detalle.eliminacionEn)}.`}
+            </p>
+          )}
+
+          {!detalle.esRoot && (
+            <details className="bloque">
+              <summary>Eliminar definitivamente esta cuenta</summary>
+              <p className="ayuda">
+                Borra la cuenta y <b>todo</b> su contenido: clientes, expedientes, protocolo, caja, comprobantes, legajos UIF y credenciales. No hay copia ni vuelta atrás; queda solo una constancia sin datos personales. Si la cuenta era la titular de una escribanía, el equipo desaparece con ella (las cuentas de sus integrantes y los datos de cada una no se tocan).
+              </p>
+              <label>
+                Escriba <code>{detalle.email}</code> para confirmar
+                <input type="text" autoComplete="off" value={confirmacionBorrado} onChange={(e) => setConfirmacionBorrado(e.target.value)} />
+              </label>
+              <button
+                type="button"
+                className="boton peligro chico"
+                disabled={borrando || confirmacionBorrado.trim().toLowerCase() !== String(detalle.email).toLowerCase()}
+                onClick={eliminarDefinitivamente}
+              >
+                <Icono nombre="basura" tamano={16} /> {borrando ? "Borrando…" : "Eliminar todo definitivamente"}
+              </button>
+            </details>
+          )}
 
           {detalle.fallasPorSkill.length > 0 && (
             <>
@@ -234,6 +471,16 @@ export default function Soporte() {
           )}
         </section>
       )}
+
+      <ConfirmarDialogo
+        abierto={Boolean(aCancelar)}
+        titulo={aCancelar ? `Cancelar la invitación a ${aCancelar.email}` : ""}
+        texto="El enlace enviado deja de servir. Se puede volver a invitar al mismo correo cuando quiera."
+        confirmar="Cancelar invitación"
+        destructivo
+        onConfirmar={() => cancelarInvitacion(aCancelar)}
+        onCancelar={() => setACancelar(null)}
+      />
 
       <ConfirmarDialogo
         abierto={Boolean(aDesactivar)}

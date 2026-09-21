@@ -14,6 +14,9 @@
  */
 import { pool } from "../config/db.js";
 import { AppError } from "../utils/errores.js";
+import { eliminarCuenta } from "./bajaCuenta.js";
+import { cerrarSesionesDe } from "../auth/repositorio.js";
+import { enPrueba, pruebaVencida } from "./prueba.js";
 
 const dias = (v, def = 30) => Math.min(Math.max(Number(v) || def, 1), 365);
 
@@ -29,6 +32,14 @@ export async function resumen(periodo) {
     [d, d],
   );
   const [[equipos]] = await pool.query("SELECT COUNT(*) AS total FROM equipos");
+  const [[prueba]] = await pool.query(
+    `SELECT SUM(prueba_termina_en >= CURDATE()) AS enPrueba,
+            SUM(prueba_termina_en >= CURDATE() AND DATEDIFF(prueba_termina_en, CURDATE()) <= 7) AS pruebaPorVencer,
+            SUM(prueba_termina_en < CURDATE()) AS vencidas,
+            SUM(eliminacion_programada_en IS NOT NULL AND eliminacion_programada_en <= CURDATE()) AS aEliminar
+       FROM usuarios
+      WHERE estado_suscripcion <> 'activa' AND prueba_termina_en IS NOT NULL`,
+  );
   const [suscripciones] = await pool.query("SELECT estado_suscripcion AS estado, COUNT(*) AS n FROM usuarios GROUP BY estado_suscripcion");
   const [[uso]] = await pool.query(
     `SELECT COUNT(*) AS ejecuciones,
@@ -58,6 +69,12 @@ export async function resumen(periodo) {
     dias: d,
     cuentas: { total: Number(cuentas.total), activas: Number(cuentas.activas || 0), altas: Number(cuentas.altas || 0), conAccesoEnPeriodo: Number(cuentas.conAcceso || 0) },
     escribanias: Number(equipos.total),
+    prueba: {
+      enPrueba: Number(prueba.enPrueba || 0),
+      porVencer: Number(prueba.pruebaPorVencer || 0),
+      vencidas: Number(prueba.vencidas || 0),
+      aEliminar: Number(prueba.aEliminar || 0),
+    },
     suscripciones: Object.fromEntries(suscripciones.map((s) => [s.estado, Number(s.n)])),
     uso: {
       ejecuciones: Number(uso.ejecuciones),
@@ -77,7 +94,7 @@ export async function resumen(periodo) {
 
 const SELECT_CUENTA = `
   SELECT u.id, u.email, u.nombre, u.activo, u.es_admin, u.creado_en, u.ultimo_acceso,
-         u.estado_suscripcion, u.proximo_cobro_en,
+         u.estado_suscripcion, u.proximo_cobro_en, u.prueba_termina_en, u.eliminacion_programada_en,
          p.nombre AS plan, p.precio_mensual_ars AS planPrecio,
          e.id AS equipoId, e.nombre AS equipo, m.rol, m.estado AS estadoEquipo,
          (SELECT COUNT(*) FROM ejecuciones x WHERE x.usuario_id = u.id AND x.iniciado_en >= DATE_SUB(NOW(), INTERVAL :dias DAY)) AS documentos,
@@ -110,6 +127,11 @@ const cuentaAVista = (r) => ({
   planPrecioArs: r.planPrecio != null ? Number(r.planPrecio) : null,
   suscripcion: r.estado_suscripcion,
   proximoCobro: r.proximo_cobro_en,
+  pruebaTerminaEn: r.prueba_termina_en,
+  eliminacionEn: r.eliminacion_programada_en,
+  // Calculado como en el resto del sistema: por fecha, no por `estado_suscripcion`.
+  enPrueba: enPrueba(r),
+  pruebaVencida: pruebaVencida(r),
   documentos: Number(r.documentos),
   fallidas: Number(r.fallidas),
   costoIaUsd: Number(r.costoIaUsd),
@@ -176,5 +198,24 @@ export async function cambiarActivo(rootId, id, activo) {
   if (!u) throw new AppError("NO_ENCONTRADO", "La cuenta no existe.", 404);
   if (u.es_admin) throw new AppError("DATOS_INVALIDOS", "No se desactiva una cuenta de operador desde el panel.", 400);
   await pool.query("UPDATE usuarios SET activo = ? WHERE id = ?", [activo ? 1 : 0, id]);
+  // Desactivar tiene que echar en el acto: sin esto la cookie ya emitida
+  // seguia sirviendo hasta que venciera.
+  if (!activo) await cerrarSesionesDe(id);
   return cuenta(id);
+}
+
+/**
+ * Borrado definitivo pedido por el operador (soporte: la titular pide la baja,
+ * o una prueba vencida que se decide borrar antes de tiempo). Exige que el
+ * correo escrito coincida con el de la cuenta: es irreversible y no hay copia.
+ */
+export async function eliminarDefinitivamente(rootId, id, confirmacionEmail) {
+  if (Number(id) === Number(rootId)) throw new AppError("DATOS_INVALIDOS", "No puede borrar su propia cuenta de operador.", 400);
+  const [[u]] = await pool.query("SELECT id, email, es_admin FROM usuarios WHERE id = ?", [id]);
+  if (!u) throw new AppError("NO_ENCONTRADO", "La cuenta no existe.", 404);
+  if (u.es_admin) throw new AppError("DATOS_INVALIDOS", "No se borra una cuenta de operador desde el panel.", 400);
+  if (String(confirmacionEmail || "").trim().toLowerCase() !== u.email.toLowerCase()) {
+    throw new AppError("CONFIRMACION_INVALIDA", "Escriba el correo exacto de la cuenta para confirmar el borrado definitivo.", 400);
+  }
+  return eliminarCuenta(u.id, "operador");
 }

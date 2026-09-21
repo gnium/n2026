@@ -9,6 +9,10 @@ export const env = {
   frontendOrigin: process.env.FRONTEND_ORIGIN || "http://localhost:5173",
   appUrl: (process.env.APP_URL || process.env.FRONTEND_ORIGIN || "http://localhost:5173").replace(/\/$/, ""),
   confiarProxy: bool(process.env.TRUST_PROXY, false),
+  // Llave con la que se cifra lo guardado en la base (identificadores de
+  // clientes, protocolo, credenciales de ARCA). Si falta se usa JWT_SECRET,
+  // como hasta ahora; ver utils/cifrado.js para por que conviene separarlas.
+  datosSecreto: process.env.DATA_ENCRYPTION_KEY || "",
   auth: {
     secreto: process.env.JWT_SECRET || "",
     sesionSegundos: num(process.env.SESSION_HOURS, 12) * 3600,

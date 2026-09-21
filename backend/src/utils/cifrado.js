@@ -1,16 +1,23 @@
 /**
  * Cifrado simetrico AES-256-GCM para datos sensibles guardados en la base.
- * Cada "contexto" deriva su propia llave (misma JWT_SECRET, distinto salt), para que
+ * Cada "contexto" deriva su propia llave (mismo secreto raiz, distinto salt), para que
  * comprometer o rotar una no afecte a las demas. "config" es el contexto historico
  * (secretos de configuracion, ej.: clave de API) y se mantiene igual para no romper
  * lo que ya esta cifrado en la base.
+ *
+ * El secreto raiz sale de DATA_ENCRYPTION_KEY y, si no esta, de JWT_SECRET.
+ * Conviene separarlos: JWT_SECRET deberia poder rotarse (echa a todas las
+ * sesiones y listo), pero rotarlo cuando tambien cifra datos vuelve ilegibles
+ * los identificadores de clientes, el protocolo y las credenciales de ARCA, sin
+ * aviso y sin vuelta atras. Con DATA_ENCRYPTION_KEY cargada, rotar el de
+ * sesiones no toca nada de lo guardado.
  */
 import { createCipheriv, createDecipheriv, randomBytes, scryptSync } from "node:crypto";
 import { env } from "../config/env.js";
 
 const llaves = new Map();
 function getLlave(contexto) {
-  if (!llaves.has(contexto)) llaves.set(contexto, scryptSync(env.auth.secreto, `notarius-${contexto}-v1`, 32));
+  if (!llaves.has(contexto)) llaves.set(contexto, scryptSync(env.datosSecreto || env.auth.secreto, `notarius-${contexto}-v1`, 32));
   return llaves.get(contexto);
 }
 

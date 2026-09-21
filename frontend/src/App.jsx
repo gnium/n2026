@@ -91,6 +91,8 @@ export default function App() {
   const [errorGeneral, setErrorGeneral] = useState(null);
   const [expedienteAbierto, setExpedienteAbierto] = useState(null);
   const [invitacion, setInvitacion] = useState(() => new URLSearchParams(window.location.search).get("invitacion"));
+  // ?alta=<token>: invitacion de la plataforma para dar de alta una escribania nueva.
+  const [alta] = useState(() => new URLSearchParams(window.location.search).get("alta"));
   const [avisoGoogle] = useState(() => new URLSearchParams(window.location.search).get("google"));
   const cerrarSSE = useRef(null);
   const sesionIdRef = useRef(null);
@@ -110,6 +112,11 @@ export default function App() {
     window.history.replaceState({}, "", window.location.pathname);
     setPantalla("integraciones");
   }, [avisoGoogle, usuario]);
+
+  // El alta de plataforma ya se consumio al crear la cuenta: se saca el token de la URL.
+  useEffect(() => {
+    if (alta && usuario) window.history.replaceState({}, "", window.location.pathname);
+  }, [alta, usuario]);
 
   // Invitacion a un equipo: el enlace del correo abre la app con ?invitacion=<token>.
   useEffect(() => {
@@ -328,7 +335,7 @@ export default function App() {
   const ocupado = estado === "subiendo" || estado === "en_curso";
 
   if (usuario === undefined) return <div className="cargando">Cargando…</div>;
-  if (!usuario) return <Acceso onIngreso={setUsuario} invitacion={invitacion} />;
+  if (!usuario) return <Acceso onIngreso={setUsuario} invitacion={invitacion} alta={alta} />;
 
   const estadoIA = !salud ? "" : !salud.ok ? "error" : salud.modo === "simulado" ? "alerta" : "ok";
   const textoIA = salud === null ? "Conectando…" : !salud.ok ? "Servidor no disponible" : salud.modo === "real" ? "Claude conectado" : salud.modo === "gemini" ? `Gemini · ${salud.modelo}` : salud.modo === "local" ? `IA local · ${salud.modelo}` : "Sin IA configurada";

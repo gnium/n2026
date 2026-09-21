@@ -36,7 +36,9 @@ import { rutasMovimientos } from "./routes/movimientos.js";
 import { rutasComprobantes } from "./routes/comprobantes.js";
 import { rutasConfiguracionFiscal } from "./routes/configuracionFiscal.js";
 import { rutasUif } from "./routes/uif.js";
-import { randomBytes } from "node:crypto";
+import { verificarOrigen } from "./middleware/origen.js";
+import { programarRevision } from "./services/prueba.js";
+import { randomBytes, createHash } from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -47,6 +49,14 @@ if (!env.auth.secreto) {
     process.exit(1);
   }
   env.auth.secreto = randomBytes(32).toString("hex"); // desarrollo: las sesiones caducan al reiniciar
+}
+
+// En produccion la cookie de sesion viaja siempre con Secure: dejarla librada a
+// una variable de entorno es dejar abierta la puerta a que la sesion se mande
+// en claro por un descuido de configuracion.
+if (process.env.NODE_ENV === "production" && !env.auth.cookieSegura) {
+  env.auth.cookieSegura = true;
+  logger.warn("COOKIE_SECURE no estaba en 1: en produccion se fuerza igual (la cookie de sesion nunca viaja sin TLS).");
 }
 
 // Despliegue de un solo servicio: si la imagen trae la interfaz ya compilada,
@@ -60,11 +70,27 @@ const hayInterfaz = fs.existsSync(path.join(dirPublico, "index.html"));
 // nunca llegaba a un documento HTML. Sirviendo la interfaz desde aca si llega,
 // y hay que declarar lo que las paginas usan de verdad: tipografias de Google,
 // un script en linea que fija el tema antes de pintar, y estilos en linea.
+// El script en linea que fija el tema antes de pintar se declara por su hash
+// sha256, no con 'unsafe-inline': asi la CSP sigue frenando cualquier script
+// inyectado, que es justamente de lo que protege.
+function hashesDeScriptsEnLinea(indexHtml) {
+  try {
+    const html = fs.readFileSync(indexHtml, "utf8");
+    const hashes = [];
+    for (const m of html.matchAll(/<script(?![^>]*\bsrc=)[^>]*>([\s\S]*?)<\/script>/gi)) {
+      hashes.push(`'sha256-${createHash("sha256").update(m[1], "utf8").digest("base64")}'`);
+    }
+    return hashes;
+  } catch {
+    return [];
+  }
+}
+
 const politicaContenido = {
   useDefaults: true,
   directives: {
     "default-src": ["'self'"],
-    "script-src": ["'self'", "'unsafe-inline'"],
+    "script-src": ["'self'", ...hashesDeScriptsEnLinea(path.join(dirPublico, "index.html"))],
     "style-src": ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
     "font-src": ["'self'", "https://fonts.gstatic.com", "data:"],
     "img-src": ["'self'", "data:", "blob:"],
@@ -82,8 +108,13 @@ if (env.confiarProxy) app.set("trust proxy", 1);
 app.use(helmet(hayInterfaz ? { contentSecurityPolicy: politicaContenido } : undefined));
 app.use(cors({ origin: env.frontendOrigin, credentials: true }));
 app.use(express.json({ limit: "1mb" }));
+app.use("/api", verificarOrigen); // CSRF: todo pedido que modifica algo debe venir del propio origen
 
-app.get("/api/salud", (_req, res) => {
+// Publica solo el latido. Que proveedor de IA, que modelo, cuantas sesiones
+// hay abiertas o si la clave es ilegible son datos de operacion: los ve la
+// interfaz cuando hay sesion, no cualquiera que consulte el endpoint.
+app.get("/api/salud", (_req, res) => res.json({ ok: true }));
+app.get("/api/salud/detalle", requerirAuth, (_req, res) => {
   const prov = descripcionProveedor();
   res.json({ ok: true, sesionesActivas: cantidadSesiones(), modelo: prov.modelo, modo: prov.modo, proveedor: prov.proveedor, origenClave: prov.origenClave || null, claveIlegible: Boolean(prov.claveIlegible) });
 });
@@ -149,6 +180,7 @@ async function iniciar() {
   await cargarConfiguracionIA();
   await cargarPrecios();
   logger.info(`Proveedor de IA: ${modoClaude()}`);
+  programarRevision(); // vencimientos de la prueba, avisos y borrado definitivo
   const servidor = app.listen(env.port, () => logger.info(`Backend escuchando en http://localhost:${env.port}`));
 
   const apagar = (senal) => {

@@ -15,7 +15,12 @@ const json = (metodo, ruta, cuerpo) =>
   fetch(`${BASE}${ruta}`, { method: metodo, headers: { "Content-Type": "application/json" }, body: cuerpo ? JSON.stringify(cuerpo) : undefined }).then(manejar);
 
 export const api = {
-  salud: () => fetch(`${BASE}/salud`).then(manejar),
+  // Con sesion trae el detalle operativo (proveedor de IA, modelo, sesiones
+  // abiertas); sin sesion, solo el latido: esos datos no son publicos.
+  salud: () =>
+    fetch(`${BASE}/salud/detalle`)
+      .then(manejar)
+      .catch(() => fetch(`${BASE}/salud`).then(manejar)),
 
   // --- autenticacion (cookie httpOnly, mismo origen) ---
   yo: () => fetch(`${BASE}/auth/yo`).then(manejar),
@@ -212,7 +217,8 @@ export const api = {
   equipoCambiarRol: (usuarioId, rol) => json("PATCH", `/equipo/miembros/${usuarioId}/rol`, { rol }),
   equipoCambiarEstado: (usuarioId, estado) => json("PATCH", `/equipo/miembros/${usuarioId}/estado`, { estado }),
   equipoQuitar: (usuarioId) => fetch(`${BASE}/equipo/miembros/${usuarioId}`, { method: "DELETE" }).then(manejar),
-  invitacionVer: (token) => fetch(`${BASE}/auth/invitacion/${token}`).then(manejar),
+  invitacionVer: (token) => fetch(`${BASE}/auth/invitacion/${encodeURIComponent(token)}`).then(manejar),
+  altaVer: (token) => fetch(`${BASE}/auth/alta/${encodeURIComponent(token)}`).then(manejar),
 
   // --- compartir un expediente con el equipo ---
   expedienteColaboradores: (id) => fetch(`${BASE}/expedientes/${id}/colaboradores`).then(manejar),
@@ -225,6 +231,12 @@ export const api = {
   soporteCuentas: (f = {}) => fetch(`${BASE}/soporte/cuentas?${new URLSearchParams(Object.fromEntries(Object.entries(f).filter(([, v]) => v)))}`).then(manejar),
   soporteCuenta: (id, dias = 30) => fetch(`${BASE}/soporte/cuentas/${id}?dias=${dias}`).then(manejar),
   soporteCuentaActivo: (id, activo) => json("PATCH", `/soporte/cuentas/${id}/activo`, { activo }),
+  soporteEliminarCuenta: (id, email) => json("DELETE", `/soporte/cuentas/${id}`, { email }),
+  soporteInvitaciones: () => fetch(`${BASE}/soporte/invitaciones`).then(manejar),
+  soporteInvitar: (datos) => json("POST", "/soporte/invitaciones", datos),
+  soporteReenviarInvitacion: (id) => json("POST", `/soporte/invitaciones/${id}/reenviar`),
+  soporteCancelarInvitacion: (id) => json("DELETE", `/soporte/invitaciones/${id}`),
+  soporteRevisarPruebas: (forzarBorrado = false) => json("POST", "/soporte/pruebas/revisar", { forzarBorrado }),
 
   // --- novedades (vencimientos y pendientes) ---
   novedades: () => fetch(`${BASE}/alertas`).then(manejar),
