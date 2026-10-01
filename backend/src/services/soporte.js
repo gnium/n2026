@@ -20,6 +20,60 @@ import { enPrueba, pruebaVencida } from "./prueba.js";
 
 const dias = (v, def = 30) => Math.min(Math.max(Number(v) || def, 1), 365);
 
+/** Detalle de suscripciones para el control de ventas. */
+export async function suscripciones(periodo) {
+  const d = dias(periodo);
+  const [activas] = await pool.query(
+    `SELECT u.id, u.email, u.nombre, u.estado_suscripcion, u.proximo_cobro_en,
+            p.nombre AS plan, p.precio_mensual_ars,
+            e.nombre AS equipo,
+            COALESCE((SELECT SUM(c.monto_ars) FROM cargos_uso c WHERE c.usuario_id = u.id AND c.creado_en >= DATE_SUB(NOW(), INTERVAL ? DAY)), 0) AS usoArs,
+            COALESCE((SELECT SUM(c.monto_ars) FROM cargos_uso c WHERE c.usuario_id = u.id AND c.facturado_en IS NOT NULL AND c.creado_en >= DATE_SUB(NOW(), INTERVAL ? DAY)), 0) AS cobradoArs
+       FROM usuarios u
+       LEFT JOIN planes p ON p.id = u.plan_id
+       LEFT JOIN equipo_miembros m ON m.usuario_id = u.id
+       LEFT JOIN equipos e ON e.id = m.equipo_id
+      WHERE u.estado_suscripcion IN ('activa','pendiente','pausada')
+      ORDER BY p.precio_mensual_ars DESC, u.nombre`,
+    [d, d],
+  );
+  const mrr = activas.filter((r) => r.estado_suscripcion === "activa").reduce((s, r) => s + Number(r.precio_mensual_ars || 0), 0);
+  const [movimientos] = await pool.query(
+    `SELECT u.id, u.email, u.nombre, u.estado_suscripcion, u.creado_en,
+            p.nombre AS plan
+       FROM usuarios u
+       LEFT JOIN planes p ON p.id = u.plan_id
+      WHERE u.estado_suscripcion IN ('activa','cancelada','pausada') AND u.creado_en >= DATE_SUB(NOW(), INTERVAL ? DAY)
+      ORDER BY u.creado_en DESC
+      LIMIT 50`,
+    [d],
+  );
+  return {
+    dias: d,
+    mrr,
+    activas: activas.map((r) => ({
+      id: r.id,
+      email: r.email,
+      nombre: r.nombre,
+      equipo: r.equipo,
+      plan: r.plan,
+      precioArs: Number(r.precio_mensual_ars || 0),
+      estado: r.estado_suscripcion,
+      proximoCobro: r.proximo_cobro_en,
+      usoArs: Number(r.usoArs),
+      cobradoArs: Number(r.cobradoArs),
+    })),
+    movimientos: movimientos.map((r) => ({
+      id: r.id,
+      email: r.email,
+      nombre: r.nombre,
+      plan: r.plan,
+      estado: r.estado_suscripcion,
+      creadoEn: r.creado_en,
+    })),
+  };
+}
+
 /** Indicadores de la plataforma para el periodo. */
 export async function resumen(periodo) {
   const d = dias(periodo);

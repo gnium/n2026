@@ -237,6 +237,21 @@ export const api = {
   soporteReenviarInvitacion: (id) => json("POST", `/soporte/invitaciones/${id}/reenviar`),
   soporteCancelarInvitacion: (id) => json("DELETE", `/soporte/invitaciones/${id}`),
   soporteRevisarPruebas: (forzarBorrado = false) => json("POST", "/soporte/pruebas/revisar", { forzarBorrado }),
+  soporteSuscripciones: (dias = 30) => fetch(`${BASE}/soporte/suscripciones?dias=${dias}`).then(manejar),
+
+  // --- consultas de soporte (canal de comunicacion con el operador) ---
+  consultasListar: () => fetch(`${BASE}/consultas`).then(manejar),
+  consultasSinLeer: () => fetch(`${BASE}/consultas/sin-leer`).then(manejar),
+  consultaObtener: (id) => fetch(`${BASE}/consultas/${id}`).then(manejar),
+  consultaCrear: (datos) => json("POST", "/consultas", datos),
+  consultaResponder: (id, contenido) => json("POST", `/consultas/${id}/mensajes`, { contenido }),
+  // operador
+  soporteConsultas: (f = {}) => fetch(`${BASE}/soporte/consultas?${new URLSearchParams(Object.fromEntries(Object.entries(f).filter(([, v]) => v)))}`).then(manejar),
+  soporteConsultasAbiertas: () => fetch(`${BASE}/soporte/consultas/abiertas`).then(manejar),
+  soporteConsulta: (id) => fetch(`${BASE}/soporte/consultas/${id}`).then(manejar),
+  soporteConsultaResponder: (id, contenido) => json("POST", `/soporte/consultas/${id}/mensajes`, { contenido }),
+  soporteConsultaCerrar: (id) => json("POST", `/soporte/consultas/${id}/cerrar`),
+  soporteConsultaReabrir: (id) => json("POST", `/soporte/consultas/${id}/reabrir`),
 
   // --- novedades (vencimientos y pendientes) ---
   novedades: () => fetch(`${BASE}/alertas`).then(manejar),

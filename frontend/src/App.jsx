@@ -24,6 +24,7 @@ import Equipo from "./components/Equipo.jsx";
 import Integraciones from "./components/Integraciones.jsx";
 import Novedades from "./components/Novedades.jsx";
 import Soporte from "./components/Soporte.jsx";
+import Consultas from "./components/Consultas.jsx";
 import TemaToggle from "./components/TemaToggle.jsx";
 import Icono from "./components/Iconos.jsx";
 import { api } from "./api.js";
@@ -57,6 +58,7 @@ const NAV = [
       { clave: "integraciones", texto: "Integraciones", icono: "nube" },
       { clave: "consumo", texto: "Consumo de IA", icono: "grafico" },
       { clave: "suscripcion", texto: "Suscripción", icono: "tarjeta" },
+      { clave: "consultas", texto: "Soporte", icono: "chat" },
     ],
   },
   {
@@ -94,12 +96,13 @@ export default function App() {
   // ?alta=<token>: invitacion de la plataforma para dar de alta una escribania nueva.
   const [alta] = useState(() => new URLSearchParams(window.location.search).get("alta"));
   const [avisoGoogle] = useState(() => new URLSearchParams(window.location.search).get("google"));
+  const [consultasSinLeer, setConsultasSinLeer] = useState(0);
   const cerrarSSE = useRef(null);
   const sesionIdRef = useRef(null);
 
   useEffect(() => {
     api.salud().then(setSalud).catch(() => setSalud({ ok: false }));
-    api.yo().then((r) => setUsuario(r.usuario)).catch(() => setUsuario(null));
+    api.yo().then((r) => { setUsuario(r.usuario); api.consultasSinLeer().then((c) => setConsultasSinLeer(c.sinLeer)).catch(() => {}); }).catch(() => setUsuario(null));
     return () => {
       cerrarSSE.current?.();
       clearInterval(sondeo.current);
@@ -355,6 +358,7 @@ export default function App() {
     protocolo: <Protocolo />,
     consumo: <Consumo esAdmin={usuario.esAdmin} />,
     suscripcion: <Suscripcion />,
+    consultas: <Consultas />,
   }[pantalla];
 
   return (
@@ -375,9 +379,9 @@ export default function App() {
             <div className="nav-grupo" key={g.titulo}>
               <div className="nav-titulo">{g.titulo}</div>
               {g.items.map((i) => (
-                <button key={i.clave} type="button" className={`nav-item ${pantalla === i.clave ? "activo" : ""}`} aria-current={pantalla === i.clave ? "page" : undefined} aria-label={i.texto} onClick={() => irA(i.clave)} title={i.texto}>
+                <button key={i.clave} type="button" className={`nav-item ${pantalla === i.clave ? "activo" : ""}`} aria-current={pantalla === i.clave ? "page" : undefined} aria-label={i.texto} onClick={() => { irA(i.clave); if (i.clave === "consultas") setConsultasSinLeer(0); }} title={i.texto}>
                   <Icono nombre={i.icono} tamano={18} />
-                  <span>{i.texto}</span>
+                  <span>{i.texto}{i.clave === "consultas" && consultasSinLeer > 0 && <span className="nav-badge">{consultasSinLeer}</span>}</span>
                 </button>
               ))}
             </div>

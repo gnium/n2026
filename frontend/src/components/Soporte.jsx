@@ -41,12 +41,17 @@ export default function Soporte() {
   const [soloProblemas, setSoloProblemas] = useState(false);
   const [detalle, setDetalle] = useState(null);
   const [aDesactivar, setADesactivar] = useState(null);
+  const [ventas, setVentas] = useState(null);
   const [invitaciones, setInvitaciones] = useState([]);
   const [alta, setAlta] = useState({ email: "", nombre: "", escribania: "", diasPrueba: 60 });
   const [enlaceAlta, setEnlaceAlta] = useState(null);
   const [aCancelar, setACancelar] = useState(null);
   const [confirmacionBorrado, setConfirmacionBorrado] = useState("");
   const [borrando, setBorrando] = useState(false);
+  const [consultas, setConsultas] = useState([]);
+  const [consultaDetalle, setConsultaDetalle] = useState(null);
+  const [respuestaConsulta, setRespuestaConsulta] = useState("");
+  const [filtroConsultas, setFiltroConsultas] = useState("");
   const [ocupado, setOcupado] = useState(false);
   const [error, setError] = useState(null);
   const [aviso, setAviso] = useState("");
@@ -54,14 +59,18 @@ export default function Soporte() {
   const cargar = async () => {
     setError(null);
     try {
-      const [r, c, i] = await Promise.all([
+      const [r, c, i, cs, v] = await Promise.all([
         api.soporteResumen(dias),
         api.soporteCuentas({ dias, q, problemas: soloProblemas ? "1" : "" }),
         api.soporteInvitaciones(),
+        api.soporteConsultas({ estado: filtroConsultas || undefined }),
+        api.soporteSuscripciones(dias),
       ]);
       setResumen(r);
       setLista(c.cuentas);
       setInvitaciones(i);
+      setConsultas(cs);
+      setVentas(v);
     } catch (e) {
       setError(e.message);
     }
@@ -70,7 +79,7 @@ export default function Soporte() {
   useEffect(() => {
     cargar();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dias, soloProblemas]);
+  }, [dias, soloProblemas, filtroConsultas]);
 
   const buscar = (e) => {
     e.preventDefault();
@@ -142,6 +151,59 @@ export default function Soporte() {
       const r = await api.soporteCancelarInvitacion(inv.id);
       setInvitaciones(r.invitaciones);
       setAviso(`Invitación a ${inv.email} cancelada: ese enlace ya no sirve.`);
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
+  const abrirConsulta = async (id) => {
+    setError(null);
+    try {
+      setConsultaDetalle(await api.soporteConsulta(id));
+      setRespuestaConsulta("");
+      setTimeout(() => document.getElementById("soporte-consulta-titulo")?.focus(), 50);
+    } catch (e) {
+      setError(e.message);
+    }
+  };
+
+  const responderConsulta = async (e) => {
+    e.preventDefault();
+    if (!consultaDetalle || !respuestaConsulta.trim()) return;
+    setOcupado(true);
+    setError(null);
+    try {
+      const r = await api.soporteConsultaResponder(consultaDetalle.id, respuestaConsulta);
+      setConsultaDetalle(r);
+      setRespuestaConsulta("");
+      setAviso("Respuesta enviada.");
+      await cargar();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setOcupado(false);
+    }
+  };
+
+  const cerrarConsulta = async (id) => {
+    setError(null);
+    try {
+      await api.soporteConsultaCerrar(id);
+      setConsultaDetalle(null);
+      setAviso("Consulta cerrada.");
+      await cargar();
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
+  const reabrirConsulta = async (id) => {
+    setError(null);
+    try {
+      await api.soporteConsultaReabrir(id);
+      setAviso("Consulta reabierta.");
+      await abrirConsulta(id);
+      await cargar();
     } catch (err) {
       setError(err.message);
     }
@@ -336,6 +398,55 @@ export default function Soporte() {
         </div>
       </section>
 
+      {ventas && (
+        <section className="bloque" aria-labelledby="soporte-ventas-titulo">
+          <h3 id="soporte-ventas-titulo">Ventas de suscripciones</h3>
+          <div className="consumo-cards">
+            <div className="consumo-card">
+              <span className="consumo-card-valor">{formatoMonto(ventas.mrr, "ARS")}</span>
+              <span className="consumo-card-etiqueta">MRR (ingreso recurrente mensual)</span>
+              <span className="nota">{ventas.activas.filter((s) => s.estado === "activa").length} suscripcion{ventas.activas.filter((s) => s.estado === "activa").length === 1 ? "" : "es"} activa{ventas.activas.filter((s) => s.estado === "activa").length === 1 ? "" : "s"}</span>
+            </div>
+            <div className="consumo-card">
+              <span className="consumo-card-valor">{formatoMonto(ventas.activas.reduce((s, r) => s + r.usoArs, 0), "ARS")}</span>
+              <span className="consumo-card-etiqueta">uso acumulado en el periodo</span>
+              <span className="nota">{formatoMonto(ventas.activas.reduce((s, r) => s + r.cobradoArs, 0), "ARS")} ya cobrado</span>
+            </div>
+          </div>
+          {ventas.activas.length > 0 && (
+            <div className="tabla-scroll">
+              <table aria-labelledby="soporte-ventas-titulo">
+                <thead>
+                  <tr>
+                    <th scope="col">Cuenta</th>
+                    <th scope="col">Plan</th>
+                    <th scope="col">Estado</th>
+                    <th scope="col" className="num">Cuota</th>
+                    <th scope="col" className="num">Uso periodo</th>
+                    <th scope="col">Proximo cobro</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {ventas.activas.map((s) => (
+                    <tr key={s.id}>
+                      <th scope="row">
+                        {s.nombre || s.email}
+                        {s.equipo && <span className="recaudo-meta">{s.equipo}</span>}
+                      </th>
+                      <td>{s.plan || "—"}</td>
+                      <td><span className={`etiqueta ${s.estado === "activa" ? "ok" : ""}`}>{NOMBRE_SUSCRIPCION[s.estado] || s.estado}</span></td>
+                      <td className="num">{formatoMonto(s.precioArs, "ARS")}</td>
+                      <td className="num">{formatoMonto(s.usoArs, "ARS")}</td>
+                      <td>{soloFecha(s.proximoCobro)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </section>
+      )}
+
       <section className="bloque" aria-labelledby="soporte-cuentas-titulo">
         <h3 id="soporte-cuentas-titulo">Cuentas <span className="etiqueta">{lista.length}</span></h3>
         {lista.length === 0 ? (
@@ -378,6 +489,101 @@ export default function Soporte() {
                       {c.arca === "apagado" && !c.googleConectado && "—"}
                     </td>
                     <td><button type="button" className="enlace" aria-label={`Ver la ficha de soporte de ${c.nombre || c.email}`} onClick={() => abrir(c)}>ver</button></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
+
+      <section className="bloque" aria-labelledby="soporte-consultas-titulo">
+        <h3 id="soporte-consultas-titulo">
+          Consultas de soporte{" "}
+          <span className="etiqueta">{consultas.filter((c) => c.estado === "abierta").length} abiertas</span>
+        </h3>
+        <p className="nota">
+          Canal de comunicacion con las cuentas suscriptoras. Los suscriptores envian consultas desde su panel; el operador responde desde aca.
+        </p>
+
+        <div className="acciones agenda-toolbar">
+          <div className="segmentado" role="group" aria-label="Filtro de consultas">
+            {[["", "Todas"], ["abierta", "Abiertas"], ["respondida", "Respondidas"], ["cerrada", "Cerradas"]].map(([v, t]) => (
+              <button type="button" key={v} className={filtroConsultas === v ? "activo" : ""} aria-pressed={filtroConsultas === v} onClick={() => { setFiltroConsultas(v); }}>{t}</button>
+            ))}
+          </div>
+        </div>
+
+        {consultaDetalle ? (
+          <div className="bloque">
+            <div className="protocolo-cabecera">
+              <h4 id="soporte-consulta-titulo" tabIndex={-1}>
+                {consultaDetalle.asunto}{" "}
+                <span className={`etiqueta ${consultaDetalle.estado === "respondida" ? "ok" : consultaDetalle.estado === "cerrada" ? "riesgo-alto" : ""}`}>{consultaDetalle.estado}</span>
+              </h4>
+              <div className="acciones">
+                {consultaDetalle.estado !== "cerrada" && (
+                  <button type="button" className="boton chico" onClick={() => cerrarConsulta(consultaDetalle.id)}>Cerrar consulta</button>
+                )}
+                {consultaDetalle.estado === "cerrada" && (
+                  <button type="button" className="boton chico" onClick={() => reabrirConsulta(consultaDetalle.id)}>Reabrir</button>
+                )}
+                <button type="button" className="boton discreto chico" onClick={() => setConsultaDetalle(null)}>
+                  <Icono nombre="izquierda" tamano={16} /> Volver
+                </button>
+              </div>
+            </div>
+            <p className="ayuda">{consultaDetalle.nombre || consultaDetalle.email}{consultaDetalle.equipo ? ` · ${consultaDetalle.equipo}` : ""} · {cuando(consultaDetalle.creadoEn)}</p>
+
+            <div className="consulta-mensajes">
+              {consultaDetalle.mensajes?.map((m) => (
+                <div key={m.id} className={`consulta-mensaje ${m.esAdmin ? "admin" : "propio"}`}>
+                  <div className="consulta-mensaje-meta">
+                    <strong>{m.esAdmin ? "Operador" : (m.nombre || m.email)}</strong>
+                    <span className="recaudo-meta">{cuando(m.creadoEn)}</span>
+                  </div>
+                  <p className="consulta-mensaje-texto">{m.contenido}</p>
+                </div>
+              ))}
+            </div>
+
+            {consultaDetalle.estado !== "cerrada" && (
+              <form className="acciones agenda-toolbar" onSubmit={responderConsulta}>
+                <textarea rows={3} maxLength={4000} value={respuestaConsulta} onChange={(e) => setRespuestaConsulta(e.target.value)} placeholder="Escriba la respuesta..." required />
+                <button type="submit" className="boton primario" disabled={ocupado || !respuestaConsulta.trim()}>
+                  <Icono nombre="chat" tamano={16} /> Responder
+                </button>
+              </form>
+            )}
+          </div>
+        ) : consultas.length === 0 ? (
+          <p className="vacio">No hay consultas{filtroConsultas ? ` ${filtroConsultas}s` : ""}.</p>
+        ) : (
+          <div className="tabla-scroll">
+            <table aria-labelledby="soporte-consultas-titulo">
+              <thead>
+                <tr>
+                  <th scope="col">De</th>
+                  <th scope="col">Asunto</th>
+                  <th scope="col">Estado</th>
+                  <th scope="col">Ultima actividad</th>
+                  <th scope="col"><span className="sr-only">Acciones</span></th>
+                </tr>
+              </thead>
+              <tbody>
+                {consultas.map((c) => (
+                  <tr key={c.id}>
+                    <td>
+                      {c.nombre || c.email}
+                      {c.equipo && <span className="recaudo-meta">{c.equipo}</span>}
+                    </td>
+                    <th scope="row">
+                      {c.asunto}
+                      {c.sinLeer > 0 && <span className="etiqueta">{c.sinLeer} sin leer</span>}
+                    </th>
+                    <td><span className={`etiqueta ${c.estado === "respondida" ? "ok" : c.estado === "cerrada" ? "riesgo-alto" : ""}`}>{c.estado}</span></td>
+                    <td>{cuando(c.actualizadoEn)}</td>
+                    <td><button type="button" className="enlace" onClick={() => abrirConsulta(c.id)}>ver</button></td>
                   </tr>
                 ))}
               </tbody>

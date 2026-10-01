@@ -38,6 +38,7 @@ import { rutasConfiguracionFiscal } from "./routes/configuracionFiscal.js";
 import { rutasUif } from "./routes/uif.js";
 import { verificarOrigen } from "./middleware/origen.js";
 import { programarRevision } from "./services/prueba.js";
+import { rutasConsultas } from "./routes/consultasSoporte.js";
 import { randomBytes, createHash } from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
@@ -131,6 +132,7 @@ app.use("/api/sesiones", requerirAuth, rutasSesiones); // cada sesion de trabajo
 app.use("/api/sesiones-guardadas", requerirAuth, rutasSesionesGuardadas); // cada cuenta guarda/reanuda solo las suyas
 app.use("/api/equipo", requerirAuth, rutasEquipo); // integrantes, invitaciones, roles y metricas del equipo
 app.use("/api/alertas", requerirAuth, rutasAlertas); // novedades: vencimientos y pendientes de la cuenta (segun rol)
+app.use("/api/consultas", requerirAuth, rutasConsultas); // canal de consultas de soporte de cada cuenta
 app.use("/api/soporte", requerirAuth, requerirAdmin, rutasSoporte); // panel de operacion de la plataforma: solo metadatos y agregados
 app.use("/api/google/callback", rutasGoogleCallback); // publica: la vuelta de OAuth se autentica con el state firmado
 app.use("/api/google", requerirAuth, rutasGoogle); // Calendar y Drive (apagado hasta configurarlo)

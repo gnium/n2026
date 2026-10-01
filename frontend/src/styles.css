@@ -183,6 +183,7 @@ code { font-family: var(--font-mono); font-size: 0.86em; background: var(--surfa
 }
 .nav-item:hover { background: var(--surface-2); color: var(--ink); }
 .nav-item.activo { background: var(--accent-soft); color: var(--accent-soft-ink); }
+.nav-badge { display: inline-flex; align-items: center; justify-content: center; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 999px; background: var(--accent); color: var(--accent-ink); font-size: var(--t-xs); font-weight: 600; line-height: 1; margin-left: var(--s1); }
 .sidebar-pie { margin-top: auto; display: flex; flex-direction: column; gap: var(--s3); padding: 0 var(--s2); }
 
 .tema-toggle, .segmentado { display: inline-flex; border: 1px solid var(--border); border-radius: 999px; padding: 3px; background: var(--surface-2); gap: 2px; }
@@ -622,3 +623,11 @@ th[scope="row"] { font-weight: 400; text-transform: none; letter-spacing: normal
 .biblioteca-item { display: flex; justify-content: space-between; align-items: center; gap: var(--s3); padding: var(--s3) var(--s4); border: 1px solid var(--border); border-radius: var(--radius-s); background: var(--surface); flex-wrap: wrap; }
 .biblioteca-item-nombre { font-weight: 500; font-size: var(--t-sm); }
 .biblioteca-item-meta { font-size: var(--t-xs); color: var(--ink-3); }
+
+/* ---------- consultas de soporte ---------- */
+.consulta-mensajes { display: flex; flex-direction: column; gap: var(--s3); margin: var(--s4) 0; }
+.consulta-mensaje { padding: var(--s3) var(--s4); border-radius: var(--radius-m); max-width: 85%; }
+.consulta-mensaje.propio { background: var(--surface-2); border: 1px solid var(--border); align-self: flex-start; }
+.consulta-mensaje.admin { background: var(--accent-soft); border: 1px solid var(--accent-soft); align-self: flex-end; }
+.consulta-mensaje-meta { display: flex; justify-content: space-between; align-items: baseline; gap: var(--s3); font-size: var(--t-xs); color: var(--ink-3); margin-bottom: var(--s1); }
+.consulta-mensaje-texto { font-size: var(--t-sm); white-space: pre-wrap; margin: 0; }
