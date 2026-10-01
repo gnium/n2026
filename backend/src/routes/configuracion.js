@@ -23,7 +23,7 @@ rutasConfiguracion.put("/skills/:clave", async (req, res, next) => {
   }
 });
 
-rutasConfiguracion.get("/plantillas", async (_req, res, next) => {
+rutasConfiguracion.get("/templates", async (_req, res, next) => {
   try {
     res.json(await listarPlantillas());
   } catch (e) {
@@ -31,7 +31,7 @@ rutasConfiguracion.get("/plantillas", async (_req, res, next) => {
   }
 });
 
-rutasConfiguracion.get("/plantillas/:clave", async (req, res, next) => {
+rutasConfiguracion.get("/templates/:clave", async (req, res, next) => {
   try {
     const p = await obtenerPlantilla(req.params.clave);
     if (!p) throw new AppError("PLANTILLA_INEXISTENTE", "Plantilla no encontrada", 404);

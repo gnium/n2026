@@ -18,39 +18,39 @@ export const api = {
   // Con sesion trae el detalle operativo (proveedor de IA, modelo, sesiones
   // abiertas); sin sesion, solo el latido: esos datos no son publicos.
   salud: () =>
-    fetch(`${BASE}/salud/detalle`)
+    fetch(`${BASE}/health/detail`)
       .then(manejar)
-      .catch(() => fetch(`${BASE}/salud`).then(manejar)),
+      .catch(() => fetch(`${BASE}/health`).then(manejar)),
 
   // --- autenticacion (cookie httpOnly, mismo origen) ---
-  yo: () => fetch(`${BASE}/auth/yo`).then(manejar),
+  yo: () => fetch(`${BASE}/auth/me`).then(manejar),
   login: (email, password) => json("POST", "/auth/login", { email, password }),
-  registro: (datos) => json("POST", "/auth/registro", datos),
+  registro: (datos) => json("POST", "/auth/register", datos),
   logout: () => json("POST", "/auth/logout"),
-  recuperar: (email) => json("POST", "/auth/recuperar", { email }),
-  restablecer: (token, password) => json("POST", "/auth/restablecer", { token, password }),
+  recuperar: (email) => json("POST", "/auth/recover", { email }),
+  restablecer: (token, password) => json("POST", "/auth/reset", { token, password }),
 
   // --- configuracion de la IA (clave cifrada en el servidor) ---
-  configuracionIA: () => fetch(`${BASE}/configuracion/ia`).then(manejar),
-  guardarConfiguracionIA: (datos) => json("PUT", "/configuracion/ia", datos),
-  probarConexionIA: (datos) => json("POST", "/configuracion/ia/probar", datos),
-  modelosGemini: (geminiApiKey) => json("POST", "/configuracion/ia/gemini/modelos", { geminiApiKey }),
+  configuracionIA: () => fetch(`${BASE}/config/ai`).then(manejar),
+  guardarConfiguracionIA: (datos) => json("PUT", "/config/ai", datos),
+  probarConexionIA: (datos) => json("POST", "/config/ai/test", datos),
+  modelosGemini: (geminiApiKey) => json("POST", "/config/ai/gemini/models", { geminiApiKey }),
 
   // --- costos ---
-  consumo: (dias = 30) => fetch(`${BASE}/consumo?dias=${dias}`).then(manejar),
-  precios: () => fetch(`${BASE}/configuracion/precios`).then(manejar),
-  guardarPrecio: (datos) => json("PUT", "/configuracion/precios", datos),
-  borrarPrecio: (proveedor, modelo) => fetch(`${BASE}/configuracion/precios/${proveedor}/${encodeURIComponent(modelo)}`, { method: "DELETE" }).then(manejar),
+  consumo: (dias = 30) => fetch(`${BASE}/usage?dias=${dias}`).then(manejar),
+  precios: () => fetch(`${BASE}/config/pricing`).then(manejar),
+  guardarPrecio: (datos) => json("PUT", "/config/pricing", datos),
+  borrarPrecio: (proveedor, modelo) => fetch(`${BASE}/config/pricing/${proveedor}/${encodeURIComponent(modelo)}`, { method: "DELETE" }).then(manejar),
 
   // --- suscripcion y facturacion (Mercado Pago, ARS) ---
-  planesDisponibles: () => fetch(`${BASE}/suscripcion/planes`).then(manejar),
-  miSuscripcion: () => fetch(`${BASE}/suscripcion`).then(manejar),
-  suscribirse: (planClave) => json("POST", "/suscripcion", { planClave }),
-  cancelarSuscripcion: () => json("POST", "/suscripcion/cancelar"),
-  planesAdmin: () => fetch(`${BASE}/configuracion/planes`).then(manejar),
-  guardarPlan: (datos) => json("PUT", "/configuracion/planes", datos),
-  parametrosFacturacion: () => fetch(`${BASE}/configuracion/planes/facturacion`).then(manejar),
-  guardarParametrosFacturacion: (datos) => json("PUT", "/configuracion/planes/facturacion", datos),
+  planesDisponibles: () => fetch(`${BASE}/subscription/plans`).then(manejar),
+  miSuscripcion: () => fetch(`${BASE}/subscription`).then(manejar),
+  suscribirse: (planClave) => json("POST", "/subscription", { planClave }),
+  cancelarSuscripcion: () => json("POST", "/subscription/cancel"),
+  planesAdmin: () => fetch(`${BASE}/config/plans`).then(manejar),
+  guardarPlan: (datos) => json("PUT", "/config/plans", datos),
+  parametrosFacturacion: () => fetch(`${BASE}/config/plans/billing`).then(manejar),
+  guardarParametrosFacturacion: (datos) => json("PUT", "/config/plans/billing", datos),
 
   subirDocumento: ({ archivo, modo = "completo", antecedentes = "", instrucciones = "", modelo = null, modeloBibliotecaId = null, datos = null }) => {
     const fd = new FormData();
@@ -61,14 +61,14 @@ export const api = {
     if (modelo) fd.append("modelo", modelo);
     else if (modeloBibliotecaId) fd.append("modeloBibliotecaId", modeloBibliotecaId);
     if (datos) fd.append("datos", JSON.stringify(datos));
-    return fetch(`${BASE}/sesiones`, { method: "POST", body: fd }).then(manejar);
+    return fetch(`${BASE}/sessions`, { method: "POST", body: fd }).then(manejar);
   },
 
-  estadoSesion: (id) => fetch(`${BASE}/sesiones/${id}`).then(manejar),
+  estadoSesion: (id) => fetch(`${BASE}/sessions/${id}`).then(manejar),
 
   /** Abre el flujo SSE. Devuelve una funcion para cerrarlo. */
   escucharEventos: (id, onEvento, onError) => {
-    const es = new EventSource(`${BASE}/sesiones/${id}/eventos`);
+    const es = new EventSource(`${BASE}/sessions/${id}/events`);
     es.onmessage = (m) => {
       try {
         const ev = JSON.parse(m.data);
@@ -85,183 +85,183 @@ export const api = {
     return () => es.close();
   },
 
-  reintentar: (id) => json("POST", `/sesiones/${id}/reintentar`),
-  iterar: (id, feedback) => json("POST", `/sesiones/${id}/iterar`, { feedback }),
+  reintentar: (id) => json("POST", `/sessions/${id}/retry`),
+  iterar: (id, feedback) => json("POST", `/sessions/${id}/iterate`, { feedback }),
 
-  urlDocumento: (id) => `${BASE}/sesiones/${id}/documento`,
+  urlDocumento: (id) => `${BASE}/sessions/${id}/document`,
 
-  cerrarSesion: (id) => fetch(`${BASE}/sesiones/${id}`, { method: "DELETE" }).then(manejar),
+  cerrarSesion: (id) => fetch(`${BASE}/sessions/${id}`, { method: "DELETE" }).then(manejar),
 
   // --- guardar y reanudar sesiones ---
-  guardarSesion: (id) => json("POST", `/sesiones/${id}/guardar`),
-  listarSesionesGuardadas: () => fetch(`${BASE}/sesiones-guardadas`).then(manejar),
-  reanudarSesionGuardada: (id) => json("POST", `/sesiones-guardadas/${id}/reanudar`),
-  borrarSesionGuardada: (id) => fetch(`${BASE}/sesiones-guardadas/${id}`, { method: "DELETE" }).then(manejar),
+  guardarSesion: (id) => json("POST", `/sessions/${id}/save`),
+  listarSesionesGuardadas: () => fetch(`${BASE}/saved-sessions`).then(manejar),
+  reanudarSesionGuardada: (id) => json("POST", `/saved-sessions/${id}/resume`),
+  borrarSesionGuardada: (id) => fetch(`${BASE}/saved-sessions/${id}`, { method: "DELETE" }).then(manejar),
 
   // --- indice de protocolo ---
-  protocoloListar: (anio) => fetch(`${BASE}/protocolo?anio=${anio}`).then(manejar),
-  protocoloAnios: () => fetch(`${BASE}/protocolo/anios`).then(manejar),
-  protocoloSugerido: (anio) => fetch(`${BASE}/protocolo/sugerido?anio=${anio}`).then(manejar),
-  protocoloDesdeSesion: (sesionId) => fetch(`${BASE}/protocolo/desde-sesion/${sesionId}`).then(manejar),
-  protocoloCrear: (datos) => json("POST", "/protocolo", datos),
-  protocoloActualizar: (id, datos) => json("PUT", `/protocolo/${id}`, datos),
-  protocoloEstado: (id, estado, observaciones) => json("PATCH", `/protocolo/${id}/estado`, { estado, observaciones }),
-  protocoloBorrar: (id) => fetch(`${BASE}/protocolo/${id}`, { method: "DELETE" }).then(manejar),
-  protocoloUrlExportar: (anio) => `${BASE}/protocolo/${anio}/exportar`,
+  protocoloListar: (anio) => fetch(`${BASE}/protocol?anio=${anio}`).then(manejar),
+  protocoloAnios: () => fetch(`${BASE}/protocol/years`).then(manejar),
+  protocoloSugerido: (anio) => fetch(`${BASE}/protocol/suggested?anio=${anio}`).then(manejar),
+  protocoloDesdeSesion: (sesionId) => fetch(`${BASE}/protocol/from-session/${sesionId}`).then(manejar),
+  protocoloCrear: (datos) => json("POST", "/protocol", datos),
+  protocoloActualizar: (id, datos) => json("PUT", `/protocol/${id}`, datos),
+  protocoloEstado: (id, estado, observaciones) => json("PATCH", `/protocol/${id}/status`, { estado, observaciones }),
+  protocoloBorrar: (id) => fetch(`${BASE}/protocol/${id}`, { method: "DELETE" }).then(manejar),
+  protocoloUrlExportar: (anio) => `${BASE}/protocol/${anio}/export`,
 
   // --- agenda de turnos ---
-  turnosListar: (desde, hasta, equipo = false) => fetch(`${BASE}/turnos?desde=${encodeURIComponent(desde)}&hasta=${encodeURIComponent(hasta)}${equipo ? "&equipo=1" : ""}`).then(manejar),
-  turnoCrear: (datos) => json("POST", "/turnos", datos),
-  turnoActualizar: (id, datos) => json("PUT", `/turnos/${id}`, datos),
-  turnoEstado: (id, estado) => json("PATCH", `/turnos/${id}/estado`, { estado }),
-  turnoBorrar: (id) => fetch(`${BASE}/turnos/${id}`, { method: "DELETE" }).then(manejar),
+  turnosListar: (desde, hasta, equipo = false) => fetch(`${BASE}/appointments?desde=${encodeURIComponent(desde)}&hasta=${encodeURIComponent(hasta)}${equipo ? "&equipo=1" : ""}`).then(manejar),
+  turnoCrear: (datos) => json("POST", "/appointments", datos),
+  turnoActualizar: (id, datos) => json("PUT", `/appointments/${id}`, datos),
+  turnoEstado: (id, estado) => json("PATCH", `/appointments/${id}/status`, { estado }),
+  turnoBorrar: (id) => fetch(`${BASE}/appointments/${id}`, { method: "DELETE" }).then(manejar),
 
   // --- notas individuales o compartidas ---
-  notasListar: () => fetch(`${BASE}/notas`).then(manejar),
-  notaCrear: (datos) => json("POST", "/notas", datos),
-  notaActualizar: (id, datos) => json("PUT", `/notas/${id}`, datos),
-  notaBorrar: (id) => fetch(`${BASE}/notas/${id}`, { method: "DELETE" }).then(manejar),
+  notasListar: () => fetch(`${BASE}/notes`).then(manejar),
+  notaCrear: (datos) => json("POST", "/notes", datos),
+  notaActualizar: (id, datos) => json("PUT", `/notes/${id}`, datos),
+  notaBorrar: (id) => fetch(`${BASE}/notes/${id}`, { method: "DELETE" }).then(manejar),
 
   // --- biblioteca de modelos propios ---
-  bibliotecaListar: () => fetch(`${BASE}/biblioteca-modelos`).then(manejar),
+  bibliotecaListar: () => fetch(`${BASE}/templates`).then(manejar),
   bibliotecaSubir: ({ archivo, nombre, tipoActo }) => {
     const fd = new FormData();
     fd.append("archivo", archivo);
     fd.append("nombre", nombre);
     if (tipoActo) fd.append("tipoActo", tipoActo);
-    return fetch(`${BASE}/biblioteca-modelos`, { method: "POST", body: fd }).then(manejar);
+    return fetch(`${BASE}/templates`, { method: "POST", body: fd }).then(manejar);
   },
-  bibliotecaBorrar: (id) => fetch(`${BASE}/biblioteca-modelos/${id}`, { method: "DELETE" }).then(manejar),
+  bibliotecaBorrar: (id) => fetch(`${BASE}/templates/${id}`, { method: "DELETE" }).then(manejar),
 
   // --- clientes (CRM) ---
-  clientesListar: (q = "") => fetch(`${BASE}/clientes?q=${encodeURIComponent(q)}`).then(manejar),
-  clienteObtener: (id) => fetch(`${BASE}/clientes/${id}`).then(manejar),
-  clienteCrear: (datos) => json("POST", "/clientes", datos),
-  clienteActualizar: (id, datos) => json("PUT", `/clientes/${id}`, datos),
-  clienteBorrar: (id) => fetch(`${BASE}/clientes/${id}`, { method: "DELETE" }).then(manejar),
+  clientesListar: (q = "") => fetch(`${BASE}/clients?q=${encodeURIComponent(q)}`).then(manejar),
+  clienteObtener: (id) => fetch(`${BASE}/clients/${id}`).then(manejar),
+  clienteCrear: (datos) => json("POST", "/clients", datos),
+  clienteActualizar: (id, datos) => json("PUT", `/clients/${id}`, datos),
+  clienteBorrar: (id) => fetch(`${BASE}/clients/${id}`, { method: "DELETE" }).then(manejar),
 
   // --- expedientes, partes y tareas ---
-  expedientesListar: (estado = "") => fetch(`${BASE}/expedientes${estado ? `?estado=${estado}` : ""}`).then(manejar),
-  expedienteObtener: (id) => fetch(`${BASE}/expedientes/${id}`).then(manejar),
-  expedienteCrear: (datos) => json("POST", "/expedientes", datos),
-  expedienteActualizar: (id, datos) => json("PUT", `/expedientes/${id}`, datos),
-  expedienteEstado: (id, estado) => json("PATCH", `/expedientes/${id}/estado`, { estado }),
-  expedienteBorrar: (id) => fetch(`${BASE}/expedientes/${id}`, { method: "DELETE" }).then(manejar),
-  expedientePartes: (id, partes) => json("PUT", `/expedientes/${id}/partes`, { partes }),
-  tareaCrear: (expedienteId, datos) => json("POST", `/expedientes/${expedienteId}/tareas`, datos),
-  tareaActualizar: (expedienteId, id, datos) => json("PUT", `/expedientes/${expedienteId}/tareas/${id}`, datos),
-  tareaEstado: (expedienteId, id, estado) => json("PATCH", `/expedientes/${expedienteId}/tareas/${id}/estado`, { estado }),
-  tareaBorrar: (expedienteId, id) => fetch(`${BASE}/expedientes/${expedienteId}/tareas/${id}`, { method: "DELETE" }).then(manejar),
-  tareasDesdeSesion: (expedienteId, sesionId) => json("POST", `/expedientes/${expedienteId}/tareas/desde-sesion/${sesionId}`),
+  expedientesListar: (estado = "") => fetch(`${BASE}/cases${estado ? `?estado=${estado}` : ""}`).then(manejar),
+  expedienteObtener: (id) => fetch(`${BASE}/cases/${id}`).then(manejar),
+  expedienteCrear: (datos) => json("POST", "/cases", datos),
+  expedienteActualizar: (id, datos) => json("PUT", `/cases/${id}`, datos),
+  expedienteEstado: (id, estado) => json("PATCH", `/cases/${id}/status`, { estado }),
+  expedienteBorrar: (id) => fetch(`${BASE}/cases/${id}`, { method: "DELETE" }).then(manejar),
+  expedientePartes: (id, partes) => json("PUT", `/cases/${id}/parties`, { partes }),
+  tareaCrear: (expedienteId, datos) => json("POST", `/cases/${expedienteId}/tasks`, datos),
+  tareaActualizar: (expedienteId, id, datos) => json("PUT", `/cases/${expedienteId}/tasks/${id}`, datos),
+  tareaEstado: (expedienteId, id, estado) => json("PATCH", `/cases/${expedienteId}/tasks/${id}/status`, { estado }),
+  tareaBorrar: (expedienteId, id) => fetch(`${BASE}/cases/${expedienteId}/tasks/${id}`, { method: "DELETE" }).then(manejar),
+  tareasDesdeSesion: (expedienteId, sesionId) => json("POST", `/cases/${expedienteId}/tasks/from-session/${sesionId}`),
 
   // --- presupuestos ---
   presupuestosListar: ({ expedienteId, clienteId } = {}) => {
     const p = new URLSearchParams();
     if (expedienteId) p.set("expedienteId", expedienteId);
     if (clienteId) p.set("clienteId", clienteId);
-    return fetch(`${BASE}/presupuestos?${p}`).then(manejar);
+    return fetch(`${BASE}/quotes?${p}`).then(manejar);
   },
-  presupuestoObtener: (id) => fetch(`${BASE}/presupuestos/${id}`).then(manejar),
-  presupuestoCrear: (datos) => json("POST", "/presupuestos", datos),
-  presupuestoActualizar: (id, datos) => json("PUT", `/presupuestos/${id}`, datos),
-  presupuestoEstado: (id, estado) => json("PATCH", `/presupuestos/${id}/estado`, { estado }),
-  presupuestoBorrar: (id) => fetch(`${BASE}/presupuestos/${id}`, { method: "DELETE" }).then(manejar),
-  presupuestoUrlPdf: (id) => `${BASE}/presupuestos/${id}/pdf`,
+  presupuestoObtener: (id) => fetch(`${BASE}/quotes/${id}`).then(manejar),
+  presupuestoCrear: (datos) => json("POST", "/quotes", datos),
+  presupuestoActualizar: (id, datos) => json("PUT", `/quotes/${id}`, datos),
+  presupuestoEstado: (id, estado) => json("PATCH", `/quotes/${id}/status`, { estado }),
+  presupuestoBorrar: (id) => fetch(`${BASE}/quotes/${id}`, { method: "DELETE" }).then(manejar),
+  presupuestoUrlPdf: (id) => `${BASE}/quotes/${id}/pdf`,
 
   // --- caja (cuenta corriente) ---
-  movimientosListar: (f = {}) => fetch(`${BASE}/movimientos?${new URLSearchParams(Object.fromEntries(Object.entries(f).filter(([, v]) => v)))}`).then(manejar),
-  movimientosResumen: (f = {}) => fetch(`${BASE}/movimientos/resumen?${new URLSearchParams(Object.fromEntries(Object.entries(f).filter(([, v]) => v)))}`).then(manejar),
-  movimientosSaldo: (clienteId) => fetch(`${BASE}/movimientos/saldo/${clienteId}`).then(manejar),
-  movimientosUrlCsv: (f = {}) => `${BASE}/movimientos/csv?${new URLSearchParams(Object.fromEntries(Object.entries(f).filter(([, v]) => v)))}`,
-  pagoRegistrar: (datos) => json("POST", "/movimientos/pagos", datos),
-  cargoCrear: (datos) => json("POST", "/movimientos/cargos", datos),
-  movimientoBorrar: (id) => fetch(`${BASE}/movimientos/${id}`, { method: "DELETE" }).then(manejar),
+  movimientosListar: (f = {}) => fetch(`${BASE}/transactions?${new URLSearchParams(Object.fromEntries(Object.entries(f).filter(([, v]) => v)))}`).then(manejar),
+  movimientosResumen: (f = {}) => fetch(`${BASE}/transactions/summary?${new URLSearchParams(Object.fromEntries(Object.entries(f).filter(([, v]) => v)))}`).then(manejar),
+  movimientosSaldo: (clienteId) => fetch(`${BASE}/transactions/balance/${clienteId}`).then(manejar),
+  movimientosUrlCsv: (f = {}) => `${BASE}/transactions/csv?${new URLSearchParams(Object.fromEntries(Object.entries(f).filter(([, v]) => v)))}`,
+  pagoRegistrar: (datos) => json("POST", "/transactions/payments", datos),
+  cargoCrear: (datos) => json("POST", "/transactions/charges", datos),
+  movimientoBorrar: (id) => fetch(`${BASE}/transactions/${id}`, { method: "DELETE" }).then(manejar),
 
   // --- comprobantes ---
-  comprobantesListar: (f = {}) => fetch(`${BASE}/comprobantes?${new URLSearchParams(Object.fromEntries(Object.entries(f).filter(([, v]) => v)))}`).then(manejar),
-  comprobantesUrlCsv: (f = {}) => `${BASE}/comprobantes/csv?${new URLSearchParams(Object.fromEntries(Object.entries(f).filter(([, v]) => v)))}`,
-  comprobanteObtener: (id) => fetch(`${BASE}/comprobantes/${id}`).then(manejar),
-  comprobanteEmitir: (datos) => json("POST", "/comprobantes", datos),
-  comprobanteAnular: (id, motivo) => json("POST", `/comprobantes/${id}/anular`, { motivo }),
-  comprobanteUrlPdf: (id) => `${BASE}/comprobantes/${id}/pdf`,
+  comprobantesListar: (f = {}) => fetch(`${BASE}/invoices?${new URLSearchParams(Object.fromEntries(Object.entries(f).filter(([, v]) => v)))}`).then(manejar),
+  comprobantesUrlCsv: (f = {}) => `${BASE}/invoices/csv?${new URLSearchParams(Object.fromEntries(Object.entries(f).filter(([, v]) => v)))}`,
+  comprobanteObtener: (id) => fetch(`${BASE}/invoices/${id}`).then(manejar),
+  comprobanteEmitir: (datos) => json("POST", "/invoices", datos),
+  comprobanteAnular: (id, motivo) => json("POST", `/invoices/${id}/void`, { motivo }),
+  comprobanteUrlPdf: (id) => `${BASE}/invoices/${id}/pdf`,
 
   // --- configuracion fiscal y ARCA (propia de cada cuenta) ---
-  configuracionFiscal: () => fetch(`${BASE}/configuracion-fiscal`).then(manejar),
-  guardarConfiguracionFiscal: (datos) => json("PUT", "/configuracion-fiscal", datos),
-  borrarCredencialesArca: () => fetch(`${BASE}/configuracion-fiscal/credenciales`, { method: "DELETE" }).then(manejar),
-  probarArca: () => json("POST", "/configuracion-fiscal/probar"),
+  configuracionFiscal: () => fetch(`${BASE}/tax-config`).then(manejar),
+  guardarConfiguracionFiscal: (datos) => json("PUT", "/tax-config", datos),
+  borrarCredencialesArca: () => fetch(`${BASE}/tax-config/credentials`, { method: "DELETE" }).then(manejar),
+  probarArca: () => json("POST", "/tax-config/test"),
 
   // --- UIF ---
-  uifAlertas: () => fetch(`${BASE}/uif/alertas`).then(manejar),
-  uifParametros: () => fetch(`${BASE}/uif/parametros`).then(manejar),
-  uifGuardarParametros: (datos) => json("PUT", "/uif/parametros", datos),
-  uifExpedientes: () => fetch(`${BASE}/uif/expedientes`).then(manejar),
-  uifLegajo: (clienteId) => fetch(`${BASE}/uif/legajos/${clienteId}`).then(manejar),
-  uifGuardarLegajo: (clienteId, datos) => json("PUT", `/uif/legajos/${clienteId}`, datos),
-  uifExpediente: (id) => fetch(`${BASE}/uif/expedientes/${id}`).then(manejar),
-  uifGuardarExpediente: (id, datos) => json("PUT", `/uif/expedientes/${id}`, datos),
-  uifGenerarRecaudos: (id) => json("POST", `/uif/expedientes/${id}/generar`),
-  uifEventos: () => fetch(`${BASE}/uif/eventos`).then(manejar),
-  uifCrearEvento: (datos) => json("POST", "/uif/eventos", datos),
-  uifBorrarEvento: (id) => fetch(`${BASE}/uif/eventos/${id}`, { method: "DELETE" }).then(manejar),
+  uifAlertas: () => fetch(`${BASE}/uif/alerts`).then(manejar),
+  uifParametros: () => fetch(`${BASE}/uif/parameters`).then(manejar),
+  uifGuardarParametros: (datos) => json("PUT", "/uif/parameters", datos),
+  uifExpedientes: () => fetch(`${BASE}/uif/cases`).then(manejar),
+  uifLegajo: (clienteId) => fetch(`${BASE}/uif/records/${clienteId}`).then(manejar),
+  uifGuardarLegajo: (clienteId, datos) => json("PUT", `/uif/records/${clienteId}`, datos),
+  uifExpediente: (id) => fetch(`${BASE}/uif/cases/${id}`).then(manejar),
+  uifGuardarExpediente: (id, datos) => json("PUT", `/uif/cases/${id}`, datos),
+  uifGenerarRecaudos: (id) => json("POST", `/uif/cases/${id}/generate`),
+  uifEventos: () => fetch(`${BASE}/uif/events`).then(manejar),
+  uifCrearEvento: (datos) => json("POST", "/uif/events", datos),
+  uifBorrarEvento: (id) => fetch(`${BASE}/uif/events/${id}`, { method: "DELETE" }).then(manejar),
 
   // --- equipo de la escribanía ---
-  equipo: () => fetch(`${BASE}/equipo`).then(manejar),
-  equipoCompaneros: () => fetch(`${BASE}/equipo/companeros`).then(manejar),
-  equipoMetricas: (dias = 30) => fetch(`${BASE}/equipo/metricas?dias=${dias}`).then(manejar),
-  equipoCrear: (nombre) => json("POST", "/equipo", { nombre }),
-  equipoRenombrar: (nombre) => json("PUT", "/equipo", { nombre }),
-  equipoInvitar: (datos) => json("POST", "/equipo/invitaciones", datos),
-  equipoCancelarInvitacion: (id) => fetch(`${BASE}/equipo/invitaciones/${id}`, { method: "DELETE" }).then(manejar),
-  equipoAceptarInvitacion: (token) => json("POST", "/equipo/invitaciones/aceptar", { token }),
-  equipoCambiarRol: (usuarioId, rol) => json("PATCH", `/equipo/miembros/${usuarioId}/rol`, { rol }),
-  equipoCambiarEstado: (usuarioId, estado) => json("PATCH", `/equipo/miembros/${usuarioId}/estado`, { estado }),
-  equipoQuitar: (usuarioId) => fetch(`${BASE}/equipo/miembros/${usuarioId}`, { method: "DELETE" }).then(manejar),
-  invitacionVer: (token) => fetch(`${BASE}/auth/invitacion/${encodeURIComponent(token)}`).then(manejar),
-  altaVer: (token) => fetch(`${BASE}/auth/alta/${encodeURIComponent(token)}`).then(manejar),
+  equipo: () => fetch(`${BASE}/team`).then(manejar),
+  equipoCompaneros: () => fetch(`${BASE}/team/colleagues`).then(manejar),
+  equipoMetricas: (dias = 30) => fetch(`${BASE}/team/metrics?dias=${dias}`).then(manejar),
+  equipoCrear: (nombre) => json("POST", "/team", { nombre }),
+  equipoRenombrar: (nombre) => json("PUT", "/team", { nombre }),
+  equipoInvitar: (datos) => json("POST", "/team/invitations", datos),
+  equipoCancelarInvitacion: (id) => fetch(`${BASE}/team/invitations/${id}`, { method: "DELETE" }).then(manejar),
+  equipoAceptarInvitacion: (token) => json("POST", "/team/invitations/accept", { token }),
+  equipoCambiarRol: (usuarioId, rol) => json("PATCH", `/team/members/${usuarioId}/role`, { rol }),
+  equipoCambiarEstado: (usuarioId, estado) => json("PATCH", `/team/members/${usuarioId}/status`, { estado }),
+  equipoQuitar: (usuarioId) => fetch(`${BASE}/team/members/${usuarioId}`, { method: "DELETE" }).then(manejar),
+  invitacionVer: (token) => fetch(`${BASE}/auth/invitation/${encodeURIComponent(token)}`).then(manejar),
+  altaVer: (token) => fetch(`${BASE}/auth/signup/${encodeURIComponent(token)}`).then(manejar),
 
   // --- compartir un expediente con el equipo ---
-  expedienteColaboradores: (id) => fetch(`${BASE}/expedientes/${id}/colaboradores`).then(manejar),
-  expedienteCompartir: (id, datos) => json("POST", `/expedientes/${id}/colaboradores`, datos),
-  expedienteDejarDeCompartir: (id, usuarioId) => fetch(`${BASE}/expedientes/${id}/colaboradores/${usuarioId}`, { method: "DELETE" }).then(manejar),
-  misTareas: () => fetch(`${BASE}/expedientes/mis-tareas`).then(manejar),
+  expedienteColaboradores: (id) => fetch(`${BASE}/cases/${id}/collaborators`).then(manejar),
+  expedienteCompartir: (id, datos) => json("POST", `/cases/${id}/collaborators`, datos),
+  expedienteDejarDeCompartir: (id, usuarioId) => fetch(`${BASE}/cases/${id}/collaborators/${usuarioId}`, { method: "DELETE" }).then(manejar),
+  misTareas: () => fetch(`${BASE}/cases/my-tasks`).then(manejar),
 
   // --- panel de operación de la plataforma (solo la cuenta operadora) ---
-  soporteResumen: (dias = 30) => fetch(`${BASE}/soporte/resumen?dias=${dias}`).then(manejar),
-  soporteCuentas: (f = {}) => fetch(`${BASE}/soporte/cuentas?${new URLSearchParams(Object.fromEntries(Object.entries(f).filter(([, v]) => v)))}`).then(manejar),
-  soporteCuenta: (id, dias = 30) => fetch(`${BASE}/soporte/cuentas/${id}?dias=${dias}`).then(manejar),
-  soporteCuentaActivo: (id, activo) => json("PATCH", `/soporte/cuentas/${id}/activo`, { activo }),
-  soporteEliminarCuenta: (id, email) => json("DELETE", `/soporte/cuentas/${id}`, { email }),
-  soporteInvitaciones: () => fetch(`${BASE}/soporte/invitaciones`).then(manejar),
-  soporteInvitar: (datos) => json("POST", "/soporte/invitaciones", datos),
-  soporteReenviarInvitacion: (id) => json("POST", `/soporte/invitaciones/${id}/reenviar`),
-  soporteCancelarInvitacion: (id) => json("DELETE", `/soporte/invitaciones/${id}`),
-  soporteEliminarInvitacion: (id) => json("DELETE", `/soporte/invitaciones/${id}/definitivo`),
-  soporteRevisarPruebas: (forzarBorrado = false) => json("POST", "/soporte/pruebas/revisar", { forzarBorrado }),
-  soporteSuscripciones: (dias = 30) => fetch(`${BASE}/soporte/suscripciones?dias=${dias}`).then(manejar),
+  soporteResumen: (dias = 30) => fetch(`${BASE}/admin/summary?dias=${dias}`).then(manejar),
+  soporteCuentas: (f = {}) => fetch(`${BASE}/admin/accounts?${new URLSearchParams(Object.fromEntries(Object.entries(f).filter(([, v]) => v)))}`).then(manejar),
+  soporteCuenta: (id, dias = 30) => fetch(`${BASE}/admin/accounts/${id}?dias=${dias}`).then(manejar),
+  soporteCuentaActivo: (id, activo) => json("PATCH", `/admin/accounts/${id}/active`, { activo }),
+  soporteEliminarCuenta: (id, email) => json("DELETE", `/admin/accounts/${id}`, { email }),
+  soporteInvitaciones: () => fetch(`${BASE}/admin/invitations`).then(manejar),
+  soporteInvitar: (datos) => json("POST", "/admin/invitations", datos),
+  soporteReenviarInvitacion: (id) => json("POST", `/admin/invitations/${id}/resend`),
+  soporteCancelarInvitacion: (id) => json("DELETE", `/admin/invitations/${id}`),
+  soporteEliminarInvitacion: (id) => json("DELETE", `/admin/invitations/${id}/permanent`),
+  soporteRevisarPruebas: (forzarBorrado = false) => json("POST", "/admin/trials/review", { forzarBorrado }),
+  soporteSuscripciones: (dias = 30) => fetch(`${BASE}/admin/subscriptions?dias=${dias}`).then(manejar),
 
   // --- consultas de soporte (canal de comunicacion con el operador) ---
-  consultasListar: () => fetch(`${BASE}/consultas`).then(manejar),
-  consultasSinLeer: () => fetch(`${BASE}/consultas/sin-leer`).then(manejar),
-  consultaObtener: (id) => fetch(`${BASE}/consultas/${id}`).then(manejar),
-  consultaCrear: (datos) => json("POST", "/consultas", datos),
-  consultaResponder: (id, contenido) => json("POST", `/consultas/${id}/mensajes`, { contenido }),
+  consultasListar: () => fetch(`${BASE}/tickets`).then(manejar),
+  consultasSinLeer: () => fetch(`${BASE}/tickets/unread`).then(manejar),
+  consultaObtener: (id) => fetch(`${BASE}/tickets/${id}`).then(manejar),
+  consultaCrear: (datos) => json("POST", "/tickets", datos),
+  consultaResponder: (id, contenido) => json("POST", `/tickets/${id}/messages`, { contenido }),
   // operador
-  soporteConsultas: (f = {}) => fetch(`${BASE}/soporte/consultas?${new URLSearchParams(Object.fromEntries(Object.entries(f).filter(([, v]) => v)))}`).then(manejar),
-  soporteConsultasAbiertas: () => fetch(`${BASE}/soporte/consultas/abiertas`).then(manejar),
-  soporteConsulta: (id) => fetch(`${BASE}/soporte/consultas/${id}`).then(manejar),
-  soporteConsultaResponder: (id, contenido) => json("POST", `/soporte/consultas/${id}/mensajes`, { contenido }),
-  soporteConsultaCerrar: (id) => json("POST", `/soporte/consultas/${id}/cerrar`),
-  soporteConsultaReabrir: (id) => json("POST", `/soporte/consultas/${id}/reabrir`),
+  soporteConsultas: (f = {}) => fetch(`${BASE}/admin/tickets?${new URLSearchParams(Object.fromEntries(Object.entries(f).filter(([, v]) => v)))}`).then(manejar),
+  soporteConsultasAbiertas: () => fetch(`${BASE}/admin/tickets/open`).then(manejar),
+  soporteConsulta: (id) => fetch(`${BASE}/admin/tickets/${id}`).then(manejar),
+  soporteConsultaResponder: (id, contenido) => json("POST", `/admin/tickets/${id}/messages`, { contenido }),
+  soporteConsultaCerrar: (id) => json("POST", `/admin/tickets/${id}/close`),
+  soporteConsultaReabrir: (id) => json("POST", `/admin/tickets/${id}/reopen`),
 
   // --- novedades (vencimientos y pendientes) ---
-  novedades: () => fetch(`${BASE}/alertas`).then(manejar),
+  novedades: () => fetch(`${BASE}/alerts`).then(manejar),
 
   // --- integraciones con Google ---
-  googleEstado: () => fetch(`${BASE}/google/estado`).then(manejar),
-  googleAutorizar: () => fetch(`${BASE}/google/autorizar`).then(manejar),
-  googleDesconectar: () => json("POST", "/google/desconectar"),
-  googlePreferencias: (datos) => json("PUT", "/google/preferencias", datos),
-  googleGuardarConfiguracion: (datos) => json("PUT", "/google/configuracion", datos),
+  googleEstado: () => fetch(`${BASE}/google/status`).then(manejar),
+  googleAutorizar: () => fetch(`${BASE}/google/authorize`).then(manejar),
+  googleDesconectar: () => json("POST", "/google/disconnect"),
+  googlePreferencias: (datos) => json("PUT", "/google/preferences", datos),
+  googleGuardarConfiguracion: (datos) => json("PUT", "/google/config", datos),
   googleSubirADrive: (datos) => json("POST", "/google/drive", datos),
 };

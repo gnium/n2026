@@ -15,7 +15,7 @@ export const rutasSuscripcion = Router();
 const ESTADO_MP_A_INTERNO = { authorized: "activa", paused: "pausada", cancelled: "cancelada", pending: "pendiente" };
 
 /** Planes activos, visibles para cualquier cuenta (para elegir uno). */
-rutasSuscripcion.get("/planes", async (_req, res, next) => {
+rutasSuscripcion.get("/plans", async (_req, res, next) => {
   try {
     const [rows] = await pool.query("SELECT id, clave, nombre, precio_mensual_ars AS precioMensualArs, descripcion FROM planes WHERE activo = 1 ORDER BY precio_mensual_ars");
     res.json(rows.map((r) => ({ ...r, precioMensualArs: Number(r.precioMensualArs) })));
@@ -63,7 +63,7 @@ rutasSuscripcion.post("/", async (req, res, next) => {
   }
 });
 
-rutasSuscripcion.post("/cancelar", async (req, res, next) => {
+rutasSuscripcion.post("/cancel", async (req, res, next) => {
   try {
     const u = await buscarPorId(req.usuario.id);
     if (!u.mp_preapproval_id) throw new AppError("SIN_SUSCRIPCION", "No tiene una suscripcion activa para cancelar.", 400);

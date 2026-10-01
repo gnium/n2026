@@ -20,7 +20,7 @@ rutasProtocolo.get("/", async (req, res, next) => {
   }
 });
 
-rutasProtocolo.get("/anios", async (req, res, next) => {
+rutasProtocolo.get("/years", async (req, res, next) => {
   try {
     res.json(await listarAniosDisponibles(req.usuario.id));
   } catch (e) {
@@ -28,7 +28,7 @@ rutasProtocolo.get("/anios", async (req, res, next) => {
   }
 });
 
-rutasProtocolo.get("/sugerido", async (req, res, next) => {
+rutasProtocolo.get("/suggested", async (req, res, next) => {
   try {
     res.json(await proximoNumeroYFolio(req.usuario.id, anioDesdeQuery(req)));
   } catch (e) {
@@ -43,7 +43,7 @@ rutasProtocolo.get("/sugerido", async (req, res, next) => {
  * que la escribana o el escribano los revise/edite antes de registrarlos en
  * el protocolo. No muta ni destruye la sesion.
  */
-rutasProtocolo.get("/desde-sesion/:sesionId", (req, res, next) => {
+rutasProtocolo.get("/from-session/:sesionId", (req, res, next) => {
   try {
     const sesion = obtenerSesionDeUsuario(req.params.sesionId, req.usuario.id);
     if (!sesion) throw new AppError("SESION_INEXISTENTE", "La sesion no existe o ya fue cerrada (los datos se borran al exportar o por inactividad).", 404);
@@ -78,7 +78,7 @@ rutasProtocolo.put("/:id", async (req, res, next) => {
   }
 });
 
-rutasProtocolo.patch("/:id/estado", async (req, res, next) => {
+rutasProtocolo.patch("/:id/status", async (req, res, next) => {
   try {
     res.json(await actualizarEstado(req.usuario.id, req.params.id, req.body?.estado, req.body?.observaciones));
   } catch (e) {
@@ -95,7 +95,7 @@ rutasProtocolo.delete("/:id", async (req, res, next) => {
   }
 });
 
-rutasProtocolo.get("/:anio/exportar", async (req, res, next) => {
+rutasProtocolo.get("/:anio/export", async (req, res, next) => {
   try {
     const anio = Number(req.params.anio);
     if (!Number.isInteger(anio)) throw new AppError("DATOS_INVALIDOS", "Año invalido.", 400);

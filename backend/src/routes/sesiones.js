@@ -157,7 +157,7 @@ rutasSesiones.get("/:id", (req, res, next) => {
 });
 
 /** GET /api/sesiones/:id/eventos -> Server-Sent Events con el progreso del pipeline. */
-rutasSesiones.get("/:id/eventos", (req, res, next) => {
+rutasSesiones.get("/:id/events", (req, res, next) => {
   let sesion;
   try {
     sesion = requerirSesion(req);
@@ -197,7 +197,7 @@ rutasSesiones.get("/:id/eventos", (req, res, next) => {
 });
 
 /** GET /api/sesiones/:id/documento -> .docx final; destruye la sesion tras enviarlo. */
-rutasSesiones.get("/:id/documento", async (req, res, next) => {
+rutasSesiones.get("/:id/document", async (req, res, next) => {
   try {
     const sesion = requerirSesion(req);
     if (sesion.estado !== "completada") throw new AppError("SESION_INCOMPLETA", "El proceso aun no termino o fallo; no hay documento para exportar.", 409);
@@ -218,7 +218,7 @@ rutasSesiones.get("/:id/documento", async (req, res, next) => {
 });
 
 /** POST /api/sesiones/:id/reintentar -> reanuda una sesion fallida desde la etapa que fallo, con el proveedor de IA actual. */
-rutasSesiones.post("/:id/reintentar", async (req, res, next) => {
+rutasSesiones.post("/:id/retry", async (req, res, next) => {
   try {
     const sesion = requerirSesion(req);
     if (sesion.estado !== "fallida") throw new AppError("SESION_NO_FALLIDA", "Solo se puede reintentar una sesion que fallo.", 409);
@@ -246,7 +246,7 @@ rutasSesiones.post("/:id/reintentar", async (req, res, next) => {
  * de mejora de la escribana o el escribano. No hace falta volver a cargar el documento: se
  * conserva la extraccion y se vuelven a correr los demas skills.
  */
-rutasSesiones.post("/:id/iterar", async (req, res, next) => {
+rutasSesiones.post("/:id/iterate", async (req, res, next) => {
   try {
     const sesion = requerirSesion(req);
     if (sesion.estado !== "completada") throw new AppError("SESION_NO_COMPLETADA", "Solo se puede pedir una mejora sobre un resultado ya terminado.", 409);
@@ -273,7 +273,7 @@ rutasSesiones.post("/:id/iterar", async (req, res, next) => {
  * para poder reanudarla despues, y libera la memoria. No se puede guardar una sesion
  * "en_curso": el pipeline mantiene una referencia viva y la sigue mutando.
  */
-rutasSesiones.post("/:id/guardar", async (req, res, next) => {
+rutasSesiones.post("/:id/save", async (req, res, next) => {
   try {
     const sesion = requerirSesion(req);
     if (sesion.estado === "en_curso") throw new AppError("SESION_EN_CURSO", "No se puede guardar una sesion mientras el pipeline la esta procesando.", 409);

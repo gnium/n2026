@@ -20,7 +20,7 @@ rutasComprobantes.get("/csv", manejar(async (req, res) => {
 }));
 rutasComprobantes.get("/:id", manejar(async (req, res) => res.json(await obtener(req.usuario.id, req.params.id))));
 rutasComprobantes.post("/", manejar(async (req, res) => res.status(201).json(await emitir(req.usuario.id, req.body || {}))));
-rutasComprobantes.post("/:id/anular", manejar(async (req, res) => res.json(await anular(req.usuario.id, req.params.id, req.body?.motivo))));
+rutasComprobantes.post("/:id/void", manejar(async (req, res) => res.json(await anular(req.usuario.id, req.params.id, req.body?.motivo))));
 rutasComprobantes.get("/:id/pdf", manejar(async (req, res) => {
   const datos = await obtenerParaPdf(req.usuario.id, req.params.id);
   const buffer = await construirComprobantePdf(datos);

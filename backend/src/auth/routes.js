@@ -63,8 +63,8 @@ async function publico(u) {
   return { id: u.id, email: u.email, nombre: u.nombre, esAdmin: Boolean(u.es_admin), rol: ctx.rol, equipoId: ctx.equipoId, equipo: ctx.equipoNombre, suspendido: ctx.suspendido };
 }
 
-/** POST /api/auth/registro {email, password, nombre?, codigo?} */
-rutasAuth.post("/registro", limiteRegistro, async (req, res, next) => {
+/** POST /api/auth/register {email, password, nombre?, codigo?} */
+rutasAuth.post("/register", limiteRegistro, async (req, res, next) => {
   try {
     const email = normalizarEmail(req.body?.email);
     const { password, nombre, codigo } = req.body || {};
@@ -122,8 +122,8 @@ rutasAuth.post("/logout", (req, res) => {
   res.status(204).end();
 });
 
-/** GET /api/auth/yo */
-rutasAuth.get("/yo", requerirAuth, async (req, res, next) => {
+/** GET /api/auth/me */
+rutasAuth.get("/me", requerirAuth, async (req, res, next) => {
   try {
     const usuario = await repo.buscarPorId(req.usuario.id);
     if (!usuario || !usuario.activo) throw new AppError("NO_AUTENTICADO", "Sesion invalida.", 401);
@@ -133,8 +133,8 @@ rutasAuth.get("/yo", requerirAuth, async (req, res, next) => {
   }
 });
 
-/** GET /api/auth/invitacion/:token -> datos publicos de la invitacion, para mostrarla antes de ingresar. */
-rutasAuth.get("/invitacion/:token", limiteToken, async (req, res, next) => {
+/** GET /api/auth/invitation/:token -> datos publicos de la invitacion, para mostrarla antes de ingresar. */
+rutasAuth.get("/invitation/:token", limiteToken, async (req, res, next) => {
   try {
     const inv = await verInvitacion(req.params.token);
     if (!inv) throw new AppError("INVITACION_INVALIDA", "La invitacion no existe, ya fue usada o vencio.", 404);
@@ -144,8 +144,8 @@ rutasAuth.get("/invitacion/:token", limiteToken, async (req, res, next) => {
   }
 });
 
-/** GET /api/auth/alta/:token -> datos publicos de una invitacion de la plataforma (alta de una escribania nueva). */
-rutasAuth.get("/alta/:token", limiteToken, async (req, res, next) => {
+/** GET /api/auth/signup/:token -> datos publicos de una invitacion de la plataforma (alta de una escribania nueva). */
+rutasAuth.get("/signup/:token", limiteToken, async (req, res, next) => {
   try {
     const inv = await altaPlataforma.ver(req.params.token);
     if (!inv) throw new AppError("INVITACION_INVALIDA", "La invitacion no existe, ya fue usada o vencio.", 404);
@@ -155,9 +155,9 @@ rutasAuth.get("/alta/:token", limiteToken, async (req, res, next) => {
   }
 });
 
-/** POST /api/auth/recuperar {email} -> siempre 200 (no revela si el correo existe). */
+/** POST /api/auth/recover {email} -> siempre 200 (no revela si el correo existe). */
 rutasAuth.post(
-  "/recuperar",
+  "/recover",
   limiteRecuperacion,
   limitar({ maximo: 3, ventanaMs: 60 * MINUTO, clave: (req) => normalizarEmail(req.body?.email), mensaje: "Ya se enviaron varios enlaces a ese correo. Revise su bandeja o espere una hora." }),
   async (req, res, next) => {
@@ -185,8 +185,8 @@ rutasAuth.post(
   },
 );
 
-/** POST /api/auth/restablecer {token, password} */
-rutasAuth.post("/restablecer", limiteToken, async (req, res, next) => {
+/** POST /api/auth/reset {token, password} */
+rutasAuth.post("/reset", limiteToken, async (req, res, next) => {
   try {
     const { token, password } = req.body || {};
     const errPass = validarPassword(password);
@@ -203,8 +203,8 @@ rutasAuth.post("/restablecer", limiteToken, async (req, res, next) => {
   }
 });
 
-/** POST /api/auth/cambiar-password {actual, nueva} */
-rutasAuth.post("/cambiar-password", requerirAuth, async (req, res, next) => {
+/** POST /api/auth/change-password {actual, nueva} */
+rutasAuth.post("/change-password", requerirAuth, async (req, res, next) => {
   try {
     const { actual, nueva } = req.body || {};
     const errPass = validarPassword(nueva);

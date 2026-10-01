@@ -114,8 +114,8 @@ app.use("/api", verificarOrigen); // CSRF: todo pedido que modifica algo debe ve
 // Publica solo el latido. Que proveedor de IA, que modelo, cuantas sesiones
 // hay abiertas o si la clave es ilegible son datos de operacion: los ve la
 // interfaz cuando hay sesion, no cualquiera que consulte el endpoint.
-app.get("/api/salud", (_req, res) => res.json({ ok: true }));
-app.get("/api/salud/detalle", requerirAuth, (_req, res) => {
+app.get("/api/health", (_req, res) => res.json({ ok: true }));
+app.get("/api/health/detail", requerirAuth, (_req, res) => {
   const prov = descripcionProveedor();
   res.json({ ok: true, sesionesActivas: cantidadSesiones(), modelo: prov.modelo, modo: prov.modo, proveedor: prov.proveedor, origenClave: prov.origenClave || null, claveIlegible: Boolean(prov.claveIlegible) });
 });
@@ -123,29 +123,29 @@ app.use("/api/auth", rutasAuth);
 app.use("/api/webhooks", rutasWebhookMercadoPago); // publica: la autenticacion es la firma de Mercado Pago, no una cookie
 // El proveedor de IA, los precios y las plantillas/skills son configuracion compartida
 // por todas las escribanas y escribanos de esta instalacion: solo la cuenta administradora la edita.
-app.use("/api/configuracion/ia", requerirAuth, requerirAdmin, rutasConfiguracionIA);
-app.use("/api/configuracion/precios", requerirAuth, requerirAdmin, rutasPrecios);
-app.use("/api/configuracion/planes", requerirAuth, requerirAdmin, rutasPlanes);
-app.use("/api/consumo", requerirAuth, rutasConsumo); // cada cuenta ve su propio consumo; la administradora ve el de todas
-app.use("/api/suscripcion", requerirAuth, rutasSuscripcion); // cada cuenta gestiona su propia suscripcion
-app.use("/api/sesiones", requerirAuth, rutasSesiones); // cada sesion de trabajo pertenece a quien la creo
-app.use("/api/sesiones-guardadas", requerirAuth, rutasSesionesGuardadas); // cada cuenta guarda/reanuda solo las suyas
-app.use("/api/equipo", requerirAuth, rutasEquipo); // integrantes, invitaciones, roles y metricas del equipo
-app.use("/api/alertas", requerirAuth, rutasAlertas); // novedades: vencimientos y pendientes de la cuenta (segun rol)
-app.use("/api/consultas", requerirAuth, rutasConsultas); // canal de consultas de soporte de cada cuenta
-app.use("/api/soporte", requerirAuth, requerirAdmin, rutasSoporte); // panel de operacion de la plataforma: solo metadatos y agregados
+app.use("/api/config/ai", requerirAuth, requerirAdmin, rutasConfiguracionIA);
+app.use("/api/config/pricing", requerirAuth, requerirAdmin, rutasPrecios);
+app.use("/api/config/plans", requerirAuth, requerirAdmin, rutasPlanes);
+app.use("/api/usage", requerirAuth, rutasConsumo); // cada cuenta ve su propio consumo; la administradora ve el de todas
+app.use("/api/subscription", requerirAuth, rutasSuscripcion); // cada cuenta gestiona su propia suscripcion
+app.use("/api/sessions", requerirAuth, rutasSesiones); // cada sesion de trabajo pertenece a quien la creo
+app.use("/api/saved-sessions", requerirAuth, rutasSesionesGuardadas); // cada cuenta guarda/reanuda solo las suyas
+app.use("/api/team", requerirAuth, rutasEquipo); // integrantes, invitaciones, roles y metricas del equipo
+app.use("/api/alerts", requerirAuth, rutasAlertas); // novedades: vencimientos y pendientes de la cuenta (segun rol)
+app.use("/api/tickets", requerirAuth, rutasConsultas); // canal de consultas de soporte de cada cuenta
+app.use("/api/admin", requerirAuth, requerirAdmin, rutasSoporte); // panel de operacion de la plataforma: solo metadatos y agregados
 app.use("/api/google/callback", rutasGoogleCallback); // publica: la vuelta de OAuth se autentica con el state firmado
 app.use("/api/google", requerirAuth, rutasGoogle); // Calendar y Drive (apagado hasta configurarlo)
-app.use("/api/protocolo", requerirAuth, requerirRol("escribano"), rutasProtocolo); // indice de protocolo: reservado a escribana/escribano
-app.use("/api/turnos", requerirAuth, rutasTurnos); // agenda propia de cada cuenta
-app.use("/api/notas", requerirAuth, rutasNotas); // notas propias + compartidas con la instalacion
-app.use("/api/biblioteca-modelos", requerirAuth, rutasBibliotecaModelos); // escrituras modelo propias, reutilizables entre sesiones
-app.use("/api/clientes", requerirAuth, rutasClientes); // CRM propio de cada cuenta (identificadores cifrados)
-app.use("/api/expedientes", requerirAuth, rutasExpedientes); // carpetas con partes, tareas y vinculo al pipeline
-app.use("/api/presupuestos", requerirAuth, rutasPresupuestos); // presupuestos con PDF
-app.use("/api/movimientos", requerirAuth, requerirRol("escribano"), rutasMovimientos); // cuenta corriente: no visible para el rol empleado
-app.use("/api/comprobantes", requerirAuth, requerirRol("escribano"), rutasComprobantes); // recibos, notas de honorarios y facturas (ARCA)
-app.use("/api/configuracion-fiscal", requerirAuth, requerirRol("escribano"), rutasConfiguracionFiscal); // datos del emisor y credenciales ARCA (cada cuenta la suya)
+app.use("/api/protocol", requerirAuth, requerirRol("escribano"), rutasProtocolo); // indice de protocolo: reservado a escribana/escribano
+app.use("/api/appointments", requerirAuth, rutasTurnos); // agenda propia de cada cuenta
+app.use("/api/notes", requerirAuth, rutasNotas); // notas propias + compartidas con la instalacion
+app.use("/api/templates", requerirAuth, rutasBibliotecaModelos); // escrituras modelo propias, reutilizables entre sesiones
+app.use("/api/clients", requerirAuth, rutasClientes); // CRM propio de cada cuenta (identificadores cifrados)
+app.use("/api/cases", requerirAuth, rutasExpedientes); // carpetas con partes, tareas y vinculo al pipeline
+app.use("/api/quotes", requerirAuth, rutasPresupuestos); // presupuestos con PDF
+app.use("/api/transactions", requerirAuth, requerirRol("escribano"), rutasMovimientos); // cuenta corriente: no visible para el rol empleado
+app.use("/api/invoices", requerirAuth, requerirRol("escribano"), rutasComprobantes); // recibos, notas de honorarios y facturas (ARCA)
+app.use("/api/tax-config", requerirAuth, requerirRol("escribano"), rutasConfiguracionFiscal); // datos del emisor y credenciales ARCA (cada cuenta la suya)
 app.use("/api/uif", requerirAuth, requerirRol("escribano"), rutasUif); // legajos, fichas y eventos UIF (parametros: solo admin)
 app.use("/api", requerirAuth, requerirAdmin, rutasConfiguracion);
 

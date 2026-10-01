@@ -62,21 +62,21 @@ rutasGoogleCallback.get("/", async (req, res) => {
   }
 });
 
-rutasGoogle.get("/estado", manejar(async (req, res) => res.json(await estado(req.usuario.id))));
+rutasGoogle.get("/status", manejar(async (req, res) => res.json(await estado(req.usuario.id))));
 rutasGoogle.get(
-  "/autorizar",
+  "/authorize",
   manejar(async (req, res) => {
     const { url, nonce } = await urlAutorizacion(req.usuario.id);
     res.cookie(COOKIE_OAUTH, nonce, { ...opcionesCookieOauth, maxAge: 10 * 60 * 1000 });
     res.json({ url });
   }),
 );
-rutasGoogle.post("/desconectar", manejar(async (req, res) => res.json(await desconectar(req.usuario.id))));
-rutasGoogle.put("/preferencias", manejar(async (req, res) => res.json(await guardarPreferencias(req.usuario.id, req.body || {}))));
+rutasGoogle.post("/disconnect", manejar(async (req, res) => res.json(await desconectar(req.usuario.id))));
+rutasGoogle.put("/preferences", manejar(async (req, res) => res.json(await guardarPreferencias(req.usuario.id, req.body || {}))));
 
 // Credenciales del proyecto de Google Cloud: comunes a la instalacion.
-rutasGoogle.get("/configuracion", requerirAdmin, manejar(async (_req, res) => res.json(await configuracionOAuth())));
-rutasGoogle.put("/configuracion", requerirAdmin, manejar(async (req, res) => res.json(await guardarConfiguracionOAuth(req.body || {}))));
+rutasGoogle.get("/config", requerirAdmin, manejar(async (_req, res) => res.json(await configuracionOAuth())));
+rutasGoogle.put("/config", requerirAdmin, manejar(async (req, res) => res.json(await guardarConfiguracionOAuth(req.body || {}))));
 
 /** Arma el PDF del presupuesto o del comprobante y devuelve nombre, tipo y contenido. */
 async function documento(usuarioId, tipo, id) {

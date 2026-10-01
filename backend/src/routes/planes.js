@@ -38,7 +38,7 @@ rutasPlanes.put("/", async (req, res, next) => {
   }
 });
 
-rutasPlanes.get("/facturacion", async (_req, res, next) => {
+rutasPlanes.get("/billing", async (_req, res, next) => {
   try {
     res.json(await parametrosFacturacion());
   } catch (e) {
@@ -46,7 +46,7 @@ rutasPlanes.get("/facturacion", async (_req, res, next) => {
   }
 });
 
-rutasPlanes.put("/facturacion", async (req, res, next) => {
+rutasPlanes.put("/billing", async (req, res, next) => {
   try {
     const { feeFijoArs, margenPct, tipoCambio, suscripcionRequerida } = req.body || {};
     for (const [nombre, v] of [["feeFijoArs", feeFijoArs], ["margenPct", margenPct], ["tipoCambio", tipoCambio]]) {

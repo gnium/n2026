@@ -16,7 +16,7 @@ rutasPresupuestos.get("/", manejar(async (req, res) => res.json(await listar(req
 rutasPresupuestos.get("/:id", manejar(async (req, res) => res.json(await obtener(req.usuario.id, req.params.id))));
 rutasPresupuestos.post("/", manejar(async (req, res) => res.status(201).json(await crear(req.usuario.id, req.body || {}))));
 rutasPresupuestos.put("/:id", manejar(async (req, res) => res.json(await actualizar(req.usuario.id, req.params.id, req.body || {}))));
-rutasPresupuestos.patch("/:id/estado", manejar(async (req, res) => res.json(await actualizarEstado(req.usuario.id, req.params.id, req.body?.estado))));
+rutasPresupuestos.patch("/:id/status", manejar(async (req, res) => res.json(await actualizarEstado(req.usuario.id, req.params.id, req.body?.estado))));
 rutasPresupuestos.delete("/:id", manejar(async (req, res) => {
   await borrar(req.usuario.id, req.params.id);
   res.status(204).end();

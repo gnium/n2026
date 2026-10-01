@@ -26,7 +26,7 @@ rutasConfiguracionIA.put("/", async (req, res, next) => {
 });
 
 /** Lista los modelos Gemini disponibles para la clave (los que admiten generateContent). */
-rutasConfiguracionIA.post("/gemini/modelos", async (req, res, next) => {
+rutasConfiguracionIA.post("/gemini/models", async (req, res, next) => {
   try {
     const c = configIA();
     const apiKey = (req.body?.geminiApiKey || "").trim() || c.geminiApiKey;
@@ -52,7 +52,7 @@ rutasConfiguracionIA.post("/gemini/modelos", async (req, res, next) => {
 });
 
 /** Prueba la conexion con el proveedor sin consumir tokens (lista/consulta modelos). Acepta una clave provisoria en el cuerpo. */
-rutasConfiguracionIA.post("/probar", async (req, res, next) => {
+rutasConfiguracionIA.post("/test", async (req, res, next) => {
   try {
     const c = configIA();
     const proveedor = req.body?.proveedor || (c.proveedor === "auto" ? (c.apiKey ? "anthropic" : "mock") : c.proveedor);

@@ -29,7 +29,7 @@ rutasTurnos.put("/:id", async (req, res, next) => {
   }
 });
 
-rutasTurnos.patch("/:id/estado", async (req, res, next) => {
+rutasTurnos.patch("/:id/status", async (req, res, next) => {
   try {
     res.json(await actualizarEstado(req.usuario.id, req.params.id, req.body?.estado));
   } catch (e) {

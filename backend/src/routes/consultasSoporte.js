@@ -22,17 +22,17 @@ const manejar = (fn) => async (req, res, next) => {
 export const rutasConsultas = Router();
 
 rutasConsultas.get("/", manejar(async (req, res) => res.json(await svc.listarMias(req.usuario.id))));
-rutasConsultas.get("/sin-leer", manejar(async (req, res) => res.json({ sinLeer: await svc.contarSinLeer(req.usuario.id) })));
+rutasConsultas.get("/unread", manejar(async (req, res) => res.json({ sinLeer: await svc.contarSinLeer(req.usuario.id) })));
 rutasConsultas.get("/:id", manejar(async (req, res) => res.json(await svc.obtener(Number(req.params.id), req.usuario.id, false))));
 rutasConsultas.post("/", manejar(async (req, res) => res.status(201).json(await svc.crear(req.usuario.id, req.body || {}))));
-rutasConsultas.post("/:id/mensajes", manejar(async (req, res) => res.json(await svc.responder(Number(req.params.id), req.usuario.id, false, req.body || {}))));
+rutasConsultas.post("/:id/messages", manejar(async (req, res) => res.json(await svc.responder(Number(req.params.id), req.usuario.id, false, req.body || {}))));
 
-// --- Rutas del operador (se montan bajo /api/soporte/consultas con requerirAdmin) ---
+// --- Rutas del operador (se montan bajo /api/admin/tickets con requerirAdmin) ---
 export const rutasConsultasAdmin = Router();
 
 rutasConsultasAdmin.get("/", manejar(async (req, res) => res.json(await svc.listarTodas({ estado: req.query.estado, q: req.query.q }))));
-rutasConsultasAdmin.get("/abiertas", manejar(async (_req, res) => res.json({ abiertas: await svc.contarAbiertas() })));
+rutasConsultasAdmin.get("/open", manejar(async (_req, res) => res.json({ abiertas: await svc.contarAbiertas() })));
 rutasConsultasAdmin.get("/:id", manejar(async (req, res) => res.json(await svc.obtener(Number(req.params.id), req.usuario.id, true))));
-rutasConsultasAdmin.post("/:id/mensajes", manejar(async (req, res) => res.json(await svc.responder(Number(req.params.id), req.usuario.id, true, req.body || {}))));
-rutasConsultasAdmin.post("/:id/cerrar", manejar(async (req, res) => res.json(await svc.cerrar(Number(req.params.id)))));
-rutasConsultasAdmin.post("/:id/reabrir", manejar(async (req, res) => res.json(await svc.reabrir(Number(req.params.id)))));
+rutasConsultasAdmin.post("/:id/messages", manejar(async (req, res) => res.json(await svc.responder(Number(req.params.id), req.usuario.id, true, req.body || {}))));
+rutasConsultasAdmin.post("/:id/close", manejar(async (req, res) => res.json(await svc.cerrar(Number(req.params.id)))));
+rutasConsultasAdmin.post("/:id/reopen", manejar(async (req, res) => res.json(await svc.reabrir(Number(req.params.id)))));

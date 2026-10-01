@@ -12,7 +12,7 @@ rutasSesionesGuardadas.get("/", async (req, res, next) => {
   }
 });
 
-rutasSesionesGuardadas.post("/:id/reanudar", async (req, res, next) => {
+rutasSesionesGuardadas.post("/:id/resume", async (req, res, next) => {
   try {
     const vista = await reanudarGuardada(req.usuario.id, req.params.id);
     await auditoria.evento("sesion.reanudada", vista.id, { motivo: vista.modo });

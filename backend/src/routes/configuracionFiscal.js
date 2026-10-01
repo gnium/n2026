@@ -12,5 +12,5 @@ const manejar = (fn) => async (req, res, next) => {
 
 rutasConfiguracionFiscal.get("/", manejar(async (req, res) => res.json(await obtener(req.usuario.id))));
 rutasConfiguracionFiscal.put("/", manejar(async (req, res) => res.json(await guardar(req.usuario.id, req.body || {}))));
-rutasConfiguracionFiscal.delete("/credenciales", manejar(async (req, res) => res.json(await borrarCredenciales(req.usuario.id))));
-rutasConfiguracionFiscal.post("/probar", manejar(async (req, res) => res.json(await probarArca(req.usuario.id))));
+rutasConfiguracionFiscal.delete("/credentials", manejar(async (req, res) => res.json(await borrarCredenciales(req.usuario.id))));
+rutasConfiguracionFiscal.post("/test", manejar(async (req, res) => res.json(await probarArca(req.usuario.id))));
