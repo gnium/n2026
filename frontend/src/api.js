@@ -236,6 +236,7 @@ export const api = {
   soporteInvitar: (datos) => json("POST", "/soporte/invitaciones", datos),
   soporteReenviarInvitacion: (id) => json("POST", `/soporte/invitaciones/${id}/reenviar`),
   soporteCancelarInvitacion: (id) => json("DELETE", `/soporte/invitaciones/${id}`),
+  soporteEliminarInvitacion: (id) => json("DELETE", `/soporte/invitaciones/${id}/definitivo`),
   soporteRevisarPruebas: (forzarBorrado = false) => json("POST", "/soporte/pruebas/revisar", { forzarBorrado }),
   soporteSuscripciones: (dias = 30) => fetch(`${BASE}/soporte/suscripciones?dias=${dias}`).then(manejar),
 

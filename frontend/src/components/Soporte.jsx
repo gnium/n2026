@@ -46,6 +46,7 @@ export default function Soporte() {
   const [alta, setAlta] = useState({ email: "", nombre: "", escribania: "", diasPrueba: 60 });
   const [enlaceAlta, setEnlaceAlta] = useState(null);
   const [aCancelar, setACancelar] = useState(null);
+  const [aEliminar, setAEliminar] = useState(null);
   const [confirmacionBorrado, setConfirmacionBorrado] = useState("");
   const [borrando, setBorrando] = useState(false);
   const [consultas, setConsultas] = useState([]);
@@ -72,7 +73,7 @@ export default function Soporte() {
       setConsultas(cs);
       setVentas(v);
     } catch (e) {
-      setError(e.message);
+      setError(`No se pudieron cargar los datos: ${e.message}`);
     }
   };
 
@@ -122,7 +123,7 @@ export default function Soporte() {
       if (r.enviado) setAviso(`Invitación enviada a ${r.email} con ${r.diasPrueba} días de prueba.`);
       else setEnlaceAlta({ email: r.email, enlace: r.enlace });
     } catch (err) {
-      setError(err.message);
+      setError(`No se pudo enviar la invitación: ${err.message}`);
     } finally {
       setOcupado(false);
     }
@@ -138,7 +139,7 @@ export default function Soporte() {
       if (r.enviado) setAviso(`Invitación reenviada a ${r.email}.`);
       else setEnlaceAlta({ email: r.email, enlace: r.enlace });
     } catch (err) {
-      setError(err.message);
+      setError(`No se pudo reenviar la invitación a ${inv.email}: ${err.message}`);
     } finally {
       setOcupado(false);
     }
@@ -152,7 +153,19 @@ export default function Soporte() {
       setInvitaciones(r.invitaciones);
       setAviso(`Invitación a ${inv.email} cancelada: ese enlace ya no sirve.`);
     } catch (err) {
-      setError(err.message);
+      setError(`No se pudo cancelar la invitación a ${inv.email}: ${err.message}`);
+    }
+  };
+
+  const eliminarInvitacion = async (inv) => {
+    setAEliminar(null);
+    setError(null);
+    try {
+      const r = await api.soporteEliminarInvitacion(inv.id);
+      setInvitaciones(r.invitaciones);
+      setAviso(`Invitación a ${inv.email} eliminada del historial.`);
+    } catch (err) {
+      setError(`No se pudo eliminar la invitación: ${err.message}`);
     }
   };
 
@@ -239,18 +252,20 @@ export default function Soporte() {
     }
   };
 
-  if (!resumen || !lista) return <div className="equipo"><h2>Operación</h2><p className="vacio" role="status">Cargando…</p>{error && <p className="alerta error" role="alert">{error}</p>}</div>;
+  useEffect(() => { if (aviso) { const t = setTimeout(() => setAviso(""), 6000); return () => clearTimeout(t); } }, [aviso]);
+
+  if (!resumen || !lista) return <div className="equipo"><h2>Panel general</h2><p className="vacio" role="status">Cargando…</p>{error && <p className="alerta error" role="alert">{error}</p>}</div>;
 
   const f = resumen.embudo;
 
   return (
     <div className="equipo">
-      <h2>Operación</h2>
+      <h2>Panel general</h2>
       <p className="nota">
-        Panel de la plataforma para dar soporte. Muestra <b>solo metadatos y agregados</b>: altas, uso, facturación y errores. Nunca los clientes, expedientes, protocolo ni documentos de una escribanía — de esas tablas solo se leen conteos. Es lo que permite sostener que ni el operador puede ver una escritura.
+        Métricas y gestión de la plataforma. Muestra <b>solo metadatos y agregados</b>: altas, uso, facturación y errores. Nunca los clientes, expedientes, protocolo ni documentos de una escribanía — de esas tablas solo se leen conteos.
       </p>
-      {error && <p className="alerta error" role="alert">{error}</p>}
-      <p className={`alerta ok ${aviso ? "" : "sr-only"}`} role="status">{aviso}</p>
+      {error && <p className="alerta error" role="alert"><strong>Error:</strong> {error} <button type="button" className="enlace" onClick={() => setError(null)} aria-label="Cerrar error">✕</button></p>}
+      {aviso && <p className="alerta ok" role="status">{aviso}</p>}
 
       <div className="acciones agenda-toolbar">
         <div className="segmentado" role="group" aria-label="Período">
@@ -360,20 +375,23 @@ export default function Soporte() {
                     <td className="num">{i.diasPrueba} días</td>
                     <td>{soloFecha(i.expiraEn)}</td>
                     <td>
-                      {i.estado === "pendiente" || i.estado === "vencida" ? (
-                        <div className="acciones">
+                      <div className="acciones">
+                        {(i.estado === "pendiente" || i.estado === "vencida") && (
                           <button type="button" className="enlace" disabled={ocupado} onClick={() => reenviar(i)} aria-label={`Reenviar la invitación a ${i.email}`}>
                             reenviar
                           </button>
-                          {i.estado === "pendiente" && (
-                            <button type="button" className="enlace" onClick={() => setACancelar(i)} aria-label={`Cancelar la invitación a ${i.email}`}>
-                              cancelar
-                            </button>
-                          )}
-                        </div>
-                      ) : (
-                        "—"
-                      )}
+                        )}
+                        {i.estado === "pendiente" && (
+                          <button type="button" className="enlace" onClick={() => setACancelar(i)} aria-label={`Cancelar la invitación a ${i.email}`}>
+                            cancelar
+                          </button>
+                        )}
+                        {i.estado !== "pendiente" && (
+                          <button type="button" className="enlace" onClick={() => setAEliminar(i)} aria-label={`Eliminar la invitación a ${i.email} del historial`}>
+                            eliminar
+                          </button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -696,6 +714,16 @@ export default function Soporte() {
         destructivo
         onConfirmar={() => cambiarActivo(aDesactivar, false)}
         onCancelar={() => setADesactivar(null)}
+      />
+
+      <ConfirmarDialogo
+        abierto={Boolean(aEliminar)}
+        titulo={aEliminar ? `Eliminar invitación a ${aEliminar.email}` : ""}
+        texto="Se elimina el registro de esta invitación del historial. Esta acción no se puede deshacer."
+        confirmar="Eliminar"
+        destructivo
+        onConfirmar={() => eliminarInvitacion(aEliminar)}
+        onCancelar={() => setAEliminar(null)}
       />
     </div>
   );

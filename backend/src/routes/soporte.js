@@ -32,6 +32,7 @@ rutasSoporte.get("/invitaciones", manejar(async (_req, res) => res.json(await in
 rutasSoporte.post("/invitaciones", manejar(async (req, res) => res.status(201).json(await invitaciones.invitar(req.usuario.id, req.body || {}))));
 rutasSoporte.post("/invitaciones/:id/reenviar", manejar(async (req, res) => res.json(await invitaciones.reenviar(req.usuario.id, req.params.id))));
 rutasSoporte.delete("/invitaciones/:id", manejar(async (req, res) => res.json(await invitaciones.cancelar(req.usuario.id, req.params.id))));
+rutasSoporte.delete("/invitaciones/:id/definitivo", manejar(async (req, res) => res.json(await invitaciones.eliminar(req.usuario.id, req.params.id))));
 
 // Canal de consultas de soporte (el operador ve todas, responde y cierra).
 rutasSoporte.use("/consultas", rutasConsultasAdmin);

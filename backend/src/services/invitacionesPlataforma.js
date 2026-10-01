@@ -102,6 +102,14 @@ export async function cancelar(_rootId, id) {
   return { ok: true, invitaciones: await listar() };
 }
 
+export async function eliminar(_rootId, id) {
+  const [[inv]] = await pool.query("SELECT id, estado FROM (SELECT id, CASE WHEN cancelada_en IS NOT NULL THEN 'cancelada' WHEN aceptada_en IS NOT NULL THEN 'aceptada' WHEN expira_en < NOW() THEN 'vencida' ELSE 'pendiente' END AS estado FROM invitaciones_plataforma WHERE id = ?) t", [id]);
+  if (!inv) throw new AppError("NO_ENCONTRADO", "La invitacion no existe.", 404);
+  if (inv.estado === "pendiente") throw new AppError("INVITACION_VIGENTE", "No se puede eliminar una invitacion pendiente. Cancélela primero.", 400);
+  await pool.query("DELETE FROM invitaciones_plataforma WHERE id = ?", [id]);
+  return { ok: true, invitaciones: await listar() };
+}
+
 /** Datos publicos de una invitacion vigente (para mostrarla antes de crear la cuenta). */
 export async function ver(token) {
   const [[r]] = await pool.query(

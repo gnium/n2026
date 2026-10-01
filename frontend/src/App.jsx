@@ -65,7 +65,7 @@ const NAV = [
     titulo: "Administración",
     soloAdmin: true,
     items: [
-      { clave: "soporte", texto: "Operación", icono: "capas" },
+      { clave: "soporte", texto: "Panel general", icono: "capas" },
       { clave: "configuracion", texto: "Configuración", icono: "ajustes" },
     ],
   },
