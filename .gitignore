@@ -10,3 +10,4 @@ certs/*.pem
 TMP/
 client_secret*.json
 *.env.bak
+CREDENCIALES_ADMIN.txt
