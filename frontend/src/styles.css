@@ -402,6 +402,7 @@ th, td { padding: 10px 12px; text-align: left; vertical-align: top; border-botto
 th { background: var(--surface-2); font-weight: 500; font-size: var(--t-xs); text-transform: uppercase; letter-spacing: 0.05em; color: var(--ink-2); white-space: nowrap; }
 tbody tr:last-child td { border-bottom: none; }
 tbody tr:hover td { background: var(--surface-2); }
+tr.fila-seleccionada td { background: color-mix(in srgb, var(--accent) 8%, transparent); }
 td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 tr.cert-faltante td { background: var(--error-soft); }
 tr.cert-presente_vencido td { background: var(--warn-soft); }

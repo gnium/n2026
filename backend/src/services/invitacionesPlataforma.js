@@ -110,6 +110,28 @@ export async function eliminar(_rootId, id) {
   return { ok: true, invitaciones: await listar() };
 }
 
+export async function cancelarVarias(_rootId, ids) {
+  if (!Array.isArray(ids) || ids.length === 0) throw new AppError("DATOS_INVALIDOS", "Debe indicar al menos una invitacion.", 400);
+  const safe = ids.filter((id) => Number.isInteger(Number(id))).map(Number);
+  if (safe.length === 0) throw new AppError("DATOS_INVALIDOS", "IDs inválidos.", 400);
+  const [r] = await pool.query(
+    `UPDATE invitaciones_plataforma SET cancelada_en = NOW() WHERE id IN (${safe.map(() => "?").join(",")}) AND aceptada_en IS NULL AND cancelada_en IS NULL`,
+    safe,
+  );
+  return { ok: true, canceladas: r.affectedRows, invitaciones: await listar() };
+}
+
+export async function eliminarVarias(_rootId, ids) {
+  if (!Array.isArray(ids) || ids.length === 0) throw new AppError("DATOS_INVALIDOS", "Debe indicar al menos una invitacion.", 400);
+  const safe = ids.filter((id) => Number.isInteger(Number(id))).map(Number);
+  if (safe.length === 0) throw new AppError("DATOS_INVALIDOS", "IDs inválidos.", 400);
+  await pool.query(
+    `DELETE FROM invitaciones_plataforma WHERE id IN (${safe.map(() => "?").join(",")}) AND (cancelada_en IS NOT NULL OR aceptada_en IS NOT NULL OR expira_en < NOW())`,
+    safe,
+  );
+  return { ok: true, invitaciones: await listar() };
+}
+
 /** Datos publicos de una invitacion vigente (para mostrarla antes de crear la cuenta). */
 export async function ver(token) {
   const [[r]] = await pool.query(

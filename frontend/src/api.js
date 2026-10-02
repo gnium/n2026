@@ -237,6 +237,8 @@ export const api = {
   soporteReenviarInvitacion: (id) => json("POST", `/admin/invitations/${id}/resend`),
   soporteCancelarInvitacion: (id) => json("DELETE", `/admin/invitations/${id}`),
   soporteEliminarInvitacion: (id) => json("DELETE", `/admin/invitations/${id}/permanent`),
+  soporteCancelarInvitacionesBulk: (ids) => json("POST", "/admin/invitations/bulk/cancel", { ids }),
+  soporteEliminarInvitacionesBulk: (ids) => json("POST", "/admin/invitations/bulk/delete", { ids }),
   soporteRevisarPruebas: (forzarBorrado = false) => json("POST", "/admin/trials/review", { forzarBorrado }),
   soporteSuscripciones: (dias = 30) => fetch(`${BASE}/admin/subscriptions?dias=${dias}`).then(manejar),
 

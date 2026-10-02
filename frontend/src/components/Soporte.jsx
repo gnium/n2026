@@ -43,10 +43,14 @@ export default function Soporte() {
   const [aDesactivar, setADesactivar] = useState(null);
   const [ventas, setVentas] = useState(null);
   const [invitaciones, setInvitaciones] = useState([]);
+  const [qInv, setQInv] = useState("");
+  const [filtroInv, setFiltroInv] = useState("");
+  const [selInv, setSelInv] = useState(new Set());
   const [alta, setAlta] = useState({ email: "", nombre: "", escribania: "", diasPrueba: 60 });
   const [enlaceAlta, setEnlaceAlta] = useState(null);
   const [aCancelar, setACancelar] = useState(null);
   const [aEliminar, setAEliminar] = useState(null);
+  const [bulkAction, setBulkAction] = useState(null);
   const [confirmacionBorrado, setConfirmacionBorrado] = useState("");
   const [borrando, setBorrando] = useState(false);
   const [consultas, setConsultas] = useState([]);
@@ -163,11 +167,56 @@ export default function Soporte() {
     try {
       const r = await api.soporteEliminarInvitacion(inv.id);
       setInvitaciones(r.invitaciones);
+      setSelInv((s) => { const n = new Set(s); n.delete(inv.id); return n; });
       setAviso(`Invitación a ${inv.email} eliminada del historial.`);
     } catch (err) {
       setError(`No se pudo eliminar la invitación: ${err.message}`);
     }
   };
+
+  const bulkCancelar = async () => {
+    setBulkAction(null);
+    setError(null);
+    setOcupado(true);
+    try {
+      const r = await api.soporteCancelarInvitacionesBulk([...selInv]);
+      setInvitaciones(r.invitaciones);
+      setSelInv(new Set());
+      setAviso(`${r.canceladas} invitación(es) cancelada(s).`);
+    } catch (err) {
+      setError(`No se pudieron cancelar: ${err.message}`);
+    } finally {
+      setOcupado(false);
+    }
+  };
+
+  const bulkEliminar = async () => {
+    setBulkAction(null);
+    setError(null);
+    setOcupado(true);
+    try {
+      const r = await api.soporteEliminarInvitacionesBulk([...selInv]);
+      setInvitaciones(r.invitaciones);
+      setSelInv(new Set());
+      setAviso("Invitaciones eliminadas del historial.");
+    } catch (err) {
+      setError(`No se pudieron eliminar: ${err.message}`);
+    } finally {
+      setOcupado(false);
+    }
+  };
+
+  const invFiltradas = invitaciones.filter((i) => {
+    if (filtroInv && i.estado !== filtroInv) return false;
+    if (qInv) {
+      const t = qInv.toLowerCase();
+      return (i.email && i.email.toLowerCase().includes(t)) || (i.nombre && i.nombre.toLowerCase().includes(t)) || (i.escribania && i.escribania.toLowerCase().includes(t));
+    }
+    return true;
+  });
+
+  const toggleSel = (id) => setSelInv((s) => { const n = new Set(s); n.has(id) ? n.delete(id) : n.add(id); return n; });
+  const toggleAll = () => setSelInv((s) => s.size === invFiltradas.length ? new Set() : new Set(invFiltradas.map((i) => i.id)));
 
   const abrirConsulta = async (id) => {
     setError(null);
@@ -346,13 +395,42 @@ export default function Soporte() {
           </p>
         )}
 
+        {invitaciones.length > 0 && (
+          <div className="acciones agenda-toolbar" style={{ marginTop: "0.75rem" }}>
+            <input type="search" placeholder="Buscar por correo, nombre o escribanía…" value={qInv} onChange={(e) => setQInv(e.target.value)} style={{ flex: 1, minWidth: "200px" }} />
+            <div className="segmentado" role="group" aria-label="Filtro de invitaciones">
+              {[["", "Todas"], ["pendiente", "Pendientes"], ["aceptada", "Aceptadas"], ["vencida", "Vencidas"], ["cancelada", "Canceladas"]].map(([v, t]) => (
+                <button type="button" key={v} className={filtroInv === v ? "activo" : ""} aria-pressed={filtroInv === v} onClick={() => { setFiltroInv(v); setSelInv(new Set()); }}>{t}</button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {selInv.size > 0 && (
+          <div className="acciones agenda-toolbar" style={{ marginTop: "0.5rem", gap: "0.5rem" }}>
+            <span className="nota" style={{ marginRight: "auto" }}>{selInv.size} seleccionada{selInv.size > 1 ? "s" : ""}</span>
+            <button type="button" className="boton chico" disabled={ocupado} onClick={() => setBulkAction("cancelar")}>
+              Cancelar seleccionadas
+            </button>
+            <button type="button" className="boton chico peligro" disabled={ocupado} onClick={() => setBulkAction("eliminar")}>
+              Eliminar seleccionadas
+            </button>
+            <button type="button" className="enlace" onClick={() => setSelInv(new Set())}>Deseleccionar</button>
+          </div>
+        )}
+
         {invitaciones.length === 0 ? (
           <p className="vacio">Todavía no se invitó a ninguna escribanía.</p>
+        ) : invFiltradas.length === 0 ? (
+          <p className="vacio">Ninguna invitación coincide con la búsqueda.</p>
         ) : (
           <div className="tabla-scroll">
             <table aria-labelledby="soporte-altas-titulo">
               <thead>
                 <tr>
+                  <th scope="col" style={{ width: "2rem" }}>
+                    <input type="checkbox" checked={selInv.size === invFiltradas.length && invFiltradas.length > 0} onChange={toggleAll} aria-label="Seleccionar todas" />
+                  </th>
                   <th scope="col">Invitada</th>
                   <th scope="col">Escribanía</th>
                   <th scope="col">Estado</th>
@@ -362,8 +440,11 @@ export default function Soporte() {
                 </tr>
               </thead>
               <tbody>
-                {invitaciones.map((i) => (
-                  <tr key={i.id}>
+                {invFiltradas.map((i) => (
+                  <tr key={i.id} className={selInv.has(i.id) ? "fila-seleccionada" : ""}>
+                    <td>
+                      <input type="checkbox" checked={selInv.has(i.id)} onChange={() => toggleSel(i.id)} aria-label={`Seleccionar ${i.email}`} />
+                    </td>
                     <th scope="row">
                       {i.nombre || i.email}
                       {i.nombre && <span className="recaudo-meta">{i.email}</span>}
@@ -724,6 +805,26 @@ export default function Soporte() {
         destructivo
         onConfirmar={() => eliminarInvitacion(aEliminar)}
         onCancelar={() => setAEliminar(null)}
+      />
+
+      <ConfirmarDialogo
+        abierto={bulkAction === "cancelar"}
+        titulo={`Cancelar ${selInv.size} invitación(es)`}
+        texto="Los enlaces enviados dejan de servir. Se puede volver a invitar a los mismos correos cuando quiera."
+        confirmar="Cancelar invitaciones"
+        destructivo
+        onConfirmar={bulkCancelar}
+        onCancelar={() => setBulkAction(null)}
+      />
+
+      <ConfirmarDialogo
+        abierto={bulkAction === "eliminar"}
+        titulo={`Eliminar ${selInv.size} invitación(es) del historial`}
+        texto="Se eliminan los registros seleccionados. Las invitaciones pendientes no se eliminan (hay que cancelarlas primero). Esta acción no se puede deshacer."
+        confirmar="Eliminar"
+        destructivo
+        onConfirmar={bulkEliminar}
+        onCancelar={() => setBulkAction(null)}
       />
     </div>
   );

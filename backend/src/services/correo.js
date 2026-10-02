@@ -32,10 +32,23 @@ async function getTransporte() {
   return transporte;
 }
 
+let relayDispatcher = null;
+async function getRelayDispatcher() {
+  if (relayDispatcher) return relayDispatcher;
+  try {
+    const { Agent } = await import("undici");
+    relayDispatcher = new Agent({ connect: { rejectUnauthorized: false } });
+  } catch {
+    relayDispatcher = undefined;
+  }
+  return relayDispatcher;
+}
+
 async function enviarPorRelay({ para, asunto, texto, html }) {
   const { relayUrl, relayKey } = env.smtp;
   if (!relayUrl || !relayKey) return null;
-  const res = await fetch(relayUrl, {
+  const dispatcher = await getRelayDispatcher();
+  const opts = {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -43,7 +56,9 @@ async function enviarPorRelay({ para, asunto, texto, html }) {
     },
     body: JSON.stringify({ to: para, subject: asunto, text: texto, html }),
     signal: AbortSignal.timeout(15000),
-  });
+  };
+  if (dispatcher) opts.dispatcher = dispatcher;
+  const res = await fetch(relayUrl, opts);
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
     throw new Error(body.error || `Relay HTTP ${res.status}`);
