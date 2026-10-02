@@ -29,6 +29,7 @@ import AdminInvitations from "./components/admin/AdminInvitations.jsx";
 import AdminAccounts from "./components/admin/AdminAccounts.jsx";
 import AdminTickets from "./components/admin/AdminTickets.jsx";
 import Consultas from "./components/Consultas.jsx";
+import Ayuda from "./components/Ayuda.jsx";
 import TemaToggle from "./components/TemaToggle.jsx";
 import Icono from "./components/Iconos.jsx";
 import { api } from "./api.js";
@@ -92,6 +93,7 @@ function SimpleWrap({ title, children }) {
 /** Derive the topbar title from the current pathname. */
 function tituloDesdeRuta(pathname) {
   if (pathname === "/") return "Redactar";
+  if (pathname === "/help") return "Ayuda";
   if (pathname.startsWith("/admin/config")) return "Configuración";
   if (pathname.startsWith("/admin")) return "Panel general";
   const items = NAV.flatMap((g) => g.items);
@@ -409,6 +411,10 @@ function AppInner() {
           ))}
         </nav>
         <div className="sidebar-pie">
+          <button type="button" className={`nav-item ${pathname === "/help" ? "activo" : ""}`} onClick={() => navigate("/help")} title="Ayuda">
+            <Icono nombre="chat" tamano={18} />
+            <span>Ayuda</span>
+          </button>
           <TemaToggle />
         </div>
       </aside>
@@ -516,6 +522,9 @@ function AppInner() {
                 </section>
               </div>
             } />
+
+            {/* --- Help --- */}
+            <Route path="/help" element={<SimpleWrap title="Ayuda"><Ayuda /></SimpleWrap>} />
 
             {/* --- Legacy path redirect --- */}
             <Route path="/suscripcion" element={<Navigate to="/subscription" replace />} />
