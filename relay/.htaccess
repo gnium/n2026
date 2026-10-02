@@ -1,0 +1,12 @@
+# Bloquear acceso a todo menos send.php
+<FilesMatch "^(?!send\.php$)">
+    Require all denied
+</FilesMatch>
+
+# Desactivar listado de directorio
+Options -Indexes
+
+# Forzar HTTPS
+RewriteEngine On
+RewriteCond %{HTTPS} off
+RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]

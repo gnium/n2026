@@ -1,13 +1,11 @@
 /**
  * Envio de correos (recuperacion de contrasena, invitaciones, avisos de la
- * prueba). Si no hay SMTP configurado, en desarrollo el contenido se imprime
- * en el log para poder probar; en produccion NO: esos correos llevan enlaces
- * con token de un solo uso y el log no es lugar para una credencial.
+ * prueba). Intenta SMTP directo; si falla o no esta configurado, usa el
+ * relay HTTP (un script PHP alojado en el mismo servidor de correo).
  */
 import { env } from "../config/env.js";
 import { logger } from "../utils/logger.js";
 
-/** Escapa texto para interpolarlo en el HTML de un correo (nombres, correos, etc.). */
 export function escaparHtml(v) {
   return String(v ?? "")
     .replace(/&/g, "&amp;")
@@ -25,22 +23,63 @@ async function getTransporte() {
     host: env.smtp.host,
     port: env.smtp.port,
     secure: env.smtp.port === 465,
-    requireTLS: env.smtp.port !== 465, // en el puerto 587 se exige STARTTLS: sin esto, una sesion sin cifrar pasa igual
+    requireTLS: env.smtp.port !== 465,
     auth: env.smtp.user ? { user: env.smtp.user, pass: env.smtp.pass } : undefined,
+    connectionTimeout: 10000,
+    greetingTimeout: 10000,
+    socketTimeout: 15000,
   });
   return transporte;
 }
 
-export async function enviarCorreo({ para, asunto, texto, html }) {
-  const t = await getTransporte();
-  if (!t) {
-    if (process.env.NODE_ENV === "production") {
-      logger.warn("SMTP no configurado: no se envio un correo. Configure SMTP_* para las invitaciones y los avisos.", { asunto: String(asunto).slice(0, 60) });
-    } else {
-      logger.warn(`SMTP no configurado. Correo NO enviado a ${para}. Contenido:\n${texto}`);
-    }
-    return { enviado: false };
+async function enviarPorRelay({ para, asunto, texto, html }) {
+  const { relayUrl, relayKey } = env.smtp;
+  if (!relayUrl || !relayKey) return null;
+  const res = await fetch(relayUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${relayKey}`,
+    },
+    body: JSON.stringify({ to: para, subject: asunto, text: texto, html }),
+    signal: AbortSignal.timeout(15000),
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body.error || `Relay HTTP ${res.status}`);
   }
-  await t.sendMail({ from: env.smtp.from, to: para, subject: asunto, text: texto, html });
-  return { enviado: true };
+  return await res.json();
+}
+
+export async function enviarCorreo({ para, asunto, texto, html }) {
+  // Intento 1: SMTP directo.
+  const t = await getTransporte();
+  if (t) {
+    try {
+      await t.sendMail({ from: env.smtp.from, to: para, subject: asunto, text: texto, html });
+      return { enviado: true, via: "smtp" };
+    } catch (e) {
+      logger.warn("SMTP falló, intentando relay", { error: e.code || e.message });
+      transporte = null;
+    }
+  }
+
+  // Intento 2: relay HTTP.
+  try {
+    const r = await enviarPorRelay({ para, asunto, texto, html });
+    if (r) {
+      logger.info("Correo enviado vía relay", { para });
+      return { enviado: true, via: "relay" };
+    }
+  } catch (e) {
+    logger.warn("Relay falló", { error: e.message });
+  }
+
+  // Sin opciones.
+  if (process.env.NODE_ENV === "production") {
+    logger.warn("No se pudo enviar el correo. Configure SMTP o SMTP_RELAY_URL.", { asunto: String(asunto).slice(0, 60) });
+  } else {
+    logger.warn(`Correo NO enviado a ${para}. Contenido:\n${texto}`);
+  }
+  return { enviado: false };
 }
