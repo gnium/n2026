@@ -13,7 +13,9 @@
     "start:prod": "node scripts/migrar.js && node src/server.js",
     "db:init": "node scripts/initDb.js",
     "db:migrar": "node scripts/migrar.js",
-    "check": "node --check src/server.js && node scripts/smokeTest.js"
+    "check": "node --check src/server.js && node scripts/smokeTest.js",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.125.0",
@@ -34,5 +36,8 @@
     "undici": "^7.30.0",
     "word-extractor": "^1.0.4",
     "zod": "^4.6.2"
+  },
+  "devDependencies": {
+    "vitest": "^4.1.11"
   }
 }

@@ -30,11 +30,11 @@ rutasSoporte.delete("/accounts/:id", manejar(async (req, res) => res.json(await 
 // Altas de escribanias nuevas: invitacion por correo con periodo de prueba.
 rutasSoporte.get("/invitations", manejar(async (_req, res) => res.json(await invitaciones.listar())));
 rutasSoporte.post("/invitations", manejar(async (req, res) => res.status(201).json(await invitaciones.invitar(req.usuario.id, req.body || {}))));
-rutasSoporte.post("/invitations/bulk/cancel", manejar(async (req, res) => res.json(await invitaciones.cancelarVarias(req.usuario.id, req.body?.ids))));
-rutasSoporte.post("/invitations/bulk/delete", manejar(async (req, res) => res.json(await invitaciones.eliminarVarias(req.usuario.id, req.body?.ids))));
+rutasSoporte.patch("/invitations/bulk/cancel", manejar(async (req, res) => res.json(await invitaciones.cancelarVarias(req.usuario.id, req.body?.ids))));
+rutasSoporte.delete("/invitations/bulk", manejar(async (req, res) => res.json(await invitaciones.eliminarVarias(req.usuario.id, req.body?.ids))));
 rutasSoporte.post("/invitations/:id/resend", manejar(async (req, res) => res.json(await invitaciones.reenviar(req.usuario.id, req.params.id))));
-rutasSoporte.delete("/invitations/:id", manejar(async (req, res) => res.json(await invitaciones.cancelar(req.usuario.id, req.params.id))));
-rutasSoporte.delete("/invitations/:id/permanent", manejar(async (req, res) => res.json(await invitaciones.eliminar(req.usuario.id, req.params.id))));
+rutasSoporte.patch("/invitations/:id/cancel", manejar(async (req, res) => res.json(await invitaciones.cancelar(req.usuario.id, req.params.id))));
+rutasSoporte.delete("/invitations/:id", manejar(async (req, res) => res.json(await invitaciones.eliminar(req.usuario.id, req.params.id))));
 
 // Canal de consultas de soporte (el operador ve todas, responde y cierra).
 rutasSoporte.use("/tickets", rutasConsultasAdmin);

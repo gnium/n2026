@@ -235,10 +235,10 @@ export const api = {
   soporteInvitaciones: () => fetch(`${BASE}/admin/invitations`).then(manejar),
   soporteInvitar: (datos) => json("POST", "/admin/invitations", datos),
   soporteReenviarInvitacion: (id) => json("POST", `/admin/invitations/${id}/resend`),
-  soporteCancelarInvitacion: (id) => json("DELETE", `/admin/invitations/${id}`),
-  soporteEliminarInvitacion: (id) => json("DELETE", `/admin/invitations/${id}/permanent`),
-  soporteCancelarInvitacionesBulk: (ids) => json("POST", "/admin/invitations/bulk/cancel", { ids }),
-  soporteEliminarInvitacionesBulk: (ids) => json("POST", "/admin/invitations/bulk/delete", { ids }),
+  soporteCancelarInvitacion: (id) => json("PATCH", `/admin/invitations/${id}/cancel`),
+  soporteEliminarInvitacion: (id) => json("DELETE", `/admin/invitations/${id}`),
+  soporteCancelarInvitacionesBulk: (ids) => json("PATCH", "/admin/invitations/bulk/cancel", { ids }),
+  soporteEliminarInvitacionesBulk: (ids) => json("DELETE", "/admin/invitations/bulk", { ids }),
   soporteRevisarPruebas: (forzarBorrado = false) => json("POST", "/admin/trials/review", { forzarBorrado }),
   soporteSuscripciones: (dias = 30) => fetch(`${BASE}/admin/subscriptions?dias=${dias}`).then(manejar),
 
@@ -253,8 +253,8 @@ export const api = {
   soporteConsultasAbiertas: () => fetch(`${BASE}/admin/tickets/open`).then(manejar),
   soporteConsulta: (id) => fetch(`${BASE}/admin/tickets/${id}`).then(manejar),
   soporteConsultaResponder: (id, contenido) => json("POST", `/admin/tickets/${id}/messages`, { contenido }),
-  soporteConsultaCerrar: (id) => json("POST", `/admin/tickets/${id}/close`),
-  soporteConsultaReabrir: (id) => json("POST", `/admin/tickets/${id}/reopen`),
+  soporteConsultaCerrar: (id) => json("PATCH", `/admin/tickets/${id}/close`),
+  soporteConsultaReabrir: (id) => json("PATCH", `/admin/tickets/${id}/reopen`),
 
   // --- novedades (vencimientos y pendientes) ---
   novedades: () => fetch(`${BASE}/alerts`).then(manejar),

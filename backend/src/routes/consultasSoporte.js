@@ -34,5 +34,5 @@ rutasConsultasAdmin.get("/", manejar(async (req, res) => res.json(await svc.list
 rutasConsultasAdmin.get("/open", manejar(async (_req, res) => res.json({ abiertas: await svc.contarAbiertas() })));
 rutasConsultasAdmin.get("/:id", manejar(async (req, res) => res.json(await svc.obtener(Number(req.params.id), req.usuario.id, true))));
 rutasConsultasAdmin.post("/:id/messages", manejar(async (req, res) => res.json(await svc.responder(Number(req.params.id), req.usuario.id, true, req.body || {}))));
-rutasConsultasAdmin.post("/:id/close", manejar(async (req, res) => res.json(await svc.cerrar(Number(req.params.id)))));
-rutasConsultasAdmin.post("/:id/reopen", manejar(async (req, res) => res.json(await svc.reabrir(Number(req.params.id)))));
+rutasConsultasAdmin.patch("/:id/close", manejar(async (req, res) => res.json(await svc.cerrar(Number(req.params.id)))));
+rutasConsultasAdmin.patch("/:id/reopen", manejar(async (req, res) => res.json(await svc.reabrir(Number(req.params.id)))));

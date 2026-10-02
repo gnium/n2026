@@ -1,3 +1,10 @@
+RewriteEngine Off
+Options -Indexes
+
+# Pasar el header Authorization a PHP (hosting compartido lo filtra).
+SetEnvIf Authorization "(.*)" HTTP_AUTHORIZATION=$1
+CGIPassAuth On
+
 # Solo permitir acceso a send.php
 <Files "*.php">
     Require all denied
@@ -5,11 +12,6 @@
 <Files "send.php">
     Require all granted
 </Files>
-
-# Bloquear config.php explicitamente
 <Files "config.php">
     Require all denied
 </Files>
-
-# Desactivar listado de directorio
-Options -Indexes

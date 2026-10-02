@@ -1,33 +1,20 @@
 <?php
 /**
- * Relay de correo seguro para Doy Fe.
- *
- * Recibe un POST con los datos del mail y lo envía usando SMTP local.
- * Solo acepta peticiones desde IPs autorizadas y con la clave correcta.
- *
- * Subir a DonWeb en: https://doyfegestion.com/relay/send.php
- * (o el subdirectorio que se prefiera).
+ * Relay de correo para Doy Fe.
+ * Recibe un POST JSON y envía por SMTP autenticado (DonWeb).
  */
 
-// ── Configuración ──────────────────────────────────────────────────
-// Clave compartida entre Railway y este script. Cambiar por una propia.
-// La clave se lee de config.php (no versionado) o de variable de entorno.
 $__cfg = @include __DIR__ . '/config.php';
 define('API_KEY', getenv('RELAY_API_KEY') ?: ($__cfg['api_key'] ?? ''));
 
-// IPs autorizadas para enviar (Railway edge + localhost para pruebas).
-define('ALLOWED_IPS', array_filter(array_map('trim', explode(',',
-    getenv('RELAY_ALLOWED_IPS') ?: '69.46.46.117'
-))));
+define('SMTP_HOST', $__cfg['smtp_host'] ?? 'sd-1249677-l.dattaweb.com');
+define('SMTP_PORT', $__cfg['smtp_port'] ?? 587);
+define('SMTP_USER', $__cfg['smtp_user'] ?? '');
+define('SMTP_PASS', $__cfg['smtp_pass'] ?? '');
+define('FROM_EMAIL', $__cfg['from_email'] ?? 'no-reply@doyfegestion.com');
+define('FROM_NAME',  $__cfg['from_name']  ?? 'Doy Fe');
 
-// Remitente fijo — no se puede cambiar desde la petición.
-define('FROM_EMAIL', 'no-reply@doyfegestion.com');
-define('FROM_NAME',  'Doy Fe');
-
-// Máximo de destinatarios por petición.
-define('MAX_RECIPIENTS', 5);
-
-// ── Helpers ────────────────────────────────────────────────────────
+// ── Helpers ───────────────────────────────────────────────────────
 function json_response(int $status, array $data): void {
     http_response_code($status);
     header('Content-Type: application/json; charset=utf-8');
@@ -35,25 +22,115 @@ function json_response(int $status, array $data): void {
     exit;
 }
 
-function get_client_ip(): string {
-    // Detrás de un proxy, X-Forwarded-For puede traer la IP real.
-    // DonWeb no suele poner proxy, pero por si acaso.
-    foreach (['HTTP_X_FORWARDED_FOR', 'HTTP_X_REAL_IP', 'REMOTE_ADDR'] as $key) {
-        if (!empty($_SERVER[$key])) {
-            $ip = trim(explode(',', $_SERVER[$key])[0]);
-            if (filter_var($ip, FILTER_VALIDATE_IP)) return $ip;
-        }
-    }
-    return $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
-}
-
 function sanitize_email(string $v): string {
     $v = trim(strtolower($v));
     return filter_var($v, FILTER_VALIDATE_EMAIL) ? $v : '';
 }
 
-// ── Validaciones ───────────────────────────────────────────────────
-// Solo POST.
+function smtp_send(string $to, string $subject, string $text, string $html): array {
+    $sock = @fsockopen(SMTP_HOST, SMTP_PORT, $errno, $errstr, 10);
+    if (!$sock) return ['ok' => false, 'error' => "connect: $errstr ($errno)"];
+
+    $read = function() use ($sock) {
+        $r = '';
+        while ($line = fgets($sock, 512)) {
+            $r .= $line;
+            if (isset($line[3]) && $line[3] === ' ') break;
+        }
+        return $r;
+    };
+
+    $cmd = function(string $c) use ($sock, $read) {
+        fwrite($sock, $c . "\r\n");
+        return $read();
+    };
+
+    $greeting = $read();
+    if (substr($greeting, 0, 3) !== '220') {
+        fclose($sock);
+        return ['ok' => false, 'error' => "greeting: $greeting"];
+    }
+
+    $ehlo = $cmd('EHLO relay.doyfegestion.com');
+
+    // STARTTLS
+    if (stripos($ehlo, 'STARTTLS') !== false) {
+        $r = $cmd('STARTTLS');
+        if (substr($r, 0, 3) !== '220') {
+            fclose($sock);
+            return ['ok' => false, 'error' => "starttls: $r"];
+        }
+        $crypto = stream_socket_enable_crypto($sock, true, STREAM_CRYPTO_METHOD_TLSv1_2_CLIENT);
+        if (!$crypto) {
+            fclose($sock);
+            return ['ok' => false, 'error' => 'TLS handshake failed'];
+        }
+        $cmd('EHLO relay.doyfegestion.com');
+    }
+
+    // AUTH LOGIN
+    $r = $cmd('AUTH LOGIN');
+    if (substr($r, 0, 3) !== '334') {
+        fclose($sock);
+        return ['ok' => false, 'error' => "auth: $r"];
+    }
+    $cmd(base64_encode(SMTP_USER));
+    $r = $cmd(base64_encode(SMTP_PASS));
+    if (substr($r, 0, 3) !== '235') {
+        fclose($sock);
+        return ['ok' => false, 'error' => "auth failed: $r"];
+    }
+
+    // Envelope
+    $r = $cmd('MAIL FROM:<' . FROM_EMAIL . '>');
+    if (substr($r, 0, 3) !== '250') { fclose($sock); return ['ok' => false, 'error' => "from: $r"]; }
+
+    $r = $cmd('RCPT TO:<' . $to . '>');
+    if (substr($r, 0, 3) !== '250') { fclose($sock); return ['ok' => false, 'error' => "rcpt: $r"]; }
+
+    $r = $cmd('DATA');
+    if (substr($r, 0, 3) !== '354') { fclose($sock); return ['ok' => false, 'error' => "data: $r"]; }
+
+    // Headers + body
+    $boundary = md5(uniqid(microtime(true)));
+    $msg  = "From: " . FROM_NAME . " <" . FROM_EMAIL . ">\r\n";
+    $msg .= "To: $to\r\n";
+    $msg .= "Subject: =?UTF-8?B?" . base64_encode($subject) . "?=\r\n";
+    $msg .= "MIME-Version: 1.0\r\n";
+    $msg .= "Date: " . date('r') . "\r\n";
+
+    if ($html && $text) {
+        $msg .= "Content-Type: multipart/alternative; boundary=\"$boundary\"\r\n\r\n";
+        $msg .= "--$boundary\r\n";
+        $msg .= "Content-Type: text/plain; charset=UTF-8\r\n\r\n";
+        $msg .= $text . "\r\n\r\n";
+        $msg .= "--$boundary\r\n";
+        $msg .= "Content-Type: text/html; charset=UTF-8\r\n\r\n";
+        $msg .= $html . "\r\n\r\n";
+        $msg .= "--$boundary--\r\n";
+    } elseif ($html) {
+        $msg .= "Content-Type: text/html; charset=UTF-8\r\n\r\n";
+        $msg .= $html . "\r\n";
+    } else {
+        $msg .= "Content-Type: text/plain; charset=UTF-8\r\n\r\n";
+        $msg .= $text . "\r\n";
+    }
+
+    // Escape lines starting with a dot
+    $msg = str_replace("\r\n.", "\r\n..", $msg);
+
+    fwrite($sock, $msg . "\r\n.\r\n");
+    $r = $read();
+    $cmd('QUIT');
+    fclose($sock);
+
+    if (substr($r, 0, 3) === '250') {
+        return ['ok' => true];
+    }
+    return ['ok' => false, 'error' => "send: $r"];
+}
+
+// ── Validaciones ──────────────────────────────────────────────────
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     header('Access-Control-Allow-Origin: *');
     header('Access-Control-Allow-Methods: POST');
@@ -67,26 +144,23 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     json_response(405, ['error' => 'Method not allowed']);
 }
 
-// Verificar que hay clave configurada.
 if (API_KEY === '') {
     json_response(500, ['error' => 'Relay not configured']);
 }
 
-// Verificar IP.
-$client_ip = get_client_ip();
-if (!in_array($client_ip, ALLOWED_IPS, true)) {
-    error_log("[relay] IP rechazada: {$client_ip}");
-    json_response(403, ['error' => 'Forbidden']);
+// Verificar clave
+$auth = $_SERVER['HTTP_AUTHORIZATION']
+    ?? $_SERVER['REDIRECT_HTTP_AUTHORIZATION']
+    ?? '';
+if (!$auth && function_exists('apache_request_headers')) {
+    $hdrs = apache_request_headers();
+    $auth = $hdrs['Authorization'] ?? $hdrs['authorization'] ?? '';
 }
-
-// Verificar clave.
-$auth = $_SERVER['HTTP_AUTHORIZATION'] ?? '';
 if (!preg_match('/^Bearer\s+(.+)$/i', $auth, $m) || !hash_equals(API_KEY, $m[1])) {
-    error_log("[relay] Clave inválida desde {$client_ip}");
     json_response(401, ['error' => 'Unauthorized']);
 }
 
-// Leer body.
+// Leer body
 $raw = file_get_contents('php://input');
 if (strlen($raw) > 65536) {
     json_response(413, ['error' => 'Payload too large']);
@@ -96,7 +170,6 @@ if (!is_array($body)) {
     json_response(400, ['error' => 'Invalid JSON']);
 }
 
-// Validar campos.
 $to      = sanitize_email($body['to'] ?? '');
 $subject = trim(mb_substr($body['subject'] ?? '', 0, 200));
 $text    = trim(mb_substr($body['text'] ?? '', 0, 50000));
@@ -106,37 +179,16 @@ if (!$to)      json_response(400, ['error' => 'Missing or invalid "to"']);
 if (!$subject) json_response(400, ['error' => 'Missing "subject"']);
 if (!$text && !$html) json_response(400, ['error' => 'Missing "text" or "html"']);
 
-// ── Envío ──────────────────────────────────────────────────────────
-$boundary = md5(uniqid(microtime(true)));
-
-$headers  = "From: " . FROM_NAME . " <" . FROM_EMAIL . ">\r\n";
-$headers .= "Reply-To: " . FROM_EMAIL . "\r\n";
-$headers .= "MIME-Version: 1.0\r\n";
-
-if ($html && $text) {
-    $headers .= "Content-Type: multipart/alternative; boundary=\"{$boundary}\"\r\n";
-    $message  = "--{$boundary}\r\n";
-    $message .= "Content-Type: text/plain; charset=UTF-8\r\n";
-    $message .= "Content-Transfer-Encoding: 8bit\r\n\r\n";
-    $message .= $text . "\r\n\r\n";
-    $message .= "--{$boundary}\r\n";
-    $message .= "Content-Type: text/html; charset=UTF-8\r\n";
-    $message .= "Content-Transfer-Encoding: 8bit\r\n\r\n";
-    $message .= $html . "\r\n\r\n";
-    $message .= "--{$boundary}--\r\n";
-} elseif ($html) {
-    $headers .= "Content-Type: text/html; charset=UTF-8\r\n";
-    $message  = $html;
-} else {
-    $headers .= "Content-Type: text/plain; charset=UTF-8\r\n";
-    $message  = $text;
+// ── Envío por SMTP autenticado ────────────────────────────────────
+if (!SMTP_USER || !SMTP_PASS) {
+    json_response(500, ['error' => 'SMTP credentials not configured']);
 }
 
-$ok = mail($to, $subject, $message, $headers, "-f" . FROM_EMAIL);
+$result = smtp_send($to, $subject, $text, $html);
 
-if ($ok) {
+if ($result['ok']) {
     json_response(200, ['sent' => true]);
 } else {
-    error_log("[relay] mail() falló para {$to}");
-    json_response(502, ['error' => 'Mail delivery failed', 'sent' => false]);
+    error_log("[relay] SMTP falló: " . $result['error']);
+    json_response(502, ['error' => 'Mail delivery failed: ' . $result['error'], 'sent' => false]);
 }

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from "react-router-dom";
 import DropZone from "./components/DropZone.jsx";
 import Pipeline from "./components/Pipeline.jsx";
 import ChatLog from "./components/ChatLog.jsx";
@@ -23,7 +24,10 @@ import ParametrosUif from "./components/ParametrosUif.jsx";
 import Equipo from "./components/Equipo.jsx";
 import Integraciones from "./components/Integraciones.jsx";
 import Novedades from "./components/Novedades.jsx";
-import Soporte from "./components/Soporte.jsx";
+import AdminDashboard from "./components/admin/AdminDashboard.jsx";
+import AdminInvitations from "./components/admin/AdminInvitations.jsx";
+import AdminAccounts from "./components/admin/AdminAccounts.jsx";
+import AdminTickets from "./components/admin/AdminTickets.jsx";
 import Consultas from "./components/Consultas.jsx";
 import TemaToggle from "./components/TemaToggle.jsx";
 import Icono from "./components/Iconos.jsx";
@@ -39,46 +43,83 @@ const NAV = [
   {
     titulo: "Trabajo",
     items: [
-      { clave: "principal", texto: "Redactar", icono: "pluma" },
-      { clave: "expedientes", texto: "Expedientes", icono: "carpeta" },
-      { clave: "clientes", texto: "Clientes", icono: "personas" },
-      { clave: "caja", texto: "Caja", icono: "caja", rolMinimo: "escribano" },
-      { clave: "comprobantes", texto: "Comprobantes", icono: "factura", rolMinimo: "escribano" },
-      { clave: "uif", texto: "UIF", icono: "escudo", rolMinimo: "escribano" },
-      { clave: "agenda", texto: "Agenda", icono: "calendario" },
-      { clave: "notas", texto: "Notas", icono: "nota" },
-      { clave: "biblioteca", texto: "Biblioteca de modelos", icono: "biblioteca" },
-      { clave: "protocolo", texto: "Protocolo", icono: "protocolo", rolMinimo: "escribano" },
+      { clave: "principal", texto: "Redactar", icono: "pluma", ruta: "/" },
+      { clave: "expedientes", texto: "Expedientes", icono: "carpeta", ruta: "/cases" },
+      { clave: "clientes", texto: "Clientes", icono: "personas", ruta: "/clients" },
+      { clave: "caja", texto: "Caja", icono: "caja", rolMinimo: "escribano", ruta: "/cash" },
+      { clave: "comprobantes", texto: "Comprobantes", icono: "factura", rolMinimo: "escribano", ruta: "/invoices" },
+      { clave: "uif", texto: "UIF", icono: "escudo", rolMinimo: "escribano", ruta: "/uif" },
+      { clave: "agenda", texto: "Agenda", icono: "calendario", ruta: "/calendar" },
+      { clave: "notas", texto: "Notas", icono: "nota", ruta: "/notes" },
+      { clave: "biblioteca", texto: "Biblioteca de modelos", icono: "biblioteca", ruta: "/templates" },
+      { clave: "protocolo", texto: "Protocolo", icono: "protocolo", rolMinimo: "escribano", ruta: "/protocol" },
     ],
   },
   {
     titulo: "Cuenta",
     items: [
-      { clave: "equipo", texto: "Equipo", icono: "edificio" },
-      { clave: "integraciones", texto: "Integraciones", icono: "nube" },
-      { clave: "consumo", texto: "Consumo de IA", icono: "grafico" },
-      { clave: "suscripcion", texto: "Suscripción", icono: "tarjeta" },
-      { clave: "consultas", texto: "Soporte", icono: "chat" },
+      { clave: "equipo", texto: "Equipo", icono: "edificio", ruta: "/team" },
+      { clave: "integraciones", texto: "Integraciones", icono: "nube", ruta: "/integrations" },
+      { clave: "consumo", texto: "Consumo de IA", icono: "grafico", ruta: "/usage" },
+      { clave: "suscripcion", texto: "Suscripción", icono: "tarjeta", ruta: "/subscription" },
+      { clave: "consultas", texto: "Soporte", icono: "chat", ruta: "/support" },
     ],
   },
   {
     titulo: "Administración",
     soloAdmin: true,
     items: [
-      { clave: "soporte", texto: "Panel general", icono: "capas" },
-      { clave: "configuracion", texto: "Configuración", icono: "ajustes" },
+      { clave: "soporte", texto: "Panel general", icono: "capas", ruta: "/admin" },
+      { clave: "configuracion", texto: "Configuración", icono: "ajustes", ruta: "/admin/config" },
     ],
   },
 ];
-const TITULO = Object.fromEntries(NAV.flatMap((g) => g.items.map((i) => [i.clave, i.texto])));
+// Map from old clave to route path — used by components that still pass claves (e.g. Novedades).
+const RUTA = Object.fromEntries(NAV.flatMap((g) => g.items).map((i) => [i.clave, i.ruta]));
 // Roles del equipo: el personal administrativo no ve protocolo, caja, comprobantes ni UIF.
 const RANGO_ROL = { empleado: 1, escribano: 2, titular: 3 };
 const puedeVer = (usuario, rolMinimo) => !rolMinimo || (RANGO_ROL[usuario?.rol] || RANGO_ROL.escribano) >= RANGO_ROL[rolMinimo];
 
+/** One-column layout wrapper for simple screens. */
+function SimpleWrap({ title, children }) {
+  return (
+    <div className="principal una-columna">
+      <section className="columna" aria-label={title}>{children}</section>
+    </div>
+  );
+}
+
+/** Derive the topbar title from the current pathname. */
+function tituloDesdeRuta(pathname) {
+  if (pathname === "/") return "Redactar";
+  if (pathname.startsWith("/admin/config")) return "Configuración";
+  if (pathname.startsWith("/admin")) return "Panel general";
+  const items = NAV.flatMap((g) => g.items);
+  const match = items.find((i) => i.ruta !== "/" && (pathname === i.ruta || pathname.startsWith(i.ruta + "/")));
+  return match?.texto || "Redactar";
+}
+
+/** Is this nav item the active one given the current pathname? */
+function esNavActivo(ruta, pathname) {
+  if (ruta === "/") return pathname === "/";
+  if (ruta === "/admin") return pathname.startsWith("/admin") && !pathname.startsWith("/admin/config");
+  return pathname === ruta || pathname.startsWith(ruta + "/");
+}
+
 export default function App() {
+  return (
+    <BrowserRouter>
+      <AppInner />
+    </BrowserRouter>
+  );
+}
+
+function AppInner() {
+  const navigate = useNavigate();
+  const { pathname } = useLocation();
+
   const [salud, setSalud] = useState(null);
   const [usuario, setUsuario] = useState(undefined); // undefined = verificando, null = sin sesion
-  const [pantalla, setPantalla] = useState(window.location.pathname === "/suscripcion" ? "suscripcion" : "principal");
   const recargarSalud = () => api.salud().then(setSalud).catch(() => setSalud({ ok: false }));
   const sondeo = useRef(null);
   const [sesionId, setSesionId] = useState(null);
@@ -113,8 +154,8 @@ export default function App() {
   useEffect(() => {
     if (!avisoGoogle || !usuario) return;
     window.history.replaceState({}, "", window.location.pathname);
-    setPantalla("integraciones");
-  }, [avisoGoogle, usuario]);
+    navigate("/integrations", { replace: true });
+  }, [avisoGoogle, usuario, navigate]);
 
   // El alta de plataforma ya se consumio al crear la cuenta: se saca el token de la URL.
   useEffect(() => {
@@ -132,23 +173,21 @@ export default function App() {
         setInvitacion(null);
         const r = await api.yo();
         setUsuario(r.usuario);
-        setPantalla("equipo");
+        navigate("/team");
       })
       .catch((e) => {
         limpiarUrl();
         setInvitacion(null);
         setErrorGeneral(e.message);
       });
-  }, [invitacion, usuario]);
+  }, [invitacion, usuario, navigate]);
 
-  const irA = (p) => {
-    if (window.location.pathname === "/suscripcion") window.history.replaceState({}, "", "/");
-    setPantalla(p);
-  };
-  const abrirExpediente = (id) => {
+  // Backward-compatible helper: components like Novedades still pass claves.
+  const irA = useCallback((clave) => navigate(RUTA[clave] || "/"), [navigate]);
+  const abrirExpediente = useCallback((id) => {
     setExpedienteAbierto(id);
-    irA("expedientes");
-  };
+    navigate("/cases");
+  }, [navigate]);
 
   const salir = async () => {
     await api.logout().catch(() => {});
@@ -343,28 +382,10 @@ export default function App() {
   const estadoIA = !salud ? "" : !salud.ok ? "error" : salud.modo === "simulado" ? "alerta" : "ok";
   const textoIA = salud === null ? "Conectando…" : !salud.ok ? "Servidor no disponible" : salud.modo === "real" ? "Claude conectado" : salud.modo === "gemini" ? `Gemini · ${salud.modelo}` : salud.modo === "local" ? `IA local · ${salud.modelo}` : "Sin IA configurada";
 
-  const pantallaSimple = {
-    expedientes: <Expedientes inicialId={expedienteAbierto} onConsumirInicial={() => setExpedienteAbierto(null)} />,
-    clientes: <Clientes onAbrirExpediente={abrirExpediente} />,
-    caja: <Caja />,
-    comprobantes: <Comprobantes />,
-    uif: <Uif onAbrirExpediente={abrirExpediente} esAdmin={usuario.esAdmin} />,
-    equipo: <Equipo usuario={usuario} />,
-    integraciones: <Integraciones usuario={usuario} aviso={avisoGoogle} />,
-    soporte: <Soporte />,
-    agenda: <Agenda />,
-    notas: <Notas />,
-    biblioteca: <BibliotecaModelos />,
-    protocolo: <Protocolo />,
-    consumo: <Consumo esAdmin={usuario.esAdmin} />,
-    suscripcion: <Suscripcion />,
-    consultas: <Consultas />,
-  }[pantalla];
-
   return (
     <div className="shell">
       <aside className="sidebar">
-        <a className="sidebar-marca" href="/" onClick={(e) => { e.preventDefault(); irA("principal"); }}>
+        <a className="sidebar-marca" href="/" onClick={(e) => { e.preventDefault(); navigate("/"); }}>
           <img className="marca-sello" src="/favicon.svg" width="34" height="34" alt="" />
           <span>
             <strong>Doy Fe</strong>
@@ -379,7 +400,7 @@ export default function App() {
             <div className="nav-grupo" key={g.titulo}>
               <div className="nav-titulo">{g.titulo}</div>
               {g.items.map((i) => (
-                <button key={i.clave} type="button" className={`nav-item ${pantalla === i.clave ? "activo" : ""}`} aria-current={pantalla === i.clave ? "page" : undefined} aria-label={i.texto} onClick={() => { irA(i.clave); if (i.clave === "consultas") setConsultasSinLeer(0); }} title={i.texto}>
+                <button key={i.clave} type="button" className={`nav-item ${esNavActivo(i.ruta, pathname) ? "activo" : ""}`} aria-current={esNavActivo(i.ruta, pathname) ? "page" : undefined} aria-label={i.texto} onClick={() => { navigate(i.ruta); if (i.clave === "consultas") setConsultasSinLeer(0); }} title={i.texto}>
                   <Icono nombre={i.icono} tamano={18} />
                   <span>{i.texto}{i.clave === "consultas" && consultasSinLeer > 0 && <span className="nav-badge">{consultasSinLeer}</span>}</span>
                 </button>
@@ -394,10 +415,10 @@ export default function App() {
 
       <div className="area">
         <header className="topbar">
-          <div className="topbar-titulo">{TITULO[pantalla]}</div>
+          <div className="topbar-titulo">{tituloDesdeRuta(pathname)}</div>
           <div className="topbar-derecha">
             {usuario.esAdmin ? (
-              <button type="button" className={`estado-servidor ${estadoIA}`} aria-label={`Estado de la IA: ${textoIA}. Abrir configuración`} title={`${textoIA} · clic para configurar la IA`} onClick={() => irA("configuracion")}>
+              <button type="button" className={`estado-servidor ${estadoIA}`} aria-label={`Estado de la IA: ${textoIA}. Abrir configuración`} title={`${textoIA} · clic para configurar la IA`} onClick={() => navigate("/admin/config")}>
                 <span className="estado-servidor-texto">{textoIA}</span>
               </button>
             ) : (
@@ -416,62 +437,92 @@ export default function App() {
         </header>
 
         <main className="contenido">
-          {pantalla === "configuracion" ? (
-            <div className="principal una-columna">
-              <section className="columna" aria-label="Configuración">
-                <Configuracion onCambio={recargarSalud} />
-                <ParametrosUif />
-                <PlanesFacturacion />
-              </section>
-            </div>
-          ) : pantallaSimple ? (
-            <div className="principal una-columna">
-              <section className="columna" aria-label={TITULO[pantalla]}>{pantallaSimple}</section>
-            </div>
-          ) : (
-            <div className="principal">
-              <section className="columna izquierda" aria-label="Conversación">
-                {estado === "inicio" && <Novedades onIr={irA} onAbrirExpediente={abrirExpediente} />}
-                <ChatLog mensajes={mensajes} />
-                {estado === "inicio" || estado === "fallida" ? (
-                  <>
-                    <DropZone onArchivo={onArchivo} onSinDocumento={onSinDocumento} deshabilitado={!salud?.ok} />
-                    {estado === "inicio" && <SesionesGuardadasPicker onReanudar={reanudarGuardada} />}
-                  </>
-                ) : estado === "configurando" ? (
-                  <Configurador archivo={archivoElegido} modoInicial={modoInicial} onProcesar={onProcesar} onCancelar={() => { setArchivoElegido(null); setEstado("inicio"); }} deshabilitado={!salud?.ok} />
-                ) : (
-                  <div className="acciones-proceso">
-                    {estado === "completada" ? null : <p className="nota" role="status">Procesando… puede tardar varios minutos según el tamaño del documento.</p>}
-                    <button className="boton" onClick={reiniciar} disabled={estado === "subiendo"}>
-                      {ocupado ? "Cancelar y empezar de nuevo" : "Nuevo documento"}
-                    </button>
-                  </div>
-                )}
-                {errorGeneral && (
-                  <p className="alerta error" role="alert">
-                    {errorGeneral.mensaje} {errorGeneral.codigo && <small>({errorGeneral.codigo})</small>}
-                  </p>
-                )}
-                {estado === "fallida" && sesionId && (
-                  <div className="acciones">
-                    <button className="boton primario" onClick={reintentar}>Reintentar desde la etapa que falló</button>
-                    {usuario.esAdmin && <button className="boton" onClick={() => irA("configuracion")}>Cambiar proveedor de IA</button>}
-                    <button className="boton" onClick={guardarSesionActual}>Guardar y continuar después</button>
-                    <small className="ayuda">El documento y las instrucciones siguen en memoria (hasta 30 minutos); no hace falta volver a cargarlos.</small>
-                  </div>
-                )}
-              </section>
+          <Routes>
+            {/* --- Main Redactar view (two-column layout) --- */}
+            <Route path="/" element={
+              <div className="principal">
+                <section className="columna izquierda" aria-label="Conversación">
+                  {estado === "inicio" && <Novedades onIr={irA} onAbrirExpediente={abrirExpediente} />}
+                  <ChatLog mensajes={mensajes} />
+                  {estado === "inicio" || estado === "fallida" ? (
+                    <>
+                      <DropZone onArchivo={onArchivo} onSinDocumento={onSinDocumento} deshabilitado={!salud?.ok} />
+                      {estado === "inicio" && <SesionesGuardadasPicker onReanudar={reanudarGuardada} />}
+                    </>
+                  ) : estado === "configurando" ? (
+                    <Configurador archivo={archivoElegido} modoInicial={modoInicial} onProcesar={onProcesar} onCancelar={() => { setArchivoElegido(null); setEstado("inicio"); }} deshabilitado={!salud?.ok} />
+                  ) : (
+                    <div className="acciones-proceso">
+                      {estado === "completada" ? null : <p className="nota" role="status">Procesando… puede tardar varios minutos según el tamaño del documento.</p>}
+                      <button className="boton" onClick={reiniciar} disabled={estado === "subiendo"}>
+                        {ocupado ? "Cancelar y empezar de nuevo" : "Nuevo documento"}
+                      </button>
+                    </div>
+                  )}
+                  {errorGeneral && (
+                    <p className="alerta error" role="alert">
+                      {errorGeneral.mensaje} {errorGeneral.codigo && <small>({errorGeneral.codigo})</small>}
+                    </p>
+                  )}
+                  {estado === "fallida" && sesionId && (
+                    <div className="acciones">
+                      <button className="boton primario" onClick={reintentar}>Reintentar desde la etapa que falló</button>
+                      {usuario.esAdmin && <button className="boton" onClick={() => navigate("/admin/config")}>Cambiar proveedor de IA</button>}
+                      <button className="boton" onClick={guardarSesionActual}>Guardar y continuar después</button>
+                      <small className="ayuda">El documento y las instrucciones siguen en memoria (hasta 30 minutos); no hace falta volver a cargarlos.</small>
+                    </div>
+                  )}
+                </section>
 
-              <section className="columna derecha" aria-label="Progreso y resultados">
-                <h2>Etapas del análisis</h2>
-                {skills.length ? <Pipeline skills={skills} /> : <p className="vacio">Las etapas aparecerán aquí al procesar un documento.</p>}
-                {estado === "completada" && resultados && sesionId && (
-                  <ResultPanel resultados={resultados} modo={modoSesion} numeroIteracion={numeroIteracion} urlDescarga={api.urlDocumento(sesionId)} sesionId={sesionId} onDescargado={onDescargado} onNuevo={reiniciar} onIterar={iterar} onGuardar={guardarSesionActual} onAbrirExpediente={abrirExpediente} />
-                )}
-              </section>
-            </div>
-          )}
+                <section className="columna derecha" aria-label="Progreso y resultados">
+                  <h2>Etapas del análisis</h2>
+                  {skills.length ? <Pipeline skills={skills} /> : <p className="vacio">Las etapas aparecerán aquí al procesar un documento.</p>}
+                  {estado === "completada" && resultados && sesionId && (
+                    <ResultPanel resultados={resultados} modo={modoSesion} numeroIteracion={numeroIteracion} urlDescarga={api.urlDocumento(sesionId)} sesionId={sesionId} onDescargado={onDescargado} onNuevo={reiniciar} onIterar={iterar} onGuardar={guardarSesionActual} onAbrirExpediente={abrirExpediente} />
+                  )}
+                </section>
+              </div>
+            } />
+
+            {/* --- Simple screens (one-column) --- */}
+            <Route path="/cases" element={<SimpleWrap title="Expedientes"><Expedientes inicialId={expedienteAbierto} onConsumirInicial={() => setExpedienteAbierto(null)} /></SimpleWrap>} />
+            <Route path="/clients" element={<SimpleWrap title="Clientes"><Clientes onAbrirExpediente={abrirExpediente} /></SimpleWrap>} />
+            <Route path="/cash" element={<SimpleWrap title="Caja"><Caja /></SimpleWrap>} />
+            <Route path="/invoices" element={<SimpleWrap title="Comprobantes"><Comprobantes /></SimpleWrap>} />
+            <Route path="/uif" element={<SimpleWrap title="UIF"><Uif onAbrirExpediente={abrirExpediente} esAdmin={usuario.esAdmin} /></SimpleWrap>} />
+            <Route path="/calendar" element={<SimpleWrap title="Agenda"><Agenda /></SimpleWrap>} />
+            <Route path="/notes" element={<SimpleWrap title="Notas"><Notas /></SimpleWrap>} />
+            <Route path="/templates" element={<SimpleWrap title="Biblioteca de modelos"><BibliotecaModelos /></SimpleWrap>} />
+            <Route path="/protocol" element={<SimpleWrap title="Protocolo"><Protocolo /></SimpleWrap>} />
+            <Route path="/team" element={<SimpleWrap title="Equipo"><Equipo usuario={usuario} /></SimpleWrap>} />
+            <Route path="/integrations" element={<SimpleWrap title="Integraciones"><Integraciones usuario={usuario} aviso={avisoGoogle} /></SimpleWrap>} />
+            <Route path="/usage" element={<SimpleWrap title="Consumo de IA"><Consumo esAdmin={usuario.esAdmin} /></SimpleWrap>} />
+            <Route path="/subscription" element={<SimpleWrap title="Suscripción"><Suscripcion /></SimpleWrap>} />
+            <Route path="/support" element={<SimpleWrap title="Soporte"><Consultas /></SimpleWrap>} />
+
+            {/* --- Admin panel routes --- */}
+            <Route path="/admin" element={<SimpleWrap title="Panel general"><AdminDashboard /></SimpleWrap>} />
+            <Route path="/admin/invitations" element={<SimpleWrap title="Panel general"><AdminInvitations /></SimpleWrap>} />
+            <Route path="/admin/accounts" element={<SimpleWrap title="Panel general"><AdminAccounts /></SimpleWrap>} />
+            <Route path="/admin/accounts/:id" element={<SimpleWrap title="Panel general"><AdminAccounts /></SimpleWrap>} />
+            <Route path="/admin/tickets" element={<SimpleWrap title="Panel general"><AdminTickets /></SimpleWrap>} />
+            <Route path="/admin/tickets/:id" element={<SimpleWrap title="Panel general"><AdminTickets /></SimpleWrap>} />
+            <Route path="/admin/config" element={
+              <div className="principal una-columna">
+                <section className="columna" aria-label="Configuración">
+                  <Configuracion onCambio={recargarSalud} />
+                  <ParametrosUif />
+                  <PlanesFacturacion />
+                </section>
+              </div>
+            } />
+
+            {/* --- Legacy path redirect --- */}
+            <Route path="/suscripcion" element={<Navigate to="/subscription" replace />} />
+
+            {/* --- Fallback --- */}
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
         </main>
 
         <footer className="pie">
