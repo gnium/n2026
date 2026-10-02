@@ -43,6 +43,7 @@ const BIENVENIDA = {
 const NAV = [
   {
     titulo: "Trabajo",
+    soloEscribanias: true,
     items: [
       { clave: "principal", texto: "Redactar", icono: "pluma", ruta: "/" },
       { clave: "expedientes", texto: "Expedientes", icono: "carpeta", ruta: "/cases" },
@@ -58,6 +59,7 @@ const NAV = [
   },
   {
     titulo: "Cuenta",
+    soloEscribanias: true,
     items: [
       { clave: "equipo", texto: "Equipo", icono: "edificio", ruta: "/team" },
       { clave: "integraciones", texto: "Integraciones", icono: "nube", ruta: "/integrations" },
@@ -387,15 +389,15 @@ function AppInner() {
   return (
     <div className="shell">
       <aside className="sidebar">
-        <a className="sidebar-marca" href="/" onClick={(e) => { e.preventDefault(); navigate("/"); }}>
+        <a className="sidebar-marca" href={usuario.esAdmin ? "/admin" : "/"} onClick={(e) => { e.preventDefault(); navigate(usuario.esAdmin ? "/admin" : "/"); }}>
           <img className="marca-sello" src="/favicon.svg" width="34" height="34" alt="" />
           <span>
             <strong>Doy Fe</strong>
-            <small>IA para escribanías</small>
+            <small>{usuario.esAdmin ? "Gestión de plataforma" : "IA para escribanías"}</small>
           </span>
         </a>
         <nav aria-label="Secciones">
-          {NAV.filter((g) => !g.soloAdmin || usuario.esAdmin)
+          {NAV.filter((g) => (!g.soloAdmin || usuario.esAdmin) && (!g.soloEscribanias || !usuario.esAdmin))
             .map((g) => ({ ...g, items: g.items.filter((i) => puedeVer(usuario, i.rolMinimo)) }))
             .filter((g) => g.items.length)
             .map((g) => (
@@ -444,98 +446,114 @@ function AppInner() {
 
         <main className="contenido">
           <Routes>
-            {/* --- Main Redactar view (two-column layout) --- */}
-            <Route path="/" element={
-              <div className="principal">
-                <section className="columna izquierda" aria-label="Conversación">
-                  {estado === "inicio" && <Novedades onIr={irA} onAbrirExpediente={abrirExpediente} />}
-                  <ChatLog mensajes={mensajes} />
-                  {estado === "inicio" || estado === "fallida" ? (
-                    <>
-                      <DropZone onArchivo={onArchivo} onSinDocumento={onSinDocumento} deshabilitado={!salud?.ok} />
-                      {estado === "inicio" && <SesionesGuardadasPicker onReanudar={reanudarGuardada} />}
-                    </>
-                  ) : estado === "configurando" ? (
-                    <Configurador archivo={archivoElegido} modoInicial={modoInicial} onProcesar={onProcesar} onCancelar={() => { setArchivoElegido(null); setEstado("inicio"); }} deshabilitado={!salud?.ok} />
-                  ) : (
-                    <div className="acciones-proceso">
-                      {estado === "completada" ? null : <p className="nota" role="status">Procesando… puede tardar varios minutos según el tamaño del documento.</p>}
-                      <button className="boton" onClick={reiniciar} disabled={estado === "subiendo"}>
-                        {ocupado ? "Cancelar y empezar de nuevo" : "Nuevo documento"}
-                      </button>
-                    </div>
-                  )}
-                  {errorGeneral && (
-                    <p className="alerta error" role="alert">
-                      {errorGeneral.mensaje} {errorGeneral.codigo && <small>({errorGeneral.codigo})</small>}
-                    </p>
-                  )}
-                  {estado === "fallida" && sesionId && (
-                    <div className="acciones">
-                      <button className="boton primario" onClick={reintentar}>Reintentar desde la etapa que falló</button>
-                      {usuario.esAdmin && <button className="boton" onClick={() => navigate("/admin/config")}>Cambiar proveedor de IA</button>}
-                      <button className="boton" onClick={guardarSesionActual}>Guardar y continuar después</button>
-                      <small className="ayuda">El documento y las instrucciones siguen en memoria (hasta 30 minutos); no hace falta volver a cargarlos.</small>
-                    </div>
-                  )}
-                </section>
+            {usuario.esAdmin ? (
+              <>
+                {/* --- Admin: redirect root to panel --- */}
+                <Route path="/" element={<Navigate to="/admin" replace />} />
 
-                <section className="columna derecha" aria-label="Progreso y resultados">
-                  <h2>Etapas del análisis</h2>
-                  {skills.length ? <Pipeline skills={skills} /> : <p className="vacio">Las etapas aparecerán aquí al procesar un documento.</p>}
-                  {estado === "completada" && resultados && sesionId && (
-                    <ResultPanel resultados={resultados} modo={modoSesion} numeroIteracion={numeroIteracion} urlDescarga={api.urlDocumento(sesionId)} sesionId={sesionId} onDescargado={onDescargado} onNuevo={reiniciar} onIterar={iterar} onGuardar={guardarSesionActual} onAbrirExpediente={abrirExpediente} />
-                  )}
-                </section>
-              </div>
-            } />
+                {/* --- Admin panel routes --- */}
+                <Route path="/admin" element={<SimpleWrap title="Panel general"><AdminDashboard /></SimpleWrap>} />
+                <Route path="/admin/invitations" element={<SimpleWrap title="Panel general"><AdminInvitations /></SimpleWrap>} />
+                <Route path="/admin/accounts" element={<SimpleWrap title="Panel general"><AdminAccounts /></SimpleWrap>} />
+                <Route path="/admin/accounts/:id" element={<SimpleWrap title="Panel general"><AdminAccounts /></SimpleWrap>} />
+                <Route path="/admin/tickets" element={<SimpleWrap title="Panel general"><AdminTickets /></SimpleWrap>} />
+                <Route path="/admin/tickets/:id" element={<SimpleWrap title="Panel general"><AdminTickets /></SimpleWrap>} />
+                <Route path="/admin/config" element={
+                  <div className="principal una-columna">
+                    <section className="columna" aria-label="Configuración">
+                      <Configuracion onCambio={recargarSalud} />
+                      <ParametrosUif />
+                      <PlanesFacturacion />
+                    </section>
+                  </div>
+                } />
 
-            {/* --- Simple screens (one-column) --- */}
-            <Route path="/cases" element={<SimpleWrap title="Expedientes"><Expedientes inicialId={expedienteAbierto} onConsumirInicial={() => setExpedienteAbierto(null)} /></SimpleWrap>} />
-            <Route path="/clients" element={<SimpleWrap title="Clientes"><Clientes onAbrirExpediente={abrirExpediente} /></SimpleWrap>} />
-            <Route path="/cash" element={<SimpleWrap title="Caja"><Caja /></SimpleWrap>} />
-            <Route path="/invoices" element={<SimpleWrap title="Comprobantes"><Comprobantes /></SimpleWrap>} />
-            <Route path="/uif" element={<SimpleWrap title="UIF"><Uif onAbrirExpediente={abrirExpediente} esAdmin={usuario.esAdmin} /></SimpleWrap>} />
-            <Route path="/calendar" element={<SimpleWrap title="Agenda"><Agenda /></SimpleWrap>} />
-            <Route path="/notes" element={<SimpleWrap title="Notas"><Notas /></SimpleWrap>} />
-            <Route path="/templates" element={<SimpleWrap title="Biblioteca de modelos"><BibliotecaModelos /></SimpleWrap>} />
-            <Route path="/protocol" element={<SimpleWrap title="Protocolo"><Protocolo /></SimpleWrap>} />
-            <Route path="/team" element={<SimpleWrap title="Equipo"><Equipo usuario={usuario} /></SimpleWrap>} />
-            <Route path="/integrations" element={<SimpleWrap title="Integraciones"><Integraciones usuario={usuario} aviso={avisoGoogle} /></SimpleWrap>} />
-            <Route path="/usage" element={<SimpleWrap title="Consumo de IA"><Consumo esAdmin={usuario.esAdmin} /></SimpleWrap>} />
-            <Route path="/subscription" element={<SimpleWrap title="Suscripción"><Suscripcion /></SimpleWrap>} />
-            <Route path="/support" element={<SimpleWrap title="Soporte"><Consultas /></SimpleWrap>} />
+                {/* --- Help --- */}
+                <Route path="/help" element={<SimpleWrap title="Ayuda"><Ayuda esAdmin /></SimpleWrap>} />
 
-            {/* --- Admin panel routes --- */}
-            <Route path="/admin" element={<SimpleWrap title="Panel general"><AdminDashboard /></SimpleWrap>} />
-            <Route path="/admin/invitations" element={<SimpleWrap title="Panel general"><AdminInvitations /></SimpleWrap>} />
-            <Route path="/admin/accounts" element={<SimpleWrap title="Panel general"><AdminAccounts /></SimpleWrap>} />
-            <Route path="/admin/accounts/:id" element={<SimpleWrap title="Panel general"><AdminAccounts /></SimpleWrap>} />
-            <Route path="/admin/tickets" element={<SimpleWrap title="Panel general"><AdminTickets /></SimpleWrap>} />
-            <Route path="/admin/tickets/:id" element={<SimpleWrap title="Panel general"><AdminTickets /></SimpleWrap>} />
-            <Route path="/admin/config" element={
-              <div className="principal una-columna">
-                <section className="columna" aria-label="Configuración">
-                  <Configuracion onCambio={recargarSalud} />
-                  <ParametrosUif />
-                  <PlanesFacturacion />
-                </section>
-              </div>
-            } />
+                {/* --- Fallback: admin always goes to panel --- */}
+                <Route path="*" element={<Navigate to="/admin" replace />} />
+              </>
+            ) : (
+              <>
+                {/* --- Main Redactar view (two-column layout) --- */}
+                <Route path="/" element={
+                  <div className="principal">
+                    <section className="columna izquierda" aria-label="Conversación">
+                      {estado === "inicio" && <Novedades onIr={irA} onAbrirExpediente={abrirExpediente} />}
+                      <ChatLog mensajes={mensajes} />
+                      {estado === "inicio" || estado === "fallida" ? (
+                        <>
+                          <DropZone onArchivo={onArchivo} onSinDocumento={onSinDocumento} deshabilitado={!salud?.ok} />
+                          {estado === "inicio" && <SesionesGuardadasPicker onReanudar={reanudarGuardada} />}
+                        </>
+                      ) : estado === "configurando" ? (
+                        <Configurador archivo={archivoElegido} modoInicial={modoInicial} onProcesar={onProcesar} onCancelar={() => { setArchivoElegido(null); setEstado("inicio"); }} deshabilitado={!salud?.ok} />
+                      ) : (
+                        <div className="acciones-proceso">
+                          {estado === "completada" ? null : <p className="nota" role="status">Procesando… puede tardar varios minutos según el tamaño del documento.</p>}
+                          <button className="boton" onClick={reiniciar} disabled={estado === "subiendo"}>
+                            {ocupado ? "Cancelar y empezar de nuevo" : "Nuevo documento"}
+                          </button>
+                        </div>
+                      )}
+                      {errorGeneral && (
+                        <p className="alerta error" role="alert">
+                          {errorGeneral.mensaje} {errorGeneral.codigo && <small>({errorGeneral.codigo})</small>}
+                        </p>
+                      )}
+                      {estado === "fallida" && sesionId && (
+                        <div className="acciones">
+                          <button className="boton primario" onClick={reintentar}>Reintentar desde la etapa que falló</button>
+                          <button className="boton" onClick={guardarSesionActual}>Guardar y continuar después</button>
+                          <small className="ayuda">El documento y las instrucciones siguen en memoria (hasta 30 minutos); no hace falta volver a cargarlos.</small>
+                        </div>
+                      )}
+                    </section>
 
-            {/* --- Help --- */}
-            <Route path="/help" element={<SimpleWrap title="Ayuda"><Ayuda /></SimpleWrap>} />
+                    <section className="columna derecha" aria-label="Progreso y resultados">
+                      <h2>Etapas del análisis</h2>
+                      {skills.length ? <Pipeline skills={skills} /> : <p className="vacio">Las etapas aparecerán aquí al procesar un documento.</p>}
+                      {estado === "completada" && resultados && sesionId && (
+                        <ResultPanel resultados={resultados} modo={modoSesion} numeroIteracion={numeroIteracion} urlDescarga={api.urlDocumento(sesionId)} sesionId={sesionId} onDescargado={onDescargado} onNuevo={reiniciar} onIterar={iterar} onGuardar={guardarSesionActual} onAbrirExpediente={abrirExpediente} />
+                      )}
+                    </section>
+                  </div>
+                } />
 
-            {/* --- Legacy path redirect --- */}
-            <Route path="/suscripcion" element={<Navigate to="/subscription" replace />} />
+                {/* --- Simple screens (one-column) --- */}
+                <Route path="/cases" element={<SimpleWrap title="Expedientes"><Expedientes inicialId={expedienteAbierto} onConsumirInicial={() => setExpedienteAbierto(null)} /></SimpleWrap>} />
+                <Route path="/clients" element={<SimpleWrap title="Clientes"><Clientes onAbrirExpediente={abrirExpediente} /></SimpleWrap>} />
+                <Route path="/cash" element={<SimpleWrap title="Caja"><Caja /></SimpleWrap>} />
+                <Route path="/invoices" element={<SimpleWrap title="Comprobantes"><Comprobantes /></SimpleWrap>} />
+                <Route path="/uif" element={<SimpleWrap title="UIF"><Uif onAbrirExpediente={abrirExpediente} esAdmin={usuario.esAdmin} /></SimpleWrap>} />
+                <Route path="/calendar" element={<SimpleWrap title="Agenda"><Agenda /></SimpleWrap>} />
+                <Route path="/notes" element={<SimpleWrap title="Notas"><Notas /></SimpleWrap>} />
+                <Route path="/templates" element={<SimpleWrap title="Biblioteca de modelos"><BibliotecaModelos /></SimpleWrap>} />
+                <Route path="/protocol" element={<SimpleWrap title="Protocolo"><Protocolo /></SimpleWrap>} />
+                <Route path="/team" element={<SimpleWrap title="Equipo"><Equipo usuario={usuario} /></SimpleWrap>} />
+                <Route path="/integrations" element={<SimpleWrap title="Integraciones"><Integraciones usuario={usuario} aviso={avisoGoogle} /></SimpleWrap>} />
+                <Route path="/usage" element={<SimpleWrap title="Consumo de IA"><Consumo esAdmin={usuario.esAdmin} /></SimpleWrap>} />
+                <Route path="/subscription" element={<SimpleWrap title="Suscripción"><Suscripcion /></SimpleWrap>} />
+                <Route path="/support" element={<SimpleWrap title="Soporte"><Consultas /></SimpleWrap>} />
 
-            {/* --- Fallback --- */}
-            <Route path="*" element={<Navigate to="/" replace />} />
+                {/* --- Help --- */}
+                <Route path="/help" element={<SimpleWrap title="Ayuda"><Ayuda /></SimpleWrap>} />
+
+                {/* --- Legacy path redirect --- */}
+                <Route path="/suscripcion" element={<Navigate to="/subscription" replace />} />
+
+                {/* --- Fallback --- */}
+                <Route path="*" element={<Navigate to="/" replace />} />
+              </>
+            )}
           </Routes>
         </main>
 
         <footer className="pie">
-          Los nombres, documentos, domicilios y datos catastrales se anonimizan antes del análisis y se conservan solo en la memoria del servidor hasta que descarga el documento o cierra la sesión. Excepciones, siempre a su pedido: el índice de protocolo y "Guardar y continuar después" (cifrados); agenda, notas y biblioteca de modelos (sin cifrar).
+          {usuario.esAdmin
+            ? "Panel de administración de Doy Fe. Gestión de cuentas, invitaciones, consultas y configuración de la plataforma."
+            : "Los nombres, documentos, domicilios y datos catastrales se anonimizan antes del análisis y se conservan solo en la memoria del servidor hasta que descarga el documento o cierra la sesión. Excepciones, siempre a su pedido: el índice de protocolo y \"Guardar y continuar después\" (cifrados); agenda, notas y biblioteca de modelos (sin cifrar)."}
         </footer>
       </div>
     </div>
