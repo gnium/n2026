@@ -236,16 +236,14 @@ export default function Ayuda({ esAdmin }) {
   const [abierta, setAbierta] = useState(null);
 
   const secciones = esAdmin
-    ? SECCIONES.filter((s) => s.soloAdmin)
+    ? SECCIONES
     : SECCIONES.filter((s) => !s.soloAdmin);
 
   return (
     <div className="equipo">
       <h2>Ayuda</h2>
       <p className="nota">
-        {esAdmin
-          ? "Guía de las funciones de gestión de la plataforma."
-          : <>Guía completa de todas las funciones de <b>Doy Fe</b>. Haga clic en cualquier sección para ver el detalle.</>}
+        Guía completa de todas las funciones de <b>Doy Fe</b>. Haga clic en cualquier sección para ver el detalle.
       </p>
 
       {secciones.map((s) => (
@@ -294,26 +292,16 @@ export default function Ayuda({ esAdmin }) {
       <section className="bloque">
         <h3>Seguridad y privacidad</h3>
         <ul style={{ lineHeight: 1.8 }}>
-          {esAdmin ? (
-            <>
-              <li>Cada cuenta ve exclusivamente sus datos: el panel muestra solo <b>metadatos y conteos</b>, nunca el contenido de las escribanías.</li>
-              <li>Los datos de clientes se guardan <b>cifrados</b> en el servidor.</li>
-              <li>Las credenciales de IA y SMTP se almacenan como variables de entorno, nunca en el código.</li>
-            </>
-          ) : (
-            <>
-              <li>Los datos de clientes (nombre, DNI, domicilio) se guardan <b>cifrados</b> en el servidor.</li>
-              <li>Los documentos procesados por la IA se <b>anonimizan</b> antes del análisis: los datos reales nunca llegan al proveedor de IA.</li>
-              <li>Al descargar el documento o cerrar la sesión, los datos se <b>borran de la memoria</b> del servidor.</li>
-              <li>Las sesiones guardadas y el protocolo se conservan cifrados hasta 7 días.</li>
-              <li>Las credenciales fiscales (ARCA) se guardan cifradas y solo se usan para emitir comprobantes.</li>
-              <li>Cada cuenta ve exclusivamente sus datos: el panel de administración muestra solo metadatos y conteos, nunca el contenido de las escribanías.</li>
-            </>
-          )}
+          <li>Los datos de clientes (nombre, DNI, domicilio) se guardan <b>cifrados</b> en el servidor.</li>
+          <li>Los documentos procesados por la IA se <b>anonimizan</b> antes del análisis: los datos reales nunca llegan al proveedor de IA.</li>
+          <li>Al descargar el documento o cerrar la sesión, los datos se <b>borran de la memoria</b> del servidor.</li>
+          <li>Las sesiones guardadas y el protocolo se conservan cifrados hasta 7 días.</li>
+          <li>Las credenciales fiscales (ARCA) se guardan cifradas y solo se usan para emitir comprobantes.</li>
+          <li>Cada cuenta ve exclusivamente sus datos: el panel de administración muestra solo metadatos y conteos, nunca el contenido de las escribanías.</li>
         </ul>
       </section>
 
-      {!esAdmin && <section className="bloque">
+      <section className="bloque">
         <h3>Roles y permisos</h3>
         <div className="tabla-scroll">
           <table>
@@ -343,27 +331,17 @@ export default function Ayuda({ esAdmin }) {
             </tbody>
           </table>
         </div>
-      </section>}
+      </section>
 
       <section className="bloque">
         <h3>Atajos y consejos</h3>
         <ul style={{ lineHeight: 1.8 }}>
-          {esAdmin ? (
-            <>
-              <li>Use la barra de búsqueda en Invitaciones y Cuentas para encontrar rápidamente lo que busca.</li>
-              <li>En Invitaciones, use las acciones en lote para cancelar o eliminar múltiples invitaciones a la vez.</li>
-              <li>Cada sección tiene su propia URL: puede guardar un enlace directo.</li>
-              <li>Use «Revisar vencimientos ahora» para adelantar la pasada automática de pruebas vencidas.</li>
-            </>
-          ) : (
-            <>
-              <li>Puede arrastrar un archivo directamente al área de carga desde cualquier carpeta de su computadora.</li>
-              <li>Use la barra de búsqueda en Clientes para encontrar rápidamente lo que busca.</li>
-              <li>Los filtros por estado en Expedientes y Consultas le permiten ver solo lo relevante.</li>
-              <li>Cada sección tiene su propia URL: puede guardar un enlace directo o compartirlo con un colega.</li>
-              <li>Si el procesamiento de un documento falla, no hace falta volver a cargarlo: use «Reintentar desde la etapa que falló».</li>
-            </>
-          )}
+          <li>Puede arrastrar un archivo directamente al área de carga desde cualquier carpeta de su computadora.</li>
+          <li>Use la barra de búsqueda en Clientes y en el Panel de administración para encontrar rápidamente lo que busca.</li>
+          <li>Los filtros por estado en Expedientes, Invitaciones y Consultas le permiten ver solo lo relevante.</li>
+          <li>En el Panel de administración, use las acciones en lote (bulk) para cancelar o eliminar múltiples invitaciones a la vez.</li>
+          <li>Cada sección tiene su propia URL: puede guardar un enlace directo o compartirlo con un colega.</li>
+          <li>Si el procesamiento de un documento falla, no hace falta volver a cargarlo: use «Reintentar desde la etapa que falló».</li>
         </ul>
       </section>
     </div>
