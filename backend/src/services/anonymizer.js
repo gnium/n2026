@@ -121,6 +121,65 @@ export function anonimizarProfundo(obj, mapa) {
   return rec(obj);
 }
 
+/**
+ * Fase B-local. Llama al microservicio NER (Presidio + spaCy) para detectar
+ * entidades que la Fase A no cubre: nombres de personas, domicilios, ubicaciones.
+ * Si el servicio no está configurado o falla, retorna un array vacío y el
+ * pipeline sigue usando Claude como fallback (comportamiento actual).
+ */
+export async function detectarEntidadesLocal(texto) {
+  const { env } = await import("../config/env.js");
+  if (!env.ner.endpoint) return [];
+
+  const headers = { "Content-Type": "application/json" };
+  if (env.ner.apiKey) headers.Authorization = `Bearer ${env.ner.apiKey}`;
+
+  let res;
+  try {
+    res = await fetch(`${env.ner.endpoint.replace(/\/$/, "")}/analyze`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({ text: texto, language: "es", score_threshold: 0.4 }),
+      signal: AbortSignal.timeout(env.ner.timeoutMs),
+    });
+  } catch {
+    return [];
+  }
+
+  if (!res.ok) return [];
+
+  const data = await res.json().catch(() => null);
+  if (!data?.entities?.length) return [];
+
+  const TIPO_A_CATEGORIA = {
+    PERSON: "persona",
+    LOCATION: "domicilio",
+    AR_DNI: "documento_identidad",
+    AR_CUIT: "documento_identidad",
+    AR_MATRICULA: "registral",
+    AR_PARTIDA: "catastro",
+    AR_DOMICILIO: "domicilio",
+    NRP: "persona",
+    EMAIL_ADDRESS: "otro",
+    PHONE_NUMBER: "otro",
+  };
+
+  return data.entities
+    .filter((e) => e.text && e.text.length >= 2 && e.score >= 0.4)
+    .map((e, i) => {
+      const cat = TIPO_A_CATEGORIA[e.entity_type] || "otro";
+      const base = cat === "persona" ? "PERSONA" : cat === "domicilio" ? "DOMICILIO" : cat === "documento_identidad" ? "DOC" : cat === "catastro" ? "CATASTRO" : cat === "registral" ? "REGISTRAL" : "ENTIDAD";
+      return {
+        id_sugerido: `${base}_${i + 1}`,
+        categoria: cat,
+        rol: null,
+        valor_literal: e.text,
+        variantes: [],
+        atributos: { estado_civil: null, nacionalidad: null, caracter: null, observaciones: null },
+      };
+    });
+}
+
 /** Fase C. Solo en memoria, al construir el documento final. */
 export function rehidratar(texto, mapa) {
   if (typeof texto !== "string") return texto;

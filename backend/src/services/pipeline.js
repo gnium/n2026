@@ -22,7 +22,7 @@
  *    empezar de cero.
  */
 import { ejecutarSkill, modoClaude } from "./claudeClient.js";
-import { aplicarEntidades, anonimizarProfundo, contieneDatosReales, reemplazarTodo, presanear } from "./anonymizer.js";
+import { aplicarEntidades, anonimizarProfundo, contieneDatosReales, reemplazarTodo, presanear, detectarEntidadesLocal } from "./anonymizer.js";
 import { emitir } from "./sessionStore.js";
 import { ESQUEMAS } from "../skills/schemas.js";
 import { skillsActivos, plantillaParaActo, obtenerPlantilla } from "../skills/repositorio.js";
@@ -162,6 +162,18 @@ export async function ejecutarPipeline(sesion, { reintento = false, iteracionFee
         return t ? `\n\n<instrucciones_de_la_escribana>\n${t}\n</instrucciones_de_la_escribana>` : "";
       };
       if (clave === "extractor_antecedentes") {
+        // ---- NER local (Presidio): pre-anonimizar nombres y domicilios antes de enviar a Claude ----
+        try {
+          const entidadesNer = await detectarEntidadesLocal(sesion.textoOriginal || "");
+          if (entidadesNer.length) {
+            sesion.textoOriginal = aplicarEntidades(sesion.textoOriginal, entidadesNer, sesion.mapa);
+            if (sesion.textoModelo) sesion.textoModelo = aplicarEntidades(sesion.textoModelo, entidadesNer, sesion.mapa);
+            if (sesion.instrucciones) sesion.instrucciones = aplicarEntidades(sesion.instrucciones, entidadesNer, sesion.mapa);
+            mensaje(sesion, `Pre-anonimizacion local: ${entidadesNer.length} dato(s) sensible(s) detectado(s) y ocultado(s) antes del analisis de IA.`);
+          }
+        } catch (e) {
+          logger.warn("NER local no disponible, continuando sin pre-anonimizacion:", e.message);
+        }
         entrada = `DOCUMENTO A ANALIZAR (los numeros de documento, CUIT, correos, telefonos, matriculas y partidas ya fueron reemplazados por marcas [[...]]):\n\n<documento>\n${sesion.textoOriginal || "(no se adjunto documento; los datos vienen en las instrucciones)"}\n</documento>`;
         if (sesion.modo === "certificacion_firmas") {
           entrada = `Se trata de una CERTIFICACION DE FIRMAS (tipo_acto = certificacion_firmas), modalidad ${sesion.certificacion?.modalidad || "personal"}. El documento adjunto es el instrumento privado cuyas firmas se certifican. Marca a los firmantes con id_sugerido FIRMANTE_1, FIRMANTE_2...; a la persona juridica representada con SOCIEDAD_1 (categoria sociedad); a los domicilios con DOMICILIO_FIRMANTE_1 / DOMICILIO_SOCIEDAD_1; a otras personas mencionadas en el documento con PARTE_1, PARTE_2...\n\n` + entrada;

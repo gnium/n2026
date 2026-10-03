@@ -53,6 +53,11 @@ export const env = {
       timeoutMs: num(process.env.LOCAL_LLM_TIMEOUT_MS, 20 * 60 * 1000),
     },
   },
+  ner: {
+    endpoint: process.env.NER_ENDPOINT || "",
+    apiKey: process.env.NER_API_KEY || "",
+    timeoutMs: num(process.env.NER_TIMEOUT_MS, 30000),
+  },
   claude: {
     model: process.env.CLAUDE_MODEL || "claude-opus-5",
     fallbacks: process.env.CLAUDE_FALLBACKS !== "0",
