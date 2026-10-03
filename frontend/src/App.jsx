@@ -385,6 +385,7 @@ function AppInner() {
 
   const estadoIA = !salud ? "" : !salud.ok ? "error" : salud.modo === "simulado" ? "alerta" : "ok";
   const textoIA = salud === null ? "Conectando…" : !salud.ok ? "Servidor no disponible" : salud.modo === "real" ? "Claude conectado" : salud.modo === "gemini" ? `Gemini · ${salud.modelo}` : salud.modo === "local" ? `IA local · ${salud.modelo}` : "Sin IA configurada";
+  const textoIAEscribano = salud === null ? "Conectando…" : !salud.ok ? "Servidor no disponible" : salud.modo === "simulado" ? "IA no disponible" : "IA conectada";
 
   return (
     <div className="shell">
@@ -430,8 +431,8 @@ function AppInner() {
                 <span className="estado-servidor-texto">{textoIA}</span>
               </button>
             ) : (
-              <div className={`estado-servidor ${estadoIA}`} role="status" aria-label={`Estado de la IA: ${textoIA}`} title={textoIA}>
-                <span className="estado-servidor-texto">{textoIA}</span>
+              <div className={`estado-servidor ${estadoIA}`} role="status" aria-label={`Estado de la IA: ${textoIAEscribano}`} title={textoIAEscribano}>
+                <span className="estado-servidor-texto">{textoIAEscribano}</span>
               </div>
             )}
             <div className="usuario">
