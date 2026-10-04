@@ -5,7 +5,7 @@ USE notarius;
 
 -- Columna de modulos habilitados por plan (JSON array de claves de modulo).
 -- NULL o '[]' = todos los modulos (backwards compatible con planes viejos).
-ALTER TABLE planes ADD COLUMN IF NOT EXISTS modulos TEXT NULL AFTER descripcion;
+CALL _agregar_columna_si_falta('planes', 'modulos', '`modulos` TEXT NULL AFTER `descripcion`');
 
 -- Planes concretos: Inicial, Profesional, Estudio.
 INSERT INTO planes (clave, nombre, precio_mensual_ars, descripcion, modulos, activo) VALUES
