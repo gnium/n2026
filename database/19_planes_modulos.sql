@@ -5,7 +5,23 @@ USE notarius;
 
 -- Columna de modulos habilitados por plan (JSON array de claves de modulo).
 -- NULL o '[]' = todos los modulos (backwards compatible con planes viejos).
-CALL _agregar_columna_si_falta('planes', 'modulos', '`modulos` TEXT NULL AFTER `descripcion`');
+DELIMITER $$
+CREATE PROCEDURE _add_col_19(IN p_tabla VARCHAR(64), IN p_columna VARCHAR(64), IN p_definicion VARCHAR(255))
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = DATABASE() AND table_name = p_tabla AND column_name = p_columna
+  ) THEN
+    SET @sql = CONCAT('ALTER TABLE `', p_tabla, '` ADD COLUMN ', p_definicion);
+    PREPARE stmt FROM @sql;
+    EXECUTE stmt;
+    DEALLOCATE PREPARE stmt;
+  END IF;
+END$$
+DELIMITER ;
+
+CALL _add_col_19('planes', 'modulos', '`modulos` TEXT NULL AFTER `descripcion`');
+DROP PROCEDURE _add_col_19;
 
 -- Planes concretos: Inicial, Profesional, Estudio.
 INSERT INTO planes (clave, nombre, precio_mensual_ars, descripcion, modulos, activo) VALUES
