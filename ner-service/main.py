@@ -80,7 +80,9 @@ def check_auth(authorization: str | None):
 
 @app.get("/health")
 def health():
-    return {"ok": True, "engine": "presidio+spacy", "model": "es_core_news_lg"}
+    eng = analyzer
+    recognizers = len(eng.registry.recognizers) if eng else 0
+    return {"ok": True, "engine": "presidio+spacy", "model": "es_core_news_lg", "recognizers": recognizers, "ready": eng is not None}
 
 
 @app.post("/analyze", response_model=AnalyzeResponse)

@@ -165,6 +165,7 @@ export default function Acceso({ onIngreso, invitacion = null, alta = null }) {
         </nav>
         <p className="acceso-legal">
           <a href="https://doyfegestion.com">Qué es Doy Fe</a> · <a href="https://doyfegestion.com/privacidad.html">Privacidad</a> · <a href="https://doyfegestion.com/condiciones.html">Condiciones</a>
+          <br />© {new Date().getFullYear()} Doy Fe · Cumbre Tech S.R.L.
         </p>
       </div>
     </div>

@@ -36,6 +36,11 @@ export const api = {
   probarConexionIA: (datos) => json("POST", "/config/ai/test", datos),
   modelosGemini: (geminiApiKey) => json("POST", "/config/ai/gemini/models", { geminiApiKey }),
 
+  // --- configuracion NER / anonimizacion ---
+  configuracionNer: () => fetch(`${BASE}/config/ner`).then(manejar),
+  guardarConfiguracionNer: (datos) => json("PUT", "/config/ner", datos),
+  probarNer: (datos) => json("POST", "/config/ner/test", datos),
+
   // --- costos ---
   consumo: (dias = 30) => fetch(`${BASE}/usage?dias=${dias}`).then(manejar),
   precios: () => fetch(`${BASE}/config/pricing`).then(manejar),

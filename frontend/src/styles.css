@@ -224,7 +224,8 @@ button.estado-servidor { font: inherit; cursor: pointer; }
 button.estado-servidor:hover { border-color: currentColor; }
 
 .contenido { padding: var(--s8); max-width: 1440px; width: 100%; }
-.pie { padding: var(--s4) var(--s8) var(--s6); font-size: var(--t-xs); color: var(--ink-3); max-width: 1440px; }
+.pie { padding: var(--s4) var(--s8) var(--s6); font-size: var(--t-xs); color: var(--ink-3); max-width: 1440px; display: flex; flex-direction: column; gap: var(--s2); }
+.pie-legal { opacity: .6; }
 
 @media (max-width: 900px) {
   .shell { grid-template-columns: 1fr; }
@@ -445,7 +446,13 @@ table select { min-height: 32px; padding: 4px 8px; width: auto; }
 .plan-card.activo { border-color: var(--accent); }
 .plan-nombre { font-weight: 600; }
 .plan-precio { color: var(--ink-2); font-variant-numeric: tabular-nums; font-size: var(--t-sm); }
-.plan-desc { font-size: var(--t-sm); color: var(--ink-2); flex: 1; }
+.plan-desc { font-size: var(--t-sm); color: var(--ink-2); }
+.plan-features { list-style: none; padding: 0; margin: 0; font-size: var(--t-sm); flex: 1; display: flex; flex-direction: column; gap: 2px; }
+.plan-features li::before { content: "✓ "; color: var(--accent); font-weight: 600; }
+.plan-features li.no-incluido { color: var(--ink-3); text-decoration: line-through; opacity: .5; }
+.plan-features li.no-incluido::before { content: "— "; color: var(--ink-3); }
+.plan-features li.destacado { font-weight: 600; color: var(--accent); }
+.plan-features li.destacado::before { content: "★ "; }
 
 /* ---------- protocolo ---------- */
 .protocolo { display: flex; flex-direction: column; gap: var(--s4); }

@@ -10,6 +10,7 @@ import { emitirToken } from "./token.js";
 import { NOMBRE_COOKIE, opcionesCookie, requerirAuth } from "../middleware/auth.js";
 import * as repo from "./repositorio.js";
 import { contexto, verInvitacion, aceptarInvitacion } from "../services/equipo.js";
+import { modulosDelPlan } from "../services/facturacion.js";
 import * as altaPlataforma from "../services/invitacionesPlataforma.js";
 import { limitar } from "../middleware/limitador.js";
 import { timingSafeEqual } from "node:crypto";
@@ -60,7 +61,8 @@ function fijarSesion(res, usuario, version) {
 /** Datos de la cuenta para el frontend, con su rol y equipo (fase 4). */
 async function publico(u) {
   const ctx = await contexto(u.id);
-  return { id: u.id, email: u.email, nombre: u.nombre, esAdmin: Boolean(u.es_admin), rol: ctx.rol, equipoId: ctx.equipoId, equipo: ctx.equipoNombre, suspendido: ctx.suspendido };
+  const modulos = await modulosDelPlan(u.plan_id);
+  return { id: u.id, email: u.email, nombre: u.nombre, esAdmin: Boolean(u.es_admin), rol: ctx.rol, equipoId: ctx.equipoId, equipo: ctx.equipoNombre, suspendido: ctx.suspendido, modulos };
 }
 
 /** POST /api/auth/register {email, password, nombre?, codigo?} */

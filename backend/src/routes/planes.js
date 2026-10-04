@@ -10,10 +10,15 @@ function normalizarPlan(r) {
   return { ...r, precioMensualArs: Number(r.precioMensualArs) };
 }
 
+function parsearModulos(r) {
+  try { r.modulos = r.modulos ? JSON.parse(r.modulos) : null; } catch { r.modulos = null; }
+  return normalizarPlan(r);
+}
+
 rutasPlanes.get("/", async (_req, res, next) => {
   try {
-    const [rows] = await pool.query("SELECT id, clave, nombre, precio_mensual_ars AS precioMensualArs, descripcion, activo FROM planes ORDER BY precio_mensual_ars");
-    res.json(rows.map(normalizarPlan));
+    const [rows] = await pool.query("SELECT id, clave, nombre, precio_mensual_ars AS precioMensualArs, descripcion, modulos, activo FROM planes ORDER BY precio_mensual_ars");
+    res.json(rows.map(parsearModulos));
   } catch (e) {
     next(e);
   }
@@ -21,18 +26,19 @@ rutasPlanes.get("/", async (_req, res, next) => {
 
 rutasPlanes.put("/", async (req, res, next) => {
   try {
-    const { clave, nombre, precioMensualArs, descripcion, activo } = req.body || {};
+    const { clave, nombre, precioMensualArs, descripcion, modulos, activo } = req.body || {};
     if (!clave || !/^[a-z0-9_-]{2,40}$/.test(clave)) throw new AppError("CLAVE_INVALIDA", "La clave del plan debe ser minuscula, sin espacios (letras, numeros, - o _).", 400);
     if (!nombre || String(nombre).trim().length < 2) throw new AppError("NOMBRE_INVALIDO", "Indique un nombre para el plan.", 400);
     const precio = Number(precioMensualArs);
     if (!Number.isFinite(precio) || precio < 0) throw new AppError("PRECIO_INVALIDO", "El precio mensual debe ser un numero mayor o igual a 0.", 400);
+    const modulosJson = Array.isArray(modulos) ? JSON.stringify(modulos) : null;
     await pool.query(
-      `INSERT INTO planes (clave, nombre, precio_mensual_ars, descripcion, activo) VALUES (?, ?, ?, ?, ?)
-       ON DUPLICATE KEY UPDATE nombre = VALUES(nombre), precio_mensual_ars = VALUES(precio_mensual_ars), descripcion = VALUES(descripcion), activo = VALUES(activo)`,
-      [clave, nombre.trim(), precio, descripcion ? String(descripcion).slice(0, 300) : null, activo === false ? 0 : 1],
+      `INSERT INTO planes (clave, nombre, precio_mensual_ars, descripcion, modulos, activo) VALUES (?, ?, ?, ?, ?, ?)
+       ON DUPLICATE KEY UPDATE nombre = VALUES(nombre), precio_mensual_ars = VALUES(precio_mensual_ars), descripcion = VALUES(descripcion), modulos = VALUES(modulos), activo = VALUES(activo)`,
+      [clave, nombre.trim(), precio, descripcion ? String(descripcion).slice(0, 300) : null, modulosJson, activo === false ? 0 : 1],
     );
-    const [rows] = await pool.query("SELECT id, clave, nombre, precio_mensual_ars AS precioMensualArs, descripcion, activo FROM planes ORDER BY precio_mensual_ars");
-    res.json(rows.map(normalizarPlan));
+    const [rows] = await pool.query("SELECT id, clave, nombre, precio_mensual_ars AS precioMensualArs, descripcion, modulos, activo FROM planes ORDER BY precio_mensual_ars");
+    res.json(rows.map(parsearModulos));
   } catch (e) {
     next(e);
   }

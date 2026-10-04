@@ -19,6 +19,20 @@ function formatoArs(n) {
   return `AR$ ${Number(n).toLocaleString("es-AR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
+const NOMBRE_MODULO = {
+  minutas: "Redactar minutas con IA",
+  agenda: "Agenda de turnos",
+  notas: "Notas",
+  biblioteca: "Biblioteca de modelos",
+  expedientes: "Expedientes",
+  clientes: "Clientes",
+  caja: "Caja de movimientos",
+  comprobantes: "Comprobantes y facturación",
+  uif: "Control UIF",
+  protocolo: "Protocolo",
+};
+const TODOS_LOS_MODULOS = Object.keys(NOMBRE_MODULO);
+
 export default function Suscripcion() {
   const [estado, setEstado] = useState(null);
   const [planes, setPlanes] = useState(null);
@@ -154,20 +168,29 @@ export default function Suscripcion() {
 
       <h3>Planes disponibles</h3>
       <div className="planes-grid">
-        {planes.map((p) => (
-          <div key={p.clave} className={`plan-card ${estado.plan?.clave === p.clave ? "activo" : ""}`}>
-            <div className="plan-nombre">{p.nombre}</div>
-            <div className="plan-precio">{formatoArs(p.precioMensualArs)}/mes</div>
-            {p.descripcion && <p className="plan-desc">{p.descripcion}</p>}
-            {estado.plan?.clave === p.clave && estado.estado === "activa" ? (
-              <span className="etiqueta">plan actual</span>
-            ) : (
-              <button type="button" className="boton primario" disabled={ocupado} onClick={() => suscribirse(p.clave)}>
-                {estado.estado === "activa" ? "Cambiar a este plan" : "Suscribirme"}
-              </button>
-            )}
-          </div>
-        ))}
+        {planes.map((p) => {
+          const mods = p.modulos || TODOS_LOS_MODULOS;
+          return (
+            <div key={p.clave} className={`plan-card ${estado.plan?.clave === p.clave ? "activo" : ""}`}>
+              <div className="plan-nombre">{p.nombre}</div>
+              <div className="plan-precio">{formatoArs(p.precioMensualArs)}/mes</div>
+              {p.descripcion && <p className="plan-desc">{p.descripcion}</p>}
+              <ul className="plan-features">
+                {TODOS_LOS_MODULOS.map((m) => (
+                  <li key={m} className={mods.includes(m) ? "" : "no-incluido"}>{NOMBRE_MODULO[m]}</li>
+                ))}
+                {p.clave === "estudio" && <li className="destacado">Soporte prioritario</li>}
+              </ul>
+              {estado.plan?.clave === p.clave && estado.estado === "activa" ? (
+                <span className="etiqueta">plan actual</span>
+              ) : (
+                <button type="button" className="boton primario" disabled={ocupado} onClick={() => suscribirse(p.clave)}>
+                  {estado.estado === "activa" ? "Cambiar a este plan" : "Suscribirme"}
+                </button>
+              )}
+            </div>
+          );
+        })}
       </div>
 
       {estado.estado === "activa" && (

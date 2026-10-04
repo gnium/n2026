@@ -17,8 +17,8 @@ const ESTADO_MP_A_INTERNO = { authorized: "activa", paused: "pausada", cancelled
 /** Planes activos, visibles para cualquier cuenta (para elegir uno). */
 rutasSuscripcion.get("/plans", async (_req, res, next) => {
   try {
-    const [rows] = await pool.query("SELECT id, clave, nombre, precio_mensual_ars AS precioMensualArs, descripcion FROM planes WHERE activo = 1 ORDER BY precio_mensual_ars");
-    res.json(rows.map((r) => ({ ...r, precioMensualArs: Number(r.precioMensualArs) })));
+    const [rows] = await pool.query("SELECT id, clave, nombre, precio_mensual_ars AS precioMensualArs, descripcion, modulos FROM planes WHERE activo = 1 ORDER BY precio_mensual_ars");
+    res.json(rows.map((r) => { try { r.modulos = r.modulos ? JSON.parse(r.modulos) : null; } catch { r.modulos = null; } return { ...r, precioMensualArs: Number(r.precioMensualArs) }; }));
   } catch (e) {
     next(e);
   }

@@ -1,11 +1,24 @@
 import { useEffect, useState } from "react";
 import { api } from "../api.js";
 
+const MODULOS_DISPONIBLES = [
+  { clave: "minutas", nombre: "Minutas / Redactar" },
+  { clave: "agenda", nombre: "Agenda" },
+  { clave: "notas", nombre: "Notas" },
+  { clave: "biblioteca", nombre: "Biblioteca de modelos" },
+  { clave: "expedientes", nombre: "Expedientes" },
+  { clave: "clientes", nombre: "Clientes" },
+  { clave: "caja", nombre: "Caja" },
+  { clave: "comprobantes", nombre: "Comprobantes" },
+  { clave: "uif", nombre: "UIF" },
+  { clave: "protocolo", nombre: "Protocolo" },
+];
+
 /** ABM de planes y parametros del fee por uso. Solo administradora. */
 export default function PlanesFacturacion() {
   const [planes, setPlanes] = useState(null);
   const [factu, setFactu] = useState(null);
-  const [editando, setEditando] = useState(null); // {clave, nombre, precioMensualArs, descripcion, activo} | null
+  const [editando, setEditando] = useState(null); // {clave, nombre, precioMensualArs, descripcion, modulos, activo} | null
   const [error, setError] = useState(null);
   const [aviso, setAviso] = useState(null);
 
@@ -71,6 +84,7 @@ export default function PlanesFacturacion() {
               <th>Clave</th>
               <th>Nombre</th>
               <th>Precio mensual</th>
+              <th>Módulos</th>
               <th>Activo</th>
               <th></th>
             </tr>
@@ -81,9 +95,10 @@ export default function PlanesFacturacion() {
                 <td>{p.clave}</td>
                 <td>{p.nombre}</td>
                 <td>AR$ {Number(p.precioMensualArs).toLocaleString("es-AR")}</td>
+                <td>{p.modulos ? p.modulos.join(", ") : "todos"}</td>
                 <td>{p.activo ? "sí" : "no"}</td>
                 <td>
-                  <button type="button" className="enlace" onClick={() => setEditando({ clave: p.clave, nombre: p.nombre, precioMensualArs: p.precioMensualArs, descripcion: p.descripcion || "", activo: Boolean(p.activo) })}>
+                  <button type="button" className="enlace" onClick={() => setEditando({ clave: p.clave, nombre: p.nombre, precioMensualArs: p.precioMensualArs, descripcion: p.descripcion || "", modulos: p.modulos || null, activo: Boolean(p.activo) })}>
                     editar
                   </button>
                 </td>
@@ -93,7 +108,7 @@ export default function PlanesFacturacion() {
         </table>
       </div>
       <div className="acciones">
-        <button type="button" className="boton" onClick={() => setEditando({ clave: "", nombre: "", precioMensualArs: "", descripcion: "", activo: true })}>
+        <button type="button" className="boton" onClick={() => setEditando({ clave: "", nombre: "", precioMensualArs: "", descripcion: "", modulos: null, activo: true })}>
           Agregar plan
         </button>
       </div>
@@ -109,6 +124,18 @@ export default function PlanesFacturacion() {
             </label>
           </div>
           <textarea rows={2} placeholder="Descripción (opcional)" value={editando.descripcion} onChange={(e) => setEditando({ ...editando, descripcion: e.target.value })} />
+          <label className="chequeo">
+            <input type="checkbox" checked={editando.modulos === null} onChange={(e) => setEditando({ ...editando, modulos: e.target.checked ? null : MODULOS_DISPONIBLES.map((m) => m.clave) })} /> Todos los módulos
+          </label>
+          {editando.modulos !== null && (
+            <div className="cert-grid" style={{ gap: "4px" }}>
+              {MODULOS_DISPONIBLES.map((m) => (
+                <label key={m.clave} className="chequeo">
+                  <input type="checkbox" checked={editando.modulos.includes(m.clave)} onChange={(e) => { const mods = e.target.checked ? [...editando.modulos, m.clave] : editando.modulos.filter((x) => x !== m.clave); setEditando({ ...editando, modulos: mods }); }} /> {m.nombre}
+                </label>
+              ))}
+            </div>
+          )}
           <div className="acciones">
             <button type="submit" className="boton primario">
               Guardar plan

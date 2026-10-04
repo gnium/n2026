@@ -128,19 +128,20 @@ export function anonimizarProfundo(obj, mapa) {
  * pipeline sigue usando Claude como fallback (comportamiento actual).
  */
 export async function detectarEntidadesLocal(texto) {
-  const { env } = await import("../config/env.js");
-  if (!env.ner.endpoint) return [];
+  const { configNerEfectiva } = await import("./configNer.js");
+  const cfg = await configNerEfectiva();
+  if (!cfg.endpoint) return [];
 
   const headers = { "Content-Type": "application/json" };
-  if (env.ner.apiKey) headers.Authorization = `Bearer ${env.ner.apiKey}`;
+  if (cfg.apiKey) headers.Authorization = `Bearer ${cfg.apiKey}`;
 
   let res;
   try {
-    res = await fetch(`${env.ner.endpoint.replace(/\/$/, "")}/analyze`, {
+    res = await fetch(`${cfg.endpoint.replace(/\/$/, "")}/analyze`, {
       method: "POST",
       headers,
       body: JSON.stringify({ text: texto, language: "es", score_threshold: 0.4 }),
-      signal: AbortSignal.timeout(env.ner.timeoutMs),
+      signal: AbortSignal.timeout(cfg.timeoutMs),
     });
   } catch {
     return [];

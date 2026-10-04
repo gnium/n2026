@@ -23,6 +23,7 @@
  */
 import { buscarPorId } from "../auth/repositorio.js";
 import { parametrosFacturacion } from "../services/facturacion.js";
+import { modulosDelPlan } from "../services/facturacion.js";
 import { AppError } from "../utils/errores.js";
 import { pruebaVencida, enPrueba } from "../services/prueba.js";
 
@@ -47,4 +48,18 @@ export async function requerirSuscripcionActiva(req, _res, next) {
   } catch (e) {
     next(e);
   }
+}
+
+export function requerirModulo(modulo) {
+  return async (req, _res, next) => {
+    try {
+      const u = req.usuarioCompleto || (await buscarPorId(req.usuario.id));
+      if (u?.es_admin) return next();
+      const modulos = await modulosDelPlan(u.plan_id);
+      if (modulos === null || modulos.includes(modulo)) return next();
+      throw new AppError("MODULO_NO_DISPONIBLE", "Su plan no incluye esta función. Actualice su suscripción para acceder.", 403);
+    } catch (e) {
+      next(e);
+    }
+  };
 }

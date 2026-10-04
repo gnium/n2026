@@ -16,6 +16,13 @@ import { actualizarMonto } from "./mercadopago.js";
 
 const CLAVES = ["fee_fijo_ars_por_documento", "margen_ia_porcentaje", "tipo_cambio_usd_ars", "suscripcion_requerida"];
 
+export async function modulosDelPlan(planId) {
+  if (!planId) return null;
+  const [rows] = await pool.query("SELECT modulos FROM planes WHERE id = ? LIMIT 1", [planId]);
+  if (!rows.length || !rows[0].modulos) return null;
+  try { return JSON.parse(rows[0].modulos); } catch { return null; }
+}
+
 export async function parametrosFacturacion() {
   const [rows] = await pool.query("SELECT clave, valor FROM configuracion WHERE clave IN (?)", [CLAVES]);
   const m = Object.fromEntries(rows.map((r) => [r.clave, r.valor]));

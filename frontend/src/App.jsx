@@ -7,6 +7,7 @@ import ResultPanel from "./components/ResultPanel.jsx";
 import Configurador from "./components/Configurador.jsx";
 import Acceso from "./components/Acceso.jsx";
 import Configuracion from "./components/Configuracion.jsx";
+import ConfigNer from "./components/ConfigNer.jsx";
 import Consumo from "./components/Consumo.jsx";
 import Suscripcion from "./components/Suscripcion.jsx";
 import PlanesFacturacion from "./components/PlanesFacturacion.jsx";
@@ -45,16 +46,16 @@ const NAV = [
     titulo: "Trabajo",
     soloEscribanias: true,
     items: [
-      { clave: "principal", texto: "Redactar", icono: "pluma", ruta: "/" },
-      { clave: "expedientes", texto: "Expedientes", icono: "carpeta", ruta: "/cases" },
-      { clave: "clientes", texto: "Clientes", icono: "personas", ruta: "/clients" },
-      { clave: "caja", texto: "Caja", icono: "caja", rolMinimo: "escribano", ruta: "/cash" },
-      { clave: "comprobantes", texto: "Comprobantes", icono: "factura", rolMinimo: "escribano", ruta: "/invoices" },
-      { clave: "uif", texto: "UIF", icono: "escudo", rolMinimo: "escribano", ruta: "/uif" },
-      { clave: "agenda", texto: "Agenda", icono: "calendario", ruta: "/calendar" },
-      { clave: "notas", texto: "Notas", icono: "nota", ruta: "/notes" },
-      { clave: "biblioteca", texto: "Biblioteca de modelos", icono: "biblioteca", ruta: "/templates" },
-      { clave: "protocolo", texto: "Protocolo", icono: "protocolo", rolMinimo: "escribano", ruta: "/protocol" },
+      { clave: "principal", texto: "Redactar", icono: "pluma", ruta: "/", modulo: "minutas" },
+      { clave: "expedientes", texto: "Expedientes", icono: "carpeta", ruta: "/cases", modulo: "expedientes" },
+      { clave: "clientes", texto: "Clientes", icono: "personas", ruta: "/clients", modulo: "clientes" },
+      { clave: "caja", texto: "Caja", icono: "caja", rolMinimo: "escribano", ruta: "/cash", modulo: "caja" },
+      { clave: "comprobantes", texto: "Comprobantes", icono: "factura", rolMinimo: "escribano", ruta: "/invoices", modulo: "comprobantes" },
+      { clave: "uif", texto: "UIF", icono: "escudo", rolMinimo: "escribano", ruta: "/uif", modulo: "uif" },
+      { clave: "agenda", texto: "Agenda", icono: "calendario", ruta: "/calendar", modulo: "agenda" },
+      { clave: "notas", texto: "Notas", icono: "nota", ruta: "/notes", modulo: "notas" },
+      { clave: "biblioteca", texto: "Biblioteca de modelos", icono: "biblioteca", ruta: "/templates", modulo: "biblioteca" },
+      { clave: "protocolo", texto: "Protocolo", icono: "protocolo", rolMinimo: "escribano", ruta: "/protocol", modulo: "protocolo" },
     ],
   },
   {
@@ -82,6 +83,7 @@ const RUTA = Object.fromEntries(NAV.flatMap((g) => g.items).map((i) => [i.clave,
 // Roles del equipo: el personal administrativo no ve protocolo, caja, comprobantes ni UIF.
 const RANGO_ROL = { empleado: 1, escribano: 2, titular: 3 };
 const puedeVer = (usuario, rolMinimo) => !rolMinimo || (RANGO_ROL[usuario?.rol] || RANGO_ROL.escribano) >= RANGO_ROL[rolMinimo];
+const tieneModulo = (usuario, modulo) => !modulo || !usuario.modulos || usuario.modulos.includes(modulo);
 
 /** One-column layout wrapper for simple screens. */
 function SimpleWrap({ title, children }) {
@@ -399,7 +401,7 @@ function AppInner() {
         </a>
         <nav aria-label="Secciones">
           {NAV.filter((g) => (!g.soloAdmin || usuario.esAdmin) && (!g.soloEscribanias || !usuario.esAdmin))
-            .map((g) => ({ ...g, items: g.items.filter((i) => puedeVer(usuario, i.rolMinimo)) }))
+            .map((g) => ({ ...g, items: g.items.filter((i) => puedeVer(usuario, i.rolMinimo) && tieneModulo(usuario, i.modulo)) }))
             .filter((g) => g.items.length)
             .map((g) => (
             <div className="nav-grupo" key={g.titulo}>
@@ -463,6 +465,7 @@ function AppInner() {
                   <div className="principal una-columna">
                     <section className="columna" aria-label="Configuración">
                       <Configuracion onCambio={recargarSalud} />
+                      <ConfigNer />
                       <ParametrosUif />
                       <PlanesFacturacion />
                     </section>
@@ -552,9 +555,10 @@ function AppInner() {
         </main>
 
         <footer className="pie">
-          {usuario.esAdmin
+          <span>{usuario.esAdmin
             ? "Panel de administración de Doy Fe. Gestión de cuentas, invitaciones, consultas y configuración de la plataforma."
-            : "Los nombres, documentos, domicilios y datos catastrales se anonimizan antes del análisis y se conservan solo en la memoria del servidor hasta que descarga el documento o cierra la sesión. Excepciones, siempre a su pedido: el índice de protocolo y \"Guardar y continuar después\" (cifrados); agenda, notas y biblioteca de modelos (sin cifrar)."}
+            : "Los nombres, documentos, domicilios y datos catastrales se anonimizan antes del análisis y se conservan solo en la memoria del servidor hasta que descarga el documento o cierra la sesión. Excepciones, siempre a su pedido: el índice de protocolo y \"Guardar y continuar después\" (cifrados); agenda, notas y biblioteca de modelos (sin cifrar)."}</span>
+          <span className="pie-legal">© {new Date().getFullYear()} Doy Fe · Cumbre Tech S.R.L.</span>
         </footer>
       </div>
     </div>
