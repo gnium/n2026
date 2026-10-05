@@ -54,6 +54,25 @@ function extraerJson(texto) {
 
 const dormir = (ms) => new Promise((r) => setTimeout(r, ms));
 
+const cooldownModelos = new Map();
+const COOLDOWN_MS = 2 * 60 * 1000;
+function registrarFallo(modelo) { cooldownModelos.set(modelo, Date.now()); }
+function modeloDisponible(modelo) {
+  const ts = cooldownModelos.get(modelo);
+  if (!ts) return true;
+  if (Date.now() - ts > COOLDOWN_MS) { cooldownModelos.delete(modelo); return true; }
+  return false;
+}
+
+let cacheFlash = { modelos: null, ts: 0, clave: null };
+const CACHE_FLASH_MS = 10 * 60 * 1000;
+async function obtenerModelosFlash(apiKey) {
+  if (cacheFlash.modelos && cacheFlash.clave === apiKey && Date.now() - cacheFlash.ts < CACHE_FLASH_MS) return cacheFlash.modelos;
+  const modelos = await listarModelosFlash(apiKey);
+  cacheFlash = { modelos, ts: Date.now(), clave: apiKey };
+  return modelos;
+}
+
 /** Lista de respaldo si no se puede consultar la API (sin conexion a /models). Se prueban en este orden. */
 const MODELOS_FLASH_RESPALDO = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-flash-latest", "gemini-2.5-flash-lite"];
 
@@ -87,7 +106,7 @@ async function listarModelosFlash(apiKey) {
 }
 
 /** Errores por los que vale la pena probar OTRO modelo (disponibilidad), no un problema de la cuenta o del contenido. */
-function esErrorDeDisponibilidad(e) {
+export function esErrorDeDisponibilidad(e) {
   return ["SIN_CONEXION", "TIMEOUT_GEMINI", "ERROR_GEMINI", "LIMITE_TASA", "MODELO_INEXISTENTE"].includes(e.codigo);
 }
 
@@ -159,36 +178,34 @@ export async function ejecutarSkillGemini({ systemPrompt, entrada, esquema, maxT
   };
   onProgreso?.(0);
 
-  // Candidatos: el modelo configurado primero; si falla por disponibilidad, se prueban
-  // hasta dos modelos "flash" (plan gratuito) mas, distintos del que ya fallo.
-  const candidatos = [c.geminiModelo];
-  let flashCargados = false;
+  const MAX_CANDIDATOS = 6;
+  const modeloPrincipal = c.geminiModelo;
+  const flash = (await obtenerModelosFlash(c.geminiApiKey))
+    .filter((m) => m !== modeloPrincipal && modeloDisponible(m));
+  const candidatos = [modeloPrincipal, ...flash.slice(0, MAX_CANDIDATOS - 1)];
+
   let data, modeloUsado, ultimoError;
-  for (let intento = 0; intento < candidatos.length && intento < 3; intento++) {
+  for (let intento = 0; intento < candidatos.length; intento++) {
     const modelo = candidatos[intento];
-    const onReintento = (n, ms) => onProgreso?.(0, `Gemini (${modelo}) saturado; reintento ${n} en ${Math.round(ms / 1000)} s`);
+    const etiqueta = `${intento + 1}/${candidatos.length}`;
+    const onReintento = (n, ms) => onProgreso?.(0, `${modelo} saturado; reintento ${n} en ${Math.round(ms / 1000)} s...`);
+    if (intento > 0) onProgreso?.(0, `Probando modelo alterno ${modelo} (${etiqueta})...`);
     try {
       data = await intentarConModelo({ apiKey: c.geminiApiKey, modelo, base, jsonSchema, entrada, onReintento });
       modeloUsado = modelo;
       break;
     } catch (e) {
       ultimoError = e;
-      if (!esErrorDeDisponibilidad(e)) throw e; // problema de cuenta, contenido o esquema: no tiene sentido cambiar de modelo
-      logger.warn(`Gemini (${modelo}) no disponible tras los reintentos (${e.codigo}); buscando un modelo alterno del plan gratuito.`);
-      if (!flashCargados) {
-        const flash = (await listarModelosFlash(c.geminiApiKey)).filter((m) => !candidatos.includes(m));
-        candidatos.push(...flash.slice(0, 2));
-        flashCargados = true;
-      }
-      const siguiente = candidatos[intento + 1];
-      if (siguiente) onProgreso?.(0, `Modelo ${modelo} no disponible; probando con ${siguiente} (plan gratuito)...`);
+      if (!esErrorDeDisponibilidad(e)) throw e;
+      registrarFallo(modelo);
+      logger.warn(`Gemini (${modelo}) no disponible (${e.codigo}); ${etiqueta} intentados.`);
     }
   }
   if (!data) {
     ultimoError.message = `${ultimoError.message} Se probaron ${candidatos.length} modelo(s) sin exito (${candidatos.join(", ")}).`;
     throw ultimoError;
   }
-  if (modeloUsado !== c.geminiModelo) onProgreso?.(0, `Continuando con ${modeloUsado} (modelo alterno).`);
+  if (modeloUsado !== modeloPrincipal) onProgreso?.(0, `Continuando con ${modeloUsado} (modelo alterno).`);
 
   const cand = data.candidates?.[0];
   if (!cand || cand.finishReason === "SAFETY" || cand.finishReason === "PROHIBITED_CONTENT") throw new AppError("RECHAZO_MODELO", `Gemini declino la respuesta (${cand?.finishReason || "sin candidatos"}).`, 422);

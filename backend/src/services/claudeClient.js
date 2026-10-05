@@ -11,9 +11,10 @@ import Anthropic from "@anthropic-ai/sdk";
 import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
 import { env } from "../config/env.js";
 import { AppError } from "../utils/errores.js";
+import { logger } from "../utils/logger.js";
 import { ejecutarSkillSimulado } from "./claudeMock.js";
 import { ejecutarSkillLocal } from "./llmLocal.js";
-import { ejecutarSkillGemini } from "./llmGemini.js";
+import { ejecutarSkillGemini, esErrorDeDisponibilidad } from "./llmGemini.js";
 import { configIA } from "./configuracionIA.js";
 
 /**
@@ -74,7 +75,16 @@ export async function ejecutarSkill({ clave, modelo, systemPrompt, entrada, esqu
   const modo = modoClaude();
   if (modo === "simulado") return ejecutarSkillSimulado({ clave, entrada, esquema, onProgreso });
   if (modo === "local") return ejecutarSkillLocal({ systemPrompt, entrada, esquema, maxTokens, onProgreso });
-  if (modo === "gemini") return ejecutarSkillGemini({ systemPrompt, entrada, esquema, maxTokens, onProgreso });
+  if (modo === "gemini") {
+    try {
+      return await ejecutarSkillGemini({ systemPrompt, entrada, esquema, maxTokens, onProgreso });
+    } catch (e) {
+      const hayClave = Boolean(configIA().apiKey || process.env.ANTHROPIC_AUTH_TOKEN);
+      if (!esErrorDeDisponibilidad(e) || !hayClave) throw e;
+      logger.warn("Gemini: todos los modelos agotados; cayendo a Claude como respaldo.");
+      onProgreso?.(0, "Modelos Gemini no disponibles. Procesando con Claude...");
+    }
+  }
   const client = getCliente();
   const cfg = configIA();
   const params = {
