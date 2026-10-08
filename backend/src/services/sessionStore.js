@@ -13,7 +13,7 @@ import { logger } from "../utils/logger.js";
 
 const sesiones = new Map();
 
-export function crearSesion({ textoOriginal, textoModelo = null, instrucciones = "", modo = "completo", certificacion = null, bytesEntrada, mapa, usuarioId }) {
+export function crearSesion({ textoOriginal, textoModelo = null, instrucciones = "", modo = "completo", certificacion = null, bytesEntrada, mapa, usuarioId, clienteIds = [] }) {
   const id = randomUUID();
   const sesion = {
     id,
@@ -41,6 +41,7 @@ export function crearSesion({ textoOriginal, textoModelo = null, instrucciones =
     eventos: [], // historial para reconexion SSE
     emisor: new EventEmitter(),
     ejecucionId: null, // id numerico en tabla ejecuciones (sin PII)
+    clienteIds, // ids de clientes vinculados al acto
   };
   sesiones.set(id, sesion);
   logger.info("Sesion creada", { sesionId: id, bytesEntrada });

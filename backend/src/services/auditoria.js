@@ -41,6 +41,13 @@ export const auditoria = {
       return r.insertId;
     }),
 
+  vincularClientes: (ejecucionId, clienteIds) =>
+    seguro(async () => {
+      if (!ejecucionId || !clienteIds?.length) return;
+      const valores = clienteIds.map((cid) => [ejecucionId, cid]);
+      await pool.query("INSERT IGNORE INTO ejecucion_clientes (ejecucion_id, cliente_id) VALUES ?", [valores]);
+    }),
+
   /** Nueva fila para UNA llamada a un skill. Devuelve su id (o null si la BD fallo: el llamador debe tolerarlo). */
   registrarSkill: (ejecucionId, clave, { modelo, proveedor } = {}) =>
     seguro(async () => {

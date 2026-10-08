@@ -240,7 +240,7 @@ function AppInner() {
 
   const NOMBRE_MODO = { escritura: "redactar la escritura", estudio_titulos: "estudio de títulos", completo: "análisis completo", certificacion_firmas: "certificación de firmas" };
 
-  const onProcesar = async ({ archivo, modo, antecedentes, instrucciones, modelo, modeloBibliotecaId, datos }) => {
+  const onProcesar = async ({ archivo, modo, antecedentes, instrucciones, modelo, modeloBibliotecaId, datos, clienteIds = [] }) => {
     setEstado("subiendo");
     setErrorGeneral(null);
     setResultados(null);
@@ -250,7 +250,7 @@ function AppInner() {
     const resumenAntecedentes = !archivo && antecedentes ? (antecedentes.length > 140 ? antecedentes.slice(0, 140) + "…" : antecedentes) : null;
     agregarMensaje({ autor: "usuario", texto: `${archivo ? archivo.name : resumenAntecedentes ? "Antecedentes escritos: " + resumenAntecedentes : "Sin documento"}${modelo ? " + modelo " + modelo.name : ""} · ${NOMBRE_MODO[modo]}${datos ? " (" + (datos.modalidad === "representacion" ? "con representación" : "a título personal") + ")" : ""}${instrucciones ? "\n" + instrucciones : ""}` });
     try {
-      const r = await api.subirDocumento({ archivo, modo, antecedentes, instrucciones, modelo, modeloBibliotecaId, datos });
+      const r = await api.subirDocumento({ archivo, modo, antecedentes, instrucciones, modelo, modeloBibliotecaId, datos, clienteIds });
       setSesionId(r.sesionId);
       sesionIdRef.current = r.sesionId;
       setEstado("en_curso");

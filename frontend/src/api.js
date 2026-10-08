@@ -57,7 +57,7 @@ export const api = {
   parametrosFacturacion: () => fetch(`${BASE}/config/plans/billing`).then(manejar),
   guardarParametrosFacturacion: (datos) => json("PUT", "/config/plans/billing", datos),
 
-  subirDocumento: ({ archivo, modo = "completo", antecedentes = "", instrucciones = "", modelo = null, modeloBibliotecaId = null, datos = null }) => {
+  subirDocumento: ({ archivo, modo = "completo", antecedentes = "", instrucciones = "", modelo = null, modeloBibliotecaId = null, datos = null, clienteIds = [] }) => {
     const fd = new FormData();
     if (archivo) fd.append("archivo", archivo);
     fd.append("modo", modo);
@@ -66,6 +66,7 @@ export const api = {
     if (modelo) fd.append("modelo", modelo);
     else if (modeloBibliotecaId) fd.append("modeloBibliotecaId", modeloBibliotecaId);
     if (datos) fd.append("datos", JSON.stringify(datos));
+    if (clienteIds.length) fd.append("clienteIds", JSON.stringify(clienteIds));
     return fetch(`${BASE}/sessions`, { method: "POST", body: fd }).then(manejar);
   },
 

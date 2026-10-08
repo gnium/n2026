@@ -81,7 +81,10 @@ export async function ejecutarPipeline(sesion, { reintento = false, iteracionFee
 
   sesion.skills = skills.map((s) => ({ clave: s.clave, nombre: s.nombre, descripcion: s.descripcion, estado: completados.has(s.clave) ? "completado" : "pendiente", mensaje: completados.has(s.clave) ? "Completado (conservado)" : null, progreso: completados.has(s.clave) ? 100 : 0, duracionMs: null }));
   emitir(sesion, { tipo: "estado", estado: "en_curso", skills: sesion.skills });
-  if (!reintento && !iterando) sesion.ejecucionId = await auditoria.iniciarEjecucion(sesion.id, sesion.bytesEntrada, sesion.usuarioId);
+  if (!reintento && !iterando) {
+    sesion.ejecucionId = await auditoria.iniciarEjecucion(sesion.id, sesion.bytesEntrada, sesion.usuarioId);
+    if (sesion.clienteIds?.length) await auditoria.vincularClientes(sesion.ejecucionId, sesion.clienteIds);
+  }
   if (reintento) mensaje(sesion, `Reintentando con ${NOMBRE_PROVEEDOR_LEGIBLE[modoClaude()] || modoClaude()} desde la etapa que fallo.`);
   if (iterando) mensaje(sesion, `Generando la version ${sesion.numeroIteracion || 2} con ${NOMBRE_PROVEEDOR_LEGIBLE[modoClaude()] || modoClaude()}${iteracionFeedback ? ", a partir de su pedido de mejora" : ""}.`);
   if (modoClaude() === "simulado") mensaje(sesion, "MODO SIMULADO: no hay clave de Claude ni IA local configurada. Los resultados son de prueba y no tienen valor juridico.", "alerta");

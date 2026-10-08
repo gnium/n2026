@@ -425,11 +425,34 @@ table select { min-height: 32px; padding: 4px 8px; width: auto; }
 .configuracion { display: flex; flex-direction: column; gap: var(--s4); }
 
 /* ---------- certificación ---------- */
-.cert-form { display: flex; flex-direction: column; gap: var(--s3); }
-.cert-firmante { display: grid; grid-template-columns: 2fr 1fr 2fr auto auto; gap: var(--s2); align-items: center; }
+.cert-form { display: flex; flex-direction: column; gap: var(--s4); }
+.cert-seccion { border: 1px solid var(--border); border-radius: var(--radius-m); padding: var(--s4); display: flex; flex-direction: column; gap: var(--s3); }
+.cert-seccion legend { display: flex; align-items: center; gap: var(--s2); font-weight: 600; font-size: var(--t-sm); padding: 0 var(--s2); }
+.cert-firmante-card { border: 1px solid var(--border); border-radius: var(--radius-s); padding: var(--s3); background: var(--surface-2); display: flex; flex-direction: column; gap: var(--s3); }
+.cert-firmante-header { display: flex; align-items: center; gap: var(--s2); }
+.cert-firmante-num { width: 22px; height: 22px; border-radius: 50%; background: var(--accent); color: var(--accent-fg, #fff); font-size: 12px; font-weight: 700; display: grid; place-items: center; flex-shrink: 0; }
+.cert-firmante-campos { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s3); }
+.cert-quitar { margin-left: auto; color: var(--muted); }
+.campo-inline { display: flex; flex-direction: column; gap: 2px; }
+.campo-inline > span { font-size: var(--t-xs); font-weight: 500; color: var(--muted); }
 .cert-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s3); }
 .compareciente-fila { display: grid; grid-template-columns: 2fr 1fr auto; gap: var(--s2); align-items: center; }
-@media (max-width: 700px) { .cert-firmante, .cert-grid, .compareciente-fila { grid-template-columns: 1fr; } }
+@media (max-width: 700px) { .cert-firmante-campos, .cert-grid, .compareciente-fila { grid-template-columns: 1fr; } }
+
+/* ---------- client picker ---------- */
+.cliente-picker { position: relative; }
+.picker-chips { display: flex; flex-wrap: wrap; gap: var(--s2); align-items: center; border: 1px solid var(--border); border-radius: var(--radius-s); padding: var(--s2); background: var(--surface); min-height: 38px; }
+.picker-chips:focus-within { border-color: var(--accent); box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 20%, transparent); }
+.picker-input { border: none; outline: none; background: transparent; flex: 1; min-width: 140px; font-size: var(--t-sm); color: var(--fg); }
+.chip { display: inline-flex; align-items: center; gap: 4px; background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-s); padding: 2px 8px; font-size: var(--t-xs); white-space: nowrap; }
+.chip-mini { font-size: 11px; padding: 1px 6px; }
+.chip-quitar { background: none; border: none; cursor: pointer; color: var(--muted); font-size: 14px; line-height: 1; padding: 0 2px; }
+.chip-quitar:hover { color: var(--fg); }
+.picker-lista { position: absolute; z-index: 10; top: 100%; left: 0; right: 0; margin-top: 4px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-s); box-shadow: var(--shadow-m); list-style: none; padding: var(--s1); max-height: 260px; overflow-y: auto; }
+.picker-lista li button { width: 100%; text-align: left; background: none; border: none; cursor: pointer; display: flex; align-items: center; gap: var(--s2); padding: var(--s2) var(--s3); border-radius: var(--radius-s); font-size: var(--t-sm); color: var(--fg); }
+.picker-lista li button:hover { background: var(--surface-2); }
+.picker-nombre { font-weight: 500; }
+.picker-detalle { font-size: var(--t-xs); color: var(--muted); }
 
 /* ---------- métricas (consumo, suscripción) ---------- */
 .consumo { display: flex; flex-direction: column; gap: var(--s4); }

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import FormCertificacion, { DATOS_CERTIFICACION_INICIAL } from "./FormCertificacion.jsx";
+import FormCertificacion, { DATOS_CERTIFICACION_INICIAL, autoFillFirmante } from "./FormCertificacion.jsx";
+import ClientePicker from "./ClientePicker.jsx";
 import { api } from "../api.js";
 import Icono from "./Iconos.jsx";
 
@@ -27,11 +28,18 @@ export default function Configurador({ archivo, modoInicial = "escritura", onPro
   const [modelo, setModelo] = useState(null);
   const [modeloBibliotecaId, setModeloBibliotecaId] = useState("");
   const [biblioteca, setBiblioteca] = useState([]);
+  const [clientesSeleccionados, setClientesSeleccionados] = useState([]);
   const inputModelo = useRef(null);
 
   useEffect(() => {
     api.bibliotecaListar().then(setBiblioteca).catch(() => setBiblioteca([]));
   }, []);
+
+  const onClienteAutoFill = (cliente) => {
+    if (modo === "certificacion_firmas") {
+      setCertificacion((prev) => autoFillFirmante(prev, cliente));
+    }
+  };
 
   const sinContenido = !archivo && !antecedentes.trim() && !(modo === "certificacion_firmas" && certificacion.firmantes.some((f) => f.nombre.trim()));
 
@@ -40,7 +48,15 @@ export default function Configurador({ archivo, modoInicial = "escritura", onPro
       className="configurador"
       onSubmit={(e) => {
         e.preventDefault();
-        onProcesar({ archivo, modo, antecedentes: antecedentes.trim(), instrucciones: instrucciones.trim(), modelo, modeloBibliotecaId: modelo ? null : modeloBibliotecaId || null, datos: modo === "certificacion_firmas" ? certificacion : null });
+        onProcesar({
+          archivo, modo,
+          antecedentes: antecedentes.trim(),
+          instrucciones: instrucciones.trim(),
+          modelo,
+          modeloBibliotecaId: modelo ? null : modeloBibliotecaId || null,
+          datos: modo === "certificacion_firmas" ? certificacion : null,
+          clienteIds: clientesSeleccionados.map((c) => c.id),
+        });
       }}
     >
       <div className="archivo-elegido">
@@ -69,6 +85,12 @@ export default function Configurador({ archivo, modoInicial = "escritura", onPro
           </label>
         ))}
       </fieldset>
+
+      <div className="campo">
+        <span className="campo-titulo"><Icono nombre="personas" tamano={16} /> Clientes vinculados <small>(opcional)</small></span>
+        <ClientePicker seleccionados={clientesSeleccionados} onChange={setClientesSeleccionados} onAutoFill={onClienteAutoFill} />
+        <small className="ayuda">Asociá clientes de tu cartera a este acto. {modo === "certificacion_firmas" ? "Sus datos se completan automáticamente como firmantes." : "Quedan vinculados para seguimiento."}</small>
+      </div>
 
       {modo === "certificacion_firmas" && <FormCertificacion datos={certificacion} onChange={setCertificacion} />}
 

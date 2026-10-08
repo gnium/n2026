@@ -8,6 +8,7 @@ import { obtenerContenido as obtenerModeloBiblioteca } from "../services/bibliot
 import { ejecutarPipeline } from "../services/pipeline.js";
 import { construirDocx } from "../services/docxBuilder.js";
 import { auditoria } from "../services/auditoria.js";
+import { exigirClientes } from "../services/clientes.js";
 import { AppError } from "../utils/errores.js";
 import { logger } from "../utils/logger.js";
 import { requerirSuscripcionActiva } from "../middleware/suscripcion.js";
@@ -132,8 +133,12 @@ rutasSesiones.post("/", requerirSuscripcionActiva, subida.fields([{ name: "archi
     const { texto: saneado } = presanear(reemplazarTodo(texto, mapa), mapa);
     const modeloSaneado = textoModelo ? presanear(reemplazarTodo(textoModelo, mapa), mapa).texto : null;
     const instrucciones = instruccionesCrudas ? presanear(reemplazarTodo(instruccionesCrudas, mapa), mapa).texto : "";
+    let clienteIds = [];
+    try { clienteIds = req.body?.clienteIds ? JSON.parse(req.body.clienteIds) : []; } catch { /* ignorar */ }
+    if (Array.isArray(clienteIds) && clienteIds.length) clienteIds = await exigirClientes(req.usuario.id, clienteIds);
+
     const bytes = (archivo?.size || 0) + (modeloArchivo?.size || 0) + Buffer.byteLength(antecedentesCrudos, "utf8");
-    const sesion = crearSesion({ textoOriginal: saneado, textoModelo: modeloSaneado, instrucciones, modo, certificacion, bytesEntrada: bytes, mapa, usuarioId: req.usuario.id });
+    const sesion = crearSesion({ textoOriginal: saneado, textoModelo: modeloSaneado, instrucciones, modo, certificacion, bytesEntrada: bytes, mapa, usuarioId: req.usuario.id, clienteIds });
     await auditoria.evento("sesion.creada", sesion.id, { bytes, cantidad: mapa.size, motivo: modo });
     // El pipeline corre en segundo plano; el cliente sigue por SSE o polling.
     ejecutarPipeline(sesion).catch((e) => {
