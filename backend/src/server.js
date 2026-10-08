@@ -4,6 +4,7 @@ import { verificarConexion, pool } from "./config/db.js";
 import { destruirTodas, cantidadSesiones } from "./services/sessionStore.js";
 import { logger } from "./utils/logger.js";
 import { modoClaude } from "./services/claudeClient.js";
+import { ejecutarMigraciones } from "./config/migrador.js";
 import { asegurarTablasAuth } from "./auth/repositorio.js";
 import { cargarConfiguracionIA } from "./services/configuracionIA.js";
 import { cargarPrecios } from "./services/precios.js";
@@ -24,6 +25,7 @@ async function iniciar() {
     logger.error("No se pudo conectar a MySQL. Revise DB_* en .env y ejecute `npm run db:init`.");
     process.exit(1);
   }
+  await ejecutarMigraciones();
   await asegurarTablasAuth();
   await cargarConfiguracionIA();
   await cargarPrecios();
