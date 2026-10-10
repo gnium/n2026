@@ -1,24 +1,252 @@
 <!doctype html>
-<html lang="es">
+<html lang="es-AR">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="color-scheme" content="light dark" />
     <meta name="theme-color" content="#24466b" />
+
+    <!-- SEO primario -->
+    <title>Doy Fe — Software con IA para escribanías argentinas</title>
+    <meta name="description" content="Doy Fe es la plataforma de gestión notarial con inteligencia artificial para escribanías argentinas. Redacte escrituras, estudios de títulos, certifique firmas y administre protocolo, clientes, expedientes, caja y UIF desde un solo lugar. Los datos nunca salen de su escribanía." />
+    <meta name="keywords" content="software para escribanías, gestión notarial, escrituras con inteligencia artificial, estudio de títulos, protocolo notarial digital, software notarial Argentina, redacción de escrituras IA, plataforma para escribanos, certificación de firmas, UIF escribanía, expedientes notariales, caja escribanía, programa para escribanía, sistema de gestión notarial, digitalización escribanía, automatización notarial, software para escribanos, legajo UIF digital, facturación electrónica escribanía, custodia documental escribanía" />
+    <link rel="canonical" href="https://doyfegestion.com/" />
+    <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
+    <meta name="author" content="Cumbre Tech S.R.L." />
+    <meta name="geo.region" content="AR" />
+    <meta name="geo.placename" content="Argentina" />
+    <meta name="language" content="es-AR" />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Doy Fe" />
+    <meta property="og:title" content="Doy Fe — Software con IA para escribanías argentinas" />
+    <meta property="og:description" content="Redacte escrituras y estudios de títulos con inteligencia artificial. Gestión integral de protocolo, clientes, expedientes, caja, comprobantes y UIF. Los datos nunca salen de su escribanía." />
+    <meta property="og:url" content="https://doyfegestion.com/" />
+    <meta property="og:image" content="https://doyfegestion.com/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Doy Fe — Software con IA para escribanías argentinas" />
+    <meta property="og:locale" content="es_AR" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Doy Fe — Software con IA para escribanías argentinas" />
+    <meta name="twitter:description" content="Redacte escrituras y estudios de títulos con inteligencia artificial. Gestión integral para escribanías." />
+    <meta name="twitter:image" content="https://doyfegestion.com/og-image.png" />
+
+    <!-- Favicon y PWA -->
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-    <title>Doy Fe · IA para escribanías</title>
+
+    <!-- JSON-LD: Organization -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "Doy Fe",
+      "legalName": "Cumbre Tech S.R.L.",
+      "url": "https://doyfegestion.com",
+      "logo": "https://doyfegestion.com/favicon.svg",
+      "description": "Plataforma de gestión notarial con inteligencia artificial para escribanías argentinas.",
+      "foundingDate": "2026",
+      "areaServed": {
+        "@type": "Country",
+        "name": "Argentina"
+      },
+      "sameAs": []
+    }
+    </script>
+
+    <!-- JSON-LD: SoftwareApplication -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "Doy Fe",
+      "applicationCategory": "BusinessApplication",
+      "operatingSystem": "Web",
+      "url": "https://doyfegestion.com",
+      "description": "Software de gestión notarial con inteligencia artificial. Redacción de escrituras, estudios de títulos, certificación de firmas, protocolo digital, gestión de clientes, expedientes, caja, comprobantes y cumplimiento UIF.",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "ARS",
+        "description": "Período de prueba gratuito"
+      },
+      "featureList": [
+        "Redacción de escrituras con IA",
+        "Estudios de títulos automatizados",
+        "Certificación de firmas",
+        "Protocolo notarial digital",
+        "Gestión de clientes y expedientes",
+        "Caja y facturación electrónica",
+        "Cumplimiento UIF - legajo digital y alertas",
+        "Custodia documental con verificación pública",
+        "Agenda y turnos",
+        "Equipo multiusuario con roles diferenciados",
+        "Anonimización automática de datos personales",
+        "Integración con Google Calendar y Drive"
+      ],
+      "applicationSubCategory": "Notarial Management Software",
+      "countriesSupported": "AR",
+      "inLanguage": "es-AR",
+      "screenshot": "https://doyfegestion.com/og-image.png"
+    }
+    </script>
+
+    <!-- JSON-LD: FAQPage -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "¿Qué es Doy Fe y cómo funciona?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Doy Fe es una plataforma de gestión notarial con inteligencia artificial diseñada para escribanías argentinas. Permite redactar escrituras, realizar estudios de títulos y certificar firmas a partir de documentos base. El escribano sube un borrador o antecedentes en formato .doc o .docx, configura el tipo de análisis y recibe la escritura lista para revisar. Además, incluye gestión integral de protocolo, clientes, expedientes, caja, comprobantes, agenda y cumplimiento UIF."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "¿Es seguro usar inteligencia artificial en una escribanía?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Sí. Doy Fe anonimiza todos los datos personales (nombres, documentos, domicilios y datos catastrales) antes de enviarlos al motor de IA. Los datos originales permanecen exclusivamente en el servidor de su escribanía y se eliminan al descargar el documento o cerrar la sesión. La plataforma cumple con la Ley 25.326 de Protección de Datos Personales y la normativa del Colegio de Escribanos."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "¿Qué tipos de escrituras puede redactar la IA?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Doy Fe puede redactar cualquier tipo de escritura notarial: compraventas, donaciones, hipotecas, poderes, actas, constitución de sociedades, cesiones, afectaciones a propiedad horizontal y más. También realiza estudios de títulos completos analizando la cadena dominial, y certifica firmas con generación automática del acta de certificación."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "¿Reemplaza al escribano?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "No. Doy Fe es una herramienta de asistencia profesional. La inteligencia artificial genera un borrador que el escribano debe revisar, corregir y aprobar antes de protocolizar. La responsabilidad profesional y la fe pública siguen siendo exclusivas del escribano. La IA ahorra horas de trabajo repetitivo, pero el criterio profesional es insustituible."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "¿Cómo se gestiona el protocolo notarial en Doy Fe?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Doy Fe incluye un módulo de protocolo digital que permite registrar escrituras con número de protocolo, fojas y fecha, mantener un índice actualizado y consultar el historial completo. El protocolo se almacena cifrado y queda vinculado a los expedientes y clientes correspondientes. Es compatible con los requisitos del Colegio de Escribanos de cada jurisdicción."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "¿Incluye gestión de cumplimiento UIF?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Sí. Doy Fe incluye un módulo completo de UIF (Unidad de Información Financiera) con análisis de riesgo de clientes, gestión de legajos, control de documentación requerida, alertas automáticas cuando se superan umbrales de operaciones sospechosas y generación de reportes. Ayuda a cumplir con las resoluciones vigentes de la UIF para sujetos obligados del sector notarial."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "¿Puedo usar Doy Fe con mi equipo de empleados?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Sí. Doy Fe soporta múltiples usuarios por escribanía con roles diferenciados: titular, escribano adscripto y empleado. Cada rol tiene permisos específicos. Los empleados pueden gestionar clientes, expedientes y agenda, mientras que el protocolo, caja, comprobantes y UIF quedan reservados para escribanos. Todo el equipo comparte la misma base de datos y puede colaborar en tiempo real."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "¿Qué costo tiene Doy Fe?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Doy Fe ofrece un período de prueba gratuito para que la escribanía evalúe todas las funcionalidades. Luego se accede mediante suscripción mensual con planes adaptados al volumen de la escribanía. El costo de la IA se mide por consumo real de tokens (procesamiento de texto), con transparencia total en el panel de consumo."
+          }
+        }
+      ]
+    }
+    </script>
+
+    <!-- Tema antes del render -->
     <script>
       try {
         var t = localStorage.getItem("notarius-tema");
         if (t === "dark" || t === "light") document.documentElement.setAttribute("data-theme", t);
       } catch (e) {}
     </script>
+
+    <!-- Fuentes -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&display=swap" />
   </head>
   <body>
+    <!--
+      Contenido estático SEO: Google lo indexa sin JavaScript.
+      React lo reemplaza al montar #root.
+    -->
+    <div id="seo-landing" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden">
+      <h1>Doy Fe — Software con inteligencia artificial para escribanías argentinas</h1>
+      <p>La plataforma de gestión notarial que redacta escrituras, estudios de títulos y certificaciones de firmas con IA. Administre protocolo, clientes, expedientes, caja, comprobantes y UIF desde un solo lugar.</p>
+
+      <h2>Software de gestión notarial integral</h2>
+      <p>Doy Fe es el software para escribanías que combina inteligencia artificial con todas las herramientas que una escribanía necesita. Desde la redacción de escrituras hasta el cumplimiento UIF, todo en una plataforma segura donde los datos nunca salen de su escribanía.</p>
+
+      <h2>Redacción de escrituras con inteligencia artificial</h2>
+      <p>Suba un borrador, antecedentes o título en formato .doc o .docx y reciba la escritura lista para revisar. La IA analiza el documento, identifica las partes, los bienes y las condiciones, y genera un borrador profesional que respeta la práctica notarial argentina. Funciona para compraventas, donaciones, hipotecas, poderes, actas, constituciones de sociedades y cualquier tipo de escritura notarial.</p>
+
+      <h2>Estudio de títulos automatizado</h2>
+      <p>Analice la cadena dominial completa a partir de los antecedentes. La inteligencia artificial detecta irregularidades, observaciones y riesgos, y genera un informe estructurado que el escribano solo debe verificar. Ahorre horas de revisión manual en cada operación inmobiliaria.</p>
+
+      <h2>Certificación de firmas</h2>
+      <p>Complete los datos de los comparecientes y Doy Fe genera el acta de certificación de firmas lista para protocolizar. Configure modalidad presencial o a distancia, con o sin representación.</p>
+
+      <h2>Protocolo notarial digital</h2>
+      <p>Registre escrituras en el protocolo con número, fojas y fecha. Mantenga un índice actualizado y consulte el historial completo. El protocolo se almacena cifrado y cumple con los requisitos de cada jurisdicción.</p>
+
+      <h2>Gestión de clientes y expedientes</h2>
+      <p>Administre su cartera de clientes con datos completos, documentación asociada y un historial de todas las operaciones. Organice el trabajo en expedientes con tareas, presupuestos y seguimiento del estado.</p>
+
+      <h2>Caja, facturación y comprobantes</h2>
+      <p>Registre ingresos y egresos, emita presupuestos detallados con IVA y genere comprobantes. Mantenga la caja de la escribanía al día con saldos actualizados y reportes por período.</p>
+
+      <h2>Cumplimiento UIF para escribanías</h2>
+      <p>Gestione legajos UIF, controle documentación requerida, analice riesgo de clientes y reciba alertas automáticas de operaciones sospechosas. Cumpla con las resoluciones vigentes de la Unidad de Información Financiera para sujetos obligados del sector notarial.</p>
+
+      <h2>Custodia documental</h2>
+      <p>Reciba y administre documentación en custodia con códigos de verificación únicos, trazabilidad completa de recepción, devolución y entrega directa, y verificación pública del estado.</p>
+
+      <h2>Agenda y equipo</h2>
+      <p>Agende turnos y reuniones con vista mensual y semanal. Trabaje con múltiples usuarios por escribanía: titular, escribano adscripto y empleados, cada uno con permisos diferenciados.</p>
+
+      <h2>Seguridad y privacidad de datos</h2>
+      <p>Los datos se anonimizan antes de enviarlos a la IA y se eliminan al cerrar la sesión. Cumplimiento de la Ley 25.326 de Protección de Datos Personales. Cifrado en tránsito y en reposo. Los documentos originales nunca salen de su escribanía.</p>
+
+      <h2>Preguntas frecuentes sobre software notarial con IA</h2>
+      <dl>
+        <dt>¿Qué es Doy Fe y cómo funciona?</dt>
+        <dd>Doy Fe es una plataforma de gestión notarial con inteligencia artificial diseñada para escribanías argentinas. Permite redactar escrituras, realizar estudios de títulos y certificar firmas a partir de documentos base.</dd>
+        <dt>¿Es seguro usar inteligencia artificial en una escribanía?</dt>
+        <dd>Sí. Doy Fe anonimiza todos los datos personales antes de enviarlos al motor de IA. Los datos originales permanecen exclusivamente en el servidor de su escribanía.</dd>
+        <dt>¿La IA reemplaza al escribano?</dt>
+        <dd>No. Doy Fe es una herramienta de asistencia profesional. La IA genera un borrador que el escribano debe revisar, corregir y aprobar.</dd>
+        <dt>¿Incluye gestión de cumplimiento UIF?</dt>
+        <dd>Sí. Incluye análisis de riesgo, gestión de legajos, control de documentación y alertas automáticas de operaciones sospechosas.</dd>
+        <dt>¿Puedo usar Doy Fe con mi equipo?</dt>
+        <dd>Sí. Soporta múltiples usuarios por escribanía con roles diferenciados: titular, escribano adscripto y empleado.</dd>
+      </dl>
+
+      <footer>
+        <p>© 2026 Doy Fe · Cumbre Tech S.R.L. · Software de gestión notarial con inteligencia artificial para escribanías argentinas.</p>
+        <nav>
+          <a href="/privacidad.html">Política de privacidad</a>
+          <a href="/condiciones.html">Condiciones del servicio</a>
+        </nav>
+      </footer>
+    </div>
+
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>

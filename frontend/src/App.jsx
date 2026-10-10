@@ -33,6 +33,7 @@ import AdminAccounts from "./components/admin/AdminAccounts.jsx";
 import AdminTickets from "./components/admin/AdminTickets.jsx";
 import Consultas from "./components/Consultas.jsx";
 import Ayuda from "./components/Ayuda.jsx";
+import Landing from "./components/Landing.jsx";
 import TemaToggle from "./components/TemaToggle.jsx";
 import Icono from "./components/Iconos.jsx";
 import { api } from "./api.js";
@@ -395,7 +396,12 @@ function AppInner() {
     );
   }
 
-  if (!usuario) return <Acceso onIngreso={setUsuario} invitacion={invitacion} alta={alta} />;
+  if (!usuario) {
+    if (pathname === "/login" || invitacion || alta) {
+      return <Acceso onIngreso={setUsuario} invitacion={invitacion} alta={alta} />;
+    }
+    return <Landing onIrAcceso={() => navigate("/login")} />;
+  }
 
   const estadoIA = !salud ? "" : !salud.ok ? "error" : salud.modo === "simulado" ? "alerta" : "ok";
   const textoIA = salud === null ? "Conectando…" : !salud.ok ? "Servidor no disponible" : salud.modo === "real" ? "Claude conectado" : salud.modo === "gemini" ? `Gemini · ${salud.modelo}` : salud.modo === "local" ? `IA local · ${salud.modelo}` : "Sin IA configurada";

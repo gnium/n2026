@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /admin/
+Disallow: /verify/
+
+Sitemap: https://doyfegestion.com/sitemap.xml
