@@ -2,7 +2,7 @@ USE notarius;
 
 CREATE TABLE IF NOT EXISTS custodia (
   id              BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-  usuario_id      BIGINT UNSIGNED NOT NULL,
+  usuario_id      INT UNSIGNED    NOT NULL,
   cliente_id      BIGINT UNSIGNED NOT NULL,
   codigo          VARCHAR(12)     NOT NULL,
   descripcion     VARCHAR(500)    NOT NULL,
