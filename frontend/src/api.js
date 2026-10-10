@@ -218,6 +218,7 @@ export const api = {
   equipoCrear: (nombre, jurisdiccion) => json("POST", "/team", { nombre, jurisdiccion }),
   equipoRenombrar: (nombre) => json("PUT", "/team", { nombre }),
   equipoCambiarJurisdiccion: (jurisdiccion) => json("PATCH", "/team/jurisdiccion", { jurisdiccion }),
+  equipoCambiarCondicionFiscal: (condicionFiscal) => json("PATCH", "/team/condicion-fiscal", { condicionFiscal }),
   equipoInvitar: (datos) => json("POST", "/team/invitations", datos),
   equipoCancelarInvitacion: (id) => fetch(`${BASE}/team/invitations/${id}`, { method: "DELETE" }).then(manejar),
   equipoAceptarInvitacion: (token) => json("POST", "/team/invitations/accept", { token }),

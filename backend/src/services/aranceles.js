@@ -13,13 +13,17 @@ export async function listar(jurisdiccion, tipoActo) {
   return rows.map(filaAVista);
 }
 
-export async function calcular(jurisdiccion, tipoActo, montoOperacion) {
+export async function calcular(jurisdiccion, tipoActo, montoOperacion, { condicionFiscal } = {}) {
   if (!jurisdiccion) throw new AppError("DATOS_INVALIDOS", "Falta la jurisdicción.", 400);
   if (!tipoActo) throw new AppError("DATOS_INVALIDOS", "Falta el tipo de acto.", 400);
   if (!Number.isFinite(montoOperacion) || montoOperacion < 0) throw new AppError("DATOS_INVALIDOS", "El monto de la operación debe ser un número positivo.", 400);
 
-  const aranceles = await listar(jurisdiccion, tipoActo);
+  let aranceles = await listar(jurisdiccion, tipoActo);
   if (!aranceles.length) throw new AppError("SIN_ARANCELES", `No hay aranceles configurados para ${jurisdiccion} / ${tipoActo}.`, 404);
+
+  if (condicionFiscal && condicionFiscal !== "responsable_inscripto") {
+    aranceles = aranceles.filter((a) => !a.categoria.startsWith("iva"));
+  }
 
   let honorarios = 0;
   const items = [];

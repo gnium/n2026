@@ -15,6 +15,11 @@ const JURISDICCIONES = [
   ["tucuman", "Tucumán (próximamente)"],
 ];
 const NOMBRE_JURISDICCION = { salta: "Salta", buenos_aires: "Buenos Aires", caba: "CABA", cordoba: "Córdoba", santa_fe: "Santa Fe", mendoza: "Mendoza", tucuman: "Tucumán" };
+const CONDICIONES_FISCALES = [
+  ["responsable_inscripto", "Responsable Inscripto"],
+  ["monotributista", "Monotributista"],
+  ["exento", "Exento"],
+];
 const NOMBRE_ROL = { titular: "Titular", escribano: "Escribano/a", empleado: "Empleado/a" };
 const DESCRIPCION_ROL = {
   titular: "Administra la instalación (IA, precios, planes, parámetros UIF) y el equipo.",
@@ -156,6 +161,16 @@ export default function Equipo({ usuario }) {
                 </select>
               </div>
               <small className="ayuda">Determina los aranceles, alícuotas de sellos, tasas registrales y formularios de DDJJ.</small>
+            </div>
+            <div className="campo">
+              <span className="campo-titulo">Condición fiscal</span>
+              <div className="fila">
+                <select value={equipo.condicionFiscal || ""} onChange={(e) => accion(() => api.equipoCambiarCondicionFiscal(e.target.value), "Condición fiscal actualizada.")} aria-label="Condición fiscal">
+                  <option value="" disabled>Seleccionar...</option>
+                  {CONDICIONES_FISCALES.map(([v, t]) => <option key={v} value={v}>{t}</option>)}
+                </select>
+              </div>
+              <small className="ayuda">Si es Responsable Inscripto, los presupuestos incluyen IVA sobre honorarios. Monotributista y Exento no facturan IVA.</small>
             </div>
           </div>
         </section>

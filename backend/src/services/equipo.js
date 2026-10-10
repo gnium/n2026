@@ -28,7 +28,7 @@ const DIAS_INVITACION = 7;
 /** Rol efectivo y equipo de una cuenta. Sin equipo: 'escribano' (o 'titular' si es la administradora). */
 export async function contexto(usuarioId) {
   const [[r]] = await pool.query(
-    `SELECT u.id, u.email, u.nombre, u.activo, u.es_admin, m.equipo_id, m.rol, m.estado, e.nombre AS equipo_nombre, e.titular_usuario_id, e.jurisdiccion
+    `SELECT u.id, u.email, u.nombre, u.activo, u.es_admin, m.equipo_id, m.rol, m.estado, e.nombre AS equipo_nombre, e.titular_usuario_id, e.jurisdiccion, e.condicion_fiscal
        FROM usuarios u
        LEFT JOIN equipo_miembros m ON m.usuario_id = u.id
        LEFT JOIN equipos e ON e.id = m.equipo_id
@@ -49,6 +49,7 @@ export async function contexto(usuarioId) {
     equipoId: retirado ? null : r.equipo_id || null,
     equipoNombre: retirado ? null : r.equipo_nombre || null,
     jurisdiccion: retirado ? null : r.jurisdiccion || null,
+    condicionFiscal: retirado ? null : r.condicion_fiscal || null,
     rol,
     suspendido,
     retirado,
@@ -92,7 +93,7 @@ const miembroAVista = (r) => ({
 /** Equipo de la cuenta con sus integrantes e invitaciones pendientes (estas ultimas, solo para la titular). */
 export async function obtener(usuarioId) {
   const ctx = await contexto(usuarioId);
-  if (!ctx.equipoId) return { existe: false, rol: ctx.rol, miembros: [], invitaciones: [], nombre: null, jurisdiccion: null, esTitular: ctx.esAdmin };
+  if (!ctx.equipoId) return { existe: false, rol: ctx.rol, miembros: [], invitaciones: [], nombre: null, jurisdiccion: null, condicionFiscal: null, esTitular: ctx.esAdmin };
   const [miembros] = await pool.query(
     `SELECT m.*, u.nombre, u.email, u.activo, u.ultimo_acceso
        FROM equipo_miembros m JOIN usuarios u ON u.id = m.usuario_id
@@ -107,11 +108,12 @@ export async function obtener(usuarioId) {
     );
     invitaciones = rows.map((r) => ({ id: r.id, email: r.email, rol: r.rol, expiraEn: r.expira_en, creadoEn: r.creado_en }));
   }
-  return { existe: true, id: ctx.equipoId, nombre: ctx.equipoNombre, jurisdiccion: ctx.jurisdiccion, rol: ctx.rol, esTitular: ctx.esTitular, miembros: miembros.map(miembroAVista), invitaciones };
+  return { existe: true, id: ctx.equipoId, nombre: ctx.equipoNombre, jurisdiccion: ctx.jurisdiccion, condicionFiscal: ctx.condicionFiscal, rol: ctx.rol, esTitular: ctx.esTitular, miembros: miembros.map(miembroAVista), invitaciones };
 }
 
 /** Crea el equipo de esta cuenta (queda como titular). Solo si todavia no pertenece a ninguno. */
 const JURISDICCIONES = new Set(["salta", "buenos_aires", "caba", "cordoba", "santa_fe", "mendoza", "tucuman", "entre_rios", "misiones", "chaco", "corrientes", "santiago_del_estero", "san_juan", "jujuy", "rio_negro", "neuquen", "formosa", "chubut", "san_luis", "catamarca", "la_rioja", "la_pampa", "santa_cruz", "tierra_del_fuego"]);
+const CONDICIONES_FISCALES = new Set(["responsable_inscripto", "monotributista", "exento"]);
 
 export async function crear(usuarioId, nombre, jurisdiccion) {
   const ctx = await contexto(usuarioId);
@@ -130,6 +132,14 @@ export async function cambiarJurisdiccion(usuarioId, jurisdiccion) {
   const jur = String(jurisdiccion || "").trim().toLowerCase();
   if (!JURISDICCIONES.has(jur)) throw new AppError("DATOS_INVALIDOS", "Jurisdicción no válida.", 400);
   await pool.query("UPDATE equipos SET jurisdiccion = ? WHERE id = ?", [jur, ctx.equipoId]);
+  return obtener(usuarioId);
+}
+
+export async function cambiarCondicionFiscal(usuarioId, condicionFiscal) {
+  const ctx = await exigirTitular(usuarioId);
+  const cf = String(condicionFiscal || "").trim().toLowerCase();
+  if (!CONDICIONES_FISCALES.has(cf)) throw new AppError("DATOS_INVALIDOS", "Condición fiscal no válida. Opciones: responsable_inscripto, monotributista, exento.", 400);
+  await pool.query("UPDATE equipos SET condicion_fiscal = ? WHERE id = ?", [cf, ctx.equipoId]);
   return obtener(usuarioId);
 }
 

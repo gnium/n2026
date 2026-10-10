@@ -14,8 +14,8 @@ const manejar = (fn) => async (req, res, next) => {
 rutasAranceles.get("/", manejar(async (req, res) => res.json(await listar(req.query.jurisdiccion, req.query.tipoActo))));
 
 rutasAranceles.post("/calcular", manejar(async (req, res) => {
-  const { jurisdiccion, tipoActo, montoOperacion } = req.body || {};
-  res.json(await calcular(jurisdiccion, tipoActo, Number(montoOperacion)));
+  const { jurisdiccion, tipoActo, montoOperacion, condicionFiscal } = req.body || {};
+  res.json(await calcular(jurisdiccion, tipoActo, Number(montoOperacion), { condicionFiscal }));
 }));
 
 rutasAranceles.get("/:id", manejar(async (req, res) => res.json(await obtener(req.params.id))));

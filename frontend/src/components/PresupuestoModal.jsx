@@ -8,6 +8,7 @@ const ITEMS_INICIALES = [
   { concepto: "Honorarios", monto: "" },
   { concepto: "Aportes y sellados", monto: "" },
   { concepto: "Certificados e informes", monto: "" },
+  { concepto: "Diligenciamiento", monto: "" },
 ];
 const TIPOS_ACTO = [
   ["compraventa", "Compraventa"],
@@ -112,7 +113,8 @@ export default function PresupuestoModal({ abierto, presupuesto = null, expedien
         setError("Configure la jurisdicción de la escribanía en Equipo antes de calcular aranceles.");
         return;
       }
-      const r = await api.arancelesCalcular({ jurisdiccion, tipoActo: form.tipoActo, montoOperacion: monto });
+      const condicionFiscal = window.__doyfe_condicion_fiscal || null;
+      const r = await api.arancelesCalcular({ jurisdiccion, tipoActo: form.tipoActo, montoOperacion: monto, condicionFiscal });
       const itemsManuales = form.items.filter((it) => !it.esCalculado && it.concepto.trim());
       const itemsCalculados = r.items.map((it) => ({
         concepto: it.concepto,
