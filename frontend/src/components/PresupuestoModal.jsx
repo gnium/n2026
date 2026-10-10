@@ -94,8 +94,18 @@ export default function PresupuestoModal({ abierto, presupuesto = null, expedien
   }, [abierto]);
 
   const total = (form?.items || []).reduce((s, it) => s + (parseMonto(it.monto) || 0), 0);
-  const totalComprador = (form?.items || []).filter((it) => ["comprador", "ambos", "cliente"].includes(it.quienPaga)).reduce((s, it) => s + (parseMonto(it.monto) || 0), 0);
-  const totalVendedor = (form?.items || []).filter((it) => ["vendedor", "ambos"].includes(it.quienPaga)).reduce((s, it) => s + (parseMonto(it.monto) || 0), 0);
+  const totalComprador = (form?.items || []).reduce((s, it) => {
+    const m = parseMonto(it.monto) || 0;
+    if (it.quienPaga === "ambos") return s + m / 2;
+    if (["comprador", "cliente"].includes(it.quienPaga)) return s + m;
+    return s;
+  }, 0);
+  const totalVendedor = (form?.items || []).reduce((s, it) => {
+    const m = parseMonto(it.monto) || 0;
+    if (it.quienPaga === "ambos") return s + m / 2;
+    if (it.quienPaga === "vendedor") return s + m;
+    return s;
+  }, 0);
   const tieneDesglose = (form?.items || []).some((it) => it.quienPaga);
   const setItem = (i, parche) => setForm({ ...form, items: form.items.map((it, j) => (j === i ? { ...it, ...parche } : it)) });
 
@@ -110,7 +120,7 @@ export default function PresupuestoModal({ abierto, presupuesto = null, expedien
     try {
       const jurisdiccion = window.__doyfe_jurisdiccion;
       if (!jurisdiccion) {
-        setError("Configure la jurisdicción de la escribanía en Equipo antes de calcular aranceles.");
+        setError("Configure la jurisdicción en Mi Escribanía antes de calcular aranceles.");
         return;
       }
       const condicionFiscal = window.__doyfe_condicion_fiscal || null;

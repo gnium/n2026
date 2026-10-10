@@ -66,7 +66,7 @@ const NAV = [
     titulo: "Cuenta",
     soloEscribanias: true,
     items: [
-      { clave: "equipo", texto: "Equipo", icono: "edificio", ruta: "/team" },
+      { clave: "equipo", texto: "Mi Escribanía", icono: "edificio", ruta: "/team" },
       { clave: "integraciones", texto: "Integraciones", icono: "nube", ruta: "/integrations" },
       { clave: "consumo", texto: "Consumo de IA", icono: "grafico", ruta: "/usage" },
       { clave: "suscripcion", texto: "Suscripción", icono: "tarjeta", ruta: "/subscription" },
@@ -558,7 +558,7 @@ function AppInner() {
                 <Route path="/notes" element={<SimpleWrap title="Notas"><Notas /></SimpleWrap>} />
                 <Route path="/templates" element={<SimpleWrap title="Biblioteca de modelos"><BibliotecaModelos /></SimpleWrap>} />
                 <Route path="/protocol" element={<SimpleWrap title="Protocolo"><Protocolo /></SimpleWrap>} />
-                <Route path="/team" element={<SimpleWrap title="Equipo"><Equipo usuario={usuario} /></SimpleWrap>} />
+                <Route path="/team" element={<SimpleWrap title="Mi Escribanía"><Equipo usuario={usuario} /></SimpleWrap>} />
                 <Route path="/integrations" element={<SimpleWrap title="Integraciones"><Integraciones usuario={usuario} aviso={avisoGoogle} /></SimpleWrap>} />
                 <Route path="/usage" element={<SimpleWrap title="Consumo de IA"><Consumo esAdmin={usuario.esAdmin} /></SimpleWrap>} />
                 <Route path="/subscription" element={<SimpleWrap title="Suscripción"><Suscripcion /></SimpleWrap>} />

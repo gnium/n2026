@@ -22,7 +22,7 @@ const CONDICIONES_FISCALES = [
 ];
 const NOMBRE_ROL = { titular: "Titular", escribano: "Escribano/a", empleado: "Empleado/a" };
 const DESCRIPCION_ROL = {
-  titular: "Administra la instalación (IA, precios, planes, parámetros UIF) y el equipo.",
+  titular: "Administra la escribanía: configuración, IA, precios, planes y parámetros UIF.",
   escribano: "Todo su trabajo: expedientes, clientes, agenda, protocolo, caja, comprobantes y UIF.",
   empleado: "Carga clientes, expedientes, tareas, turnos y notas. No ve protocolo, caja, comprobantes ni legajos UIF.",
 };
@@ -78,7 +78,7 @@ export default function Equipo({ usuario }) {
 
   const crearEquipo = (e) => {
     e.preventDefault();
-    accion(() => api.equipoCrear(nombreNuevo, jurisdiccionNueva || undefined), "Equipo creado.");
+    accion(() => api.equipoCrear(nombreNuevo, jurisdiccionNueva || undefined), "Escribanía creada.");
   };
 
   const invitar = async (e) => {
@@ -96,14 +96,14 @@ export default function Equipo({ usuario }) {
     }
   };
 
-  if (!equipo) return <div className="equipo"><h2>Equipo</h2><p className="vacio" role="status">Cargando…</p>{error && <p className="alerta error" role="alert">{error}</p>}</div>;
+  if (!equipo) return <div className="equipo"><h2>Mi Escribanía</h2><p className="vacio" role="status">Cargando…</p>{error && <p className="alerta error" role="alert">{error}</p>}</div>;
 
   // Cuenta sin equipo: solo la administradora puede crear uno.
   if (!equipo.existe) {
     return (
       <div className="equipo">
-        <h2>Equipo</h2>
-        <p className="nota">Su cuenta todavía no forma parte de un equipo. Un equipo permite invitar a otras escribanas, escribanos y personal administrativo, darles un rol y compartirles expedientes puntuales. Cada cuenta sigue siendo dueña de sus propios clientes, expedientes y caja: el equipo no mezcla los datos.</p>
+        <h2>Mi Escribanía</h2>
+        <p className="nota">Su cuenta todavía no forma parte de una escribanía. Crear una escribanía le permite invitar a otras escribanas, escribanos y personal administrativo, darles un rol y compartirles expedientes puntuales. Cada cuenta sigue siendo dueña de sus propios clientes, expedientes y caja: la escribanía no mezcla los datos.</p>
         {error && <p className="alerta error" role="alert">{error}</p>}
         {usuario?.esAdmin ? (
           <form className="cert-form" onSubmit={crearEquipo}>
@@ -116,10 +116,10 @@ export default function Equipo({ usuario }) {
                 {JURISDICCIONES.map(([v, t]) => <option key={v} value={v} disabled={v !== "salta"}>{t}</option>)}
               </select>
             </label>
-            <div className="acciones"><button type="submit" className="boton primario">Crear el equipo</button></div>
+            <div className="acciones"><button type="submit" className="boton primario">Crear la escribanía</button></div>
           </form>
         ) : (
-          <p className="vacio">Para sumarse a un equipo hace falta una invitación de su titular.</p>
+          <p className="vacio">Para sumarse a una escribanía hace falta una invitación de su titular.</p>
         )}
       </div>
     );
@@ -129,7 +129,7 @@ export default function Equipo({ usuario }) {
 
   return (
     <div className="equipo">
-      <h2>Equipo</h2>
+      <h2>Mi Escribanía</h2>
       <p className="nota">
         {equipo.nombre} · usted es <b>{NOMBRE_ROL[equipo.rol]}</b>. Cada cuenta es dueña de sus clientes, expedientes y caja; lo que se comparte se comparte de a un expediente por vez, desde el detalle del expediente. Las métricas son conteos: ningún contenido sale de la cuenta que lo creó.
       </p>
@@ -211,7 +211,7 @@ export default function Equipo({ usuario }) {
                           >
                             {m.estado === "activo" ? "suspender" : "reactivar"}
                           </button>
-                          <button type="button" className="enlace" aria-label={`Quitar a ${m.nombre || m.email} del equipo`} onClick={() => setAQuitar(m)}>quitar</button>
+                          <button type="button" className="enlace" aria-label={`Quitar a ${m.nombre || m.email} de la escribanía`} onClick={() => setAQuitar(m)}>quitar</button>
                         </div>
                       )}
                     </td>
@@ -272,7 +272,7 @@ export default function Equipo({ usuario }) {
       {esTitular && (
         <section className="bloque" aria-labelledby="equipo-metricas-titulo">
           <div className="protocolo-cabecera">
-            <h3 id="equipo-metricas-titulo">Actividad del equipo</h3>
+            <h3 id="equipo-metricas-titulo">Actividad de la escribanía</h3>
             <div className="segmentado" role="group" aria-label="Período de las métricas">
               {[["30", "30 días"], ["90", "90 días"], ["365", "12 meses"]].map(([v, t]) => (
                 <button type="button" key={v} className={dias === v ? "activo" : ""} aria-pressed={dias === v} onClick={() => setDias(v)}>{t}</button>
@@ -323,11 +323,11 @@ export default function Equipo({ usuario }) {
 
       <ConfirmarDialogo
         abierto={Boolean(aQuitar)}
-        titulo={aQuitar ? `Quitar a ${aQuitar.nombre || aQuitar.email} del equipo` : ""}
-        texto="No se borra nada suyo: sus clientes, expedientes y comprobantes siguen siendo de su cuenta. Pierde el acceso a los expedientes que le compartieron y deja de ver las notas y la agenda del equipo."
-        confirmar="Quitar del equipo"
+        titulo={aQuitar ? `Quitar a ${aQuitar.nombre || aQuitar.email} de la escribanía` : ""}
+        texto="No se borra nada suyo: sus clientes, expedientes y comprobantes siguen siendo de su cuenta. Pierde el acceso a los expedientes que le compartieron y deja de ver las notas y la agenda de la escribanía."
+        confirmar="Quitar de la escribanía"
         destructivo
-        onConfirmar={() => { const m = aQuitar; setAQuitar(null); accion(() => api.equipoQuitar(m.usuarioId), "Integrante quitado del equipo."); }}
+        onConfirmar={() => { const m = aQuitar; setAQuitar(null); accion(() => api.equipoQuitar(m.usuarioId), "Integrante quitado de la escribanía."); }}
         onCancelar={() => setAQuitar(null)}
       />
     </div>

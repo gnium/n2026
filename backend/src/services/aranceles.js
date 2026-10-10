@@ -47,10 +47,19 @@ export async function calcular(jurisdiccion, tipoActo, montoOperacion, { condici
     return oa - ob;
   });
 
-  const totalComprador = items.filter((i) => ["comprador", "ambos", "cliente"].includes(i.quienPaga)).reduce((s, i) => s + i.monto, 0);
-  const totalVendedor = items.filter((i) => ["vendedor", "ambos"].includes(i.quienPaga)).reduce((s, i) => s + i.monto, 0);
+  const totalComprador = items.reduce((s, i) => {
+    if (i.quienPaga === "ambos") return s + i.monto / 2;
+    if (["comprador", "cliente"].includes(i.quienPaga)) return s + i.monto;
+    return s;
+  }, 0);
+  const totalVendedor = items.reduce((s, i) => {
+    if (i.quienPaga === "ambos") return s + i.monto / 2;
+    if (i.quienPaga === "vendedor") return s + i.monto;
+    return s;
+  }, 0);
+  const total = items.reduce((s, i) => s + i.monto, 0);
 
-  return { items, totalComprador: redondear(totalComprador), totalVendedor: redondear(totalVendedor), total: redondear(totalComprador + totalVendedor) };
+  return { items, totalComprador: redondear(totalComprador), totalVendedor: redondear(totalVendedor), total: redondear(total) };
 }
 
 function calcularMonto(arancel, base) {

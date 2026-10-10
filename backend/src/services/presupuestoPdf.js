@@ -78,8 +78,18 @@ export function construirPresupuestoPdf({ presupuesto: p, cliente, emisor }) {
     doc.moveDown(0.4);
     doc.font("Helvetica-Bold").fontSize(13).fillColor(TINTA).text("Total", izq + 8, doc.y, { continued: true }).text(moneda(p.total, p.moneda), { align: "right" });
     if (tieneDesglose) {
-      const totalComprador = p.items.filter((it) => ["comprador", "ambos", "cliente"].includes(it.quienPaga)).reduce((s, it) => s + Number(it.monto), 0);
-      const totalVendedor = p.items.filter((it) => ["vendedor", "ambos"].includes(it.quienPaga)).reduce((s, it) => s + Number(it.monto), 0);
+      const totalComprador = p.items.reduce((s, it) => {
+        const m = Number(it.monto);
+        if (it.quienPaga === "ambos") return s + m / 2;
+        if (["comprador", "cliente"].includes(it.quienPaga)) return s + m;
+        return s;
+      }, 0);
+      const totalVendedor = p.items.reduce((s, it) => {
+        const m = Number(it.monto);
+        if (it.quienPaga === "ambos") return s + m / 2;
+        if (it.quienPaga === "vendedor") return s + m;
+        return s;
+      }, 0);
       doc.moveDown(0.4);
       doc.font("Helvetica").fontSize(10).fillColor(GRIS).text(`Comprador: ${moneda(totalComprador, p.moneda)}   ·   Vendedor: ${moneda(totalVendedor, p.moneda)}`, izq + 8);
     }
