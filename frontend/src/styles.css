@@ -235,8 +235,8 @@ button.estado-servidor:hover { border-color: currentColor; }
   .sidebar-marca { order: 1; }
   .nav-grupo { display: contents; }
   .nav-titulo { display: none; }
-  .nav-item { width: auto; min-height: 36px; padding: 0 var(--s2); }
-  .nav-item span { display: none; }
+  .nav-item { width: auto; min-height: 36px; padding: 0 var(--s2); flex-shrink: 0; }
+  .nav-item span { font-size: var(--t-xs); }
   .sidebar-pie { margin-top: 0; margin-left: auto; flex-direction: row; padding: 0; order: 2; }
   .topbar { padding: 0 var(--s4); height: auto; min-height: var(--topbar-h); flex-wrap: wrap; padding-block: var(--s2); }
   .topbar-derecha { flex-wrap: wrap; gap: var(--s2); min-width: 0; }
@@ -820,3 +820,126 @@ th[scope="row"] { font-weight: 400; text-transform: none; letter-spacing: normal
 .landing-footer-links a { font-size: var(--t-sm); color: var(--ink-2); text-decoration: none; }
 .landing-footer-links a:hover { color: var(--accent); text-decoration: underline; }
 .landing-footer-legal { font-size: var(--t-xs); color: var(--ink-3); }
+
+/* =====================================================================
+   Mobile & tablet — fixes for phone/tablet usability
+   ===================================================================== */
+
+/* --- Sidebar: hide labels on phones, keep just icons --- */
+@media (max-width: 640px) {
+  .nav-item span { display: none; }
+}
+
+/* --- Topbar: truncate user name, compact on phone --- */
+@media (max-width: 640px) {
+  .topbar { gap: var(--s2); }
+  .topbar-derecha { width: 100%; justify-content: space-between; }
+  .usuario > span { max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .usuario .boton { padding: 0 var(--s2); }
+}
+
+/* --- Segmented controls: horizontal scroll on narrow screens --- */
+@media (max-width: 480px) {
+  .segmentado { overflow-x: auto; -webkit-overflow-scrolling: touch; max-width: 100%; }
+  .segmentado button { flex-shrink: 0; white-space: nowrap; }
+}
+
+/* --- Toolbars: stack vertically on phone --- */
+@media (max-width: 640px) {
+  .agenda-toolbar { flex-direction: column; align-items: stretch; gap: var(--s3); }
+  .agenda-toolbar > .acciones { flex-wrap: wrap; }
+  .buscador { max-width: 100%; }
+}
+
+/* --- Detail headers: stack title and actions on phone --- */
+@media (max-width: 640px) {
+  .protocolo-cabecera { flex-direction: column; align-items: flex-start; gap: var(--s3); }
+  .protocolo-cabecera > .acciones { width: 100%; }
+}
+
+/* --- Form rows: stack on phone --- */
+@media (max-width: 480px) {
+  .fila { flex-direction: column; }
+  .fila > input, .fila > select { flex: none; width: 100%; }
+  .fila > select.moneda { flex: none; }
+  .select-con-nuevo { flex-wrap: wrap; }
+}
+
+/* --- Modal: near-fullscreen on phone --- */
+@media (max-width: 480px) {
+  .modal { max-width: 100%; width: 100%; margin: var(--s2) auto; }
+  .modal.ancho { max-width: 100%; }
+  .modal-caja { border-radius: var(--radius-m); max-height: calc(100vh - var(--s4)); }
+}
+
+/* --- Touch targets: minimum 44px on touch devices --- */
+@media (pointer: coarse) {
+  .acciones .enlace { min-height: 44px; display: inline-flex; align-items: center; padding: 0 var(--s2); }
+  .nav-item { min-height: 44px; }
+  .tab { min-height: 44px; padding: var(--s3) var(--s4); }
+  .agenda-celda { min-height: 56px; }
+  .landing-faq-q { min-height: 48px; }
+  .chip .enlace { min-height: 32px; min-width: 32px; }
+}
+
+/* --- Expediente detail: tasks grid stacks on phone --- */
+@media (max-width: 640px) {
+  .tareas { grid-template-columns: 1fr; gap: var(--s4); }
+  .tarea { font-size: var(--t-sm); }
+  .tarea-responsable { max-width: 100%; }
+}
+
+/* --- Consumo cards on small phone --- */
+@media (max-width: 480px) {
+  .consumo-cards, .caja .consumo-cards { grid-template-columns: 1fr; }
+}
+
+/* --- Client detail panel: stack on mobile --- */
+@media (max-width: 640px) {
+  .agenda-dia-panel .protocolo-cabecera { flex-direction: column; align-items: flex-start; }
+  .agenda-dia-panel .protocolo-cabecera .acciones { width: 100%; flex-wrap: wrap; }
+}
+
+/* --- Presupuesto items on phone --- */
+@media (max-width: 480px) {
+  .presupuesto-item.con-iva { grid-template-columns: 1fr; }
+  .desglose { margin-left: 0; text-align: left; }
+}
+
+/* --- Beneficiarios grid on phone --- */
+@media (max-width: 640px) {
+  .beneficiarios-cabecera { grid-template-columns: 1fr; }
+}
+
+/* --- Landing: padding reduction on phone --- */
+@media (max-width: 480px) {
+  .landing-contenedor { padding: 0 var(--s4); }
+  .landing-header-inner { padding: var(--s3) var(--s4); }
+  .landing-faq-q { padding: var(--s3) var(--s4); }
+  .landing-faq-a { padding: 0 var(--s4) var(--s3); }
+}
+
+/* --- Custodia cards: single column on phone --- */
+@media (max-width: 480px) {
+  .custodia-lista { grid-template-columns: 1fr; }
+}
+
+/* --- Content area: reduce vertical padding on phone --- */
+@media (max-width: 640px) {
+  .contenido { padding-block: var(--s4); }
+  .pie { padding-block: var(--s3); }
+}
+
+/* --- Acceso page: tighter on small phone --- */
+@media (max-width: 480px) {
+  .acceso { padding: var(--s3); }
+  .acceso-caja { padding: var(--s5); }
+}
+
+/* --- Custodia modal: viewport-safe on phone --- */
+@media (max-width: 480px) {
+  .custodia-modal { max-width: 100%; }
+}
+
+/* --- Prevent horizontal page scroll from any overflow edge case --- */
+html { overflow-x: hidden; }
