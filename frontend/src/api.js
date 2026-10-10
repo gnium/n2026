@@ -265,6 +265,17 @@ export const api = {
   // --- novedades (vencimientos y pendientes) ---
   novedades: () => fetch(`${BASE}/alerts`).then(manejar),
 
+  // --- custodia de documentos ---
+  custodiaListar: (f = {}) => fetch(`${BASE}/custody?${new URLSearchParams(Object.fromEntries(Object.entries(f).filter(([, v]) => v)))}`).then(manejar),
+  custodiaObtener: (id) => fetch(`${BASE}/custody/${id}`).then(manejar),
+  custodiaRecibir: (datos) => json("POST", "/custody", datos),
+  custodiaEntregar: (datos) => json("POST", "/custody/deliver", datos),
+  custodiaDevolver: (id, datos) => json("POST", `/custody/${id}/return`, datos),
+  custodiaUrlPdfRecepcion: (id) => `${BASE}/custody/${id}/pdf/reception`,
+  custodiaUrlPdfDevolucion: (id) => `${BASE}/custody/${id}/pdf/return`,
+  custodiaUrlPdfEntrega: (id) => `${BASE}/custody/${id}/pdf/delivery`,
+  custodiaVerificar: (codigo) => fetch(`${BASE}/verify/${encodeURIComponent(codigo)}`).then(manejar),
+
   // --- integraciones con Google ---
   googleEstado: () => fetch(`${BASE}/google/status`).then(manejar),
   googleAutorizar: () => fetch(`${BASE}/google/authorize`).then(manejar),

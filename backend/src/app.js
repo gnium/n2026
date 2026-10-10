@@ -36,6 +36,7 @@ import { rutasMovimientos } from "./routes/movimientos.js";
 import { rutasComprobantes } from "./routes/comprobantes.js";
 import { rutasConfiguracionFiscal } from "./routes/configuracionFiscal.js";
 import { rutasUif } from "./routes/uif.js";
+import { rutasCustodia, rutaVerificacion } from "./routes/custodia.js";
 import { verificarOrigen } from "./middleware/origen.js";
 import { rutasConsultas } from "./routes/consultasSoporte.js";
 import { cantidadSesiones } from "./services/sessionStore.js";
@@ -136,6 +137,8 @@ app.use("/api/transactions", requerirAuth, requerirRol("escribano"), requerirMod
 app.use("/api/invoices", requerirAuth, requerirRol("escribano"), requerirModulo("comprobantes"), rutasComprobantes);
 app.use("/api/tax-config", requerirAuth, requerirRol("escribano"), requerirModulo("comprobantes"), rutasConfiguracionFiscal);
 app.use("/api/uif", requerirAuth, requerirRol("escribano"), requerirModulo("uif"), rutasUif);
+app.use("/api/custody", requerirAuth, requerirModulo("clientes"), rutasCustodia);
+app.use("/api/verify", rutaVerificacion);
 app.use("/api", requerirAuth, requerirAdmin, rutasConfiguracion);
 
 if (hayInterfaz) {

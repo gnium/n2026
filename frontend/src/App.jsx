@@ -21,6 +21,8 @@ import Expedientes from "./components/Expedientes.jsx";
 import Caja from "./components/Caja.jsx";
 import Comprobantes from "./components/Comprobantes.jsx";
 import Uif from "./components/Uif.jsx";
+import Custodia from "./components/Custodia.jsx";
+import Verificacion from "./components/Verificacion.jsx";
 import ParametrosUif from "./components/ParametrosUif.jsx";
 import Equipo from "./components/Equipo.jsx";
 import Integraciones from "./components/Integraciones.jsx";
@@ -49,6 +51,7 @@ const NAV = [
       { clave: "principal", texto: "Redactar", icono: "pluma", ruta: "/", modulo: "minutas" },
       { clave: "expedientes", texto: "Expedientes", icono: "carpeta", ruta: "/cases", modulo: "expedientes" },
       { clave: "clientes", texto: "Clientes", icono: "personas", ruta: "/clients", modulo: "clientes" },
+      { clave: "custodia", texto: "Custodia", icono: "escudo", ruta: "/custody", modulo: "clientes" },
       { clave: "caja", texto: "Caja", icono: "caja", rolMinimo: "escribano", ruta: "/cash", modulo: "caja" },
       { clave: "comprobantes", texto: "Comprobantes", icono: "factura", rolMinimo: "escribano", ruta: "/invoices", modulo: "comprobantes" },
       { clave: "uif", texto: "UIF", icono: "escudo", rolMinimo: "escribano", ruta: "/uif", modulo: "uif" },
@@ -383,6 +386,15 @@ function AppInner() {
   const ocupado = estado === "subiendo" || estado === "en_curso";
 
   if (usuario === undefined) return <div className="cargando">Cargando…</div>;
+
+  if (pathname.startsWith("/verify/")) {
+    return (
+      <Routes>
+        <Route path="/verify/:code" element={<Verificacion />} />
+      </Routes>
+    );
+  }
+
   if (!usuario) return <Acceso onIngreso={setUsuario} invitacion={invitacion} alta={alta} />;
 
   const estadoIA = !salud ? "" : !salud.ok ? "error" : salud.modo === "simulado" ? "alerta" : "ok";
@@ -528,6 +540,7 @@ function AppInner() {
                 {/* --- Simple screens (one-column) --- */}
                 <Route path="/cases" element={<SimpleWrap title="Expedientes"><Expedientes inicialId={expedienteAbierto} onConsumirInicial={() => setExpedienteAbierto(null)} /></SimpleWrap>} />
                 <Route path="/clients" element={<SimpleWrap title="Clientes"><Clientes onAbrirExpediente={abrirExpediente} /></SimpleWrap>} />
+                <Route path="/custody" element={<SimpleWrap title="Custodia"><Custodia /></SimpleWrap>} />
                 <Route path="/cash" element={<SimpleWrap title="Caja"><Caja /></SimpleWrap>} />
                 <Route path="/invoices" element={<SimpleWrap title="Comprobantes"><Comprobantes /></SimpleWrap>} />
                 <Route path="/uif" element={<SimpleWrap title="UIF"><Uif onAbrirExpediente={abrirExpediente} esAdmin={usuario.esAdmin} /></SimpleWrap>} />

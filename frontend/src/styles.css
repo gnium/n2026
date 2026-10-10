@@ -662,3 +662,54 @@ th[scope="row"] { font-weight: 400; text-transform: none; letter-spacing: normal
 .consulta-mensaje.admin { background: var(--accent-soft); border: 1px solid var(--accent-soft); align-self: flex-end; }
 .consulta-mensaje-meta { display: flex; justify-content: space-between; align-items: baseline; gap: var(--s3); font-size: var(--t-xs); color: var(--ink-3); margin-bottom: var(--s1); }
 .consulta-mensaje-texto { font-size: var(--t-sm); white-space: pre-wrap; margin: 0; }
+
+/* === Custodia de documentación === */
+.custodia-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--s4); flex-wrap: wrap; gap: var(--s3); }
+.custodia-header h2 { margin: 0; }
+.custodia-filtros { margin-bottom: var(--s4); }
+.custodia-filtros select { padding: var(--s2) var(--s3); border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); color: var(--ink); font-size: var(--t-sm); }
+.custodia-lista { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: var(--s4); }
+.custodia-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-m); padding: var(--s4); cursor: pointer; transition: border-color 0.15s, box-shadow 0.15s; }
+.custodia-card:hover { border-color: var(--accent); box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+.custodia-card.devuelto { opacity: 0.7; }
+.custodia-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--s3); }
+.custodia-estado { font-size: var(--t-xs); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; padding: 2px 8px; border-radius: var(--radius); }
+.custodia-estado.en_custodia { background: var(--accent-soft); color: var(--accent); }
+.custodia-estado.devuelto { background: var(--ok-soft); color: var(--ok); }
+.custodia-estado.entregado { background: var(--warn-soft); color: var(--warn); }
+.custodia-card.entregado { opacity: 0.7; }
+.custodia-codigo { font-family: monospace; font-size: var(--t-sm); color: var(--ink-3); }
+.custodia-card-body strong { display: block; margin-bottom: var(--s1); }
+.custodia-card-body p { margin: 0; font-size: var(--t-sm); color: var(--ink-2); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.custodia-card-footer { display: flex; gap: var(--s3); margin-top: var(--s3); flex-wrap: wrap; }
+.custodia-card-footer small { color: var(--ink-3); font-size: var(--t-xs); }
+.custodia-modal { max-width: 540px; }
+.custodia-detalle-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--s4); }
+.custodia-detalle-header h3 { margin: 0; }
+.custodia-detalle-info { display: flex; flex-direction: column; gap: var(--s2); margin-bottom: var(--s4); padding: var(--s4); background: var(--surface-2); border-radius: var(--radius); }
+.custodia-acciones-pdf { display: flex; gap: var(--s3); margin-bottom: var(--s4); flex-wrap: wrap; }
+.custodia-envio { border: 1px solid var(--border); border-radius: var(--radius); padding: var(--s3) var(--s4); margin-bottom: var(--s3); }
+.custodia-envio legend { font-size: var(--t-sm); font-weight: 600; padding: 0 var(--s2); }
+.custodia-envio label { display: flex; align-items: center; gap: var(--s2); font-size: var(--t-sm); margin-top: var(--s2); }
+.custodia-aviso-envio { display: flex; align-items: flex-start; gap: var(--s2); padding: var(--s3) var(--s4); background: var(--accent-soft); border-radius: var(--radius); margin-bottom: var(--s3); }
+.custodia-aviso-envio small { font-size: var(--t-xs); color: var(--accent); }
+.custodia-devolucion { border-top: 1px solid var(--border); padding-top: var(--s4); margin-top: var(--s4); }
+
+/* === Verificación pública === */
+.verificacion-publica { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: var(--bg); padding: var(--s4); }
+.verificacion-card { background: var(--surface); border-radius: var(--radius-m); box-shadow: 0 4px 24px rgba(0,0,0,0.12); max-width: 480px; width: 100%; padding: var(--s6); }
+.verificacion-logo { text-align: center; margin-bottom: var(--s5); }
+.verificacion-logo h1 { margin: var(--s2) 0 0; font-size: var(--t-xl); color: var(--accent); }
+.verificacion-logo p { margin: var(--s1) 0 0; font-size: var(--t-sm); color: var(--ink-2); }
+.verificacion-cargando { text-align: center; color: var(--ink-2); padding: var(--s6) 0; }
+.verificacion-error { text-align: center; padding: var(--s4); }
+.verificacion-error h2 { color: var(--danger); margin: 0 0 var(--s3); }
+.verificacion-estado { text-align: center; font-size: var(--t-lg); font-weight: 700; padding: var(--s3) var(--s4); border-radius: var(--radius); margin-bottom: var(--s4); }
+.verificacion-estado.en_custodia { background: var(--accent-soft); color: var(--accent); }
+.verificacion-estado.devuelto { background: var(--ok-soft); color: var(--ok); }
+.verificacion-estado.entregado { background: var(--warn-soft); color: var(--warn); }
+.verificacion-datos { margin: 0; padding: 0; }
+.verificacion-datos dt { font-size: var(--t-xs); font-weight: 600; color: var(--ink-3); text-transform: uppercase; letter-spacing: 0.05em; margin-top: var(--s3); }
+.verificacion-datos dd { margin: var(--s1) 0 0; font-size: var(--t-sm); color: var(--ink); }
+.verificacion-pie { text-align: center; margin-top: var(--s5); padding-top: var(--s4); border-top: 1px solid var(--border); }
+.verificacion-pie small { display: block; color: var(--ink-3); font-size: var(--t-xs); }

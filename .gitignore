@@ -5,7 +5,7 @@ dist/
 .DS_Store
 backend/uploads/
 ejemplos/*.resultado*.json
-certs/*.pem
+certs/
 .claude/settings.local.json
 TMP/
 client_secret*.json
