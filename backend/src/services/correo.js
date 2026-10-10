@@ -1,7 +1,8 @@
 /**
  * Envio de correos (recuperacion de contrasena, invitaciones, avisos de la
- * prueba). Intenta SMTP directo; si falla o no esta configurado, usa el
- * relay HTTP (un script PHP alojado en el mismo servidor de correo).
+ * prueba). Intenta la API HTTP de Resend si el host es smtp.resend.com (los
+ * puertos SMTP suelen estar bloqueados en Railway); si no, SMTP directo;
+ * como ultimo recurso, el relay HTTP.
  */
 import { env } from "../config/env.js";
 import { logger } from "../utils/logger.js";
@@ -13,6 +14,31 @@ export function escaparHtml(v) {
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#39;");
+}
+
+const esResend = env.smtp.host === "smtp.resend.com";
+
+async function enviarPorResendApi({ para, asunto, texto, html }) {
+  const res = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${env.smtp.pass}`,
+    },
+    body: JSON.stringify({
+      from: env.smtp.from,
+      to: Array.isArray(para) ? para : [para],
+      subject: asunto,
+      text: texto,
+      html,
+    }),
+    signal: AbortSignal.timeout(15000),
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body.message || `Resend API ${res.status}`);
+  }
+  return await res.json();
 }
 
 let transporte = null;
@@ -67,7 +93,17 @@ async function enviarPorRelay({ para, asunto, texto, html }) {
 }
 
 export async function enviarCorreo({ para, asunto, texto, html }) {
-  // Intento 1: SMTP directo.
+  // Intento 1: API HTTP de Resend (evita bloqueo de puertos SMTP).
+  if (esResend) {
+    try {
+      await enviarPorResendApi({ para, asunto, texto, html });
+      return { enviado: true, via: "resend-api" };
+    } catch (e) {
+      logger.warn("Resend API falló", { error: e.message });
+    }
+  }
+
+  // Intento 2: SMTP directo.
   const t = await getTransporte();
   if (t) {
     try {
@@ -79,7 +115,7 @@ export async function enviarCorreo({ para, asunto, texto, html }) {
     }
   }
 
-  // Intento 2: relay HTTP.
+  // Intento 3: relay HTTP.
   try {
     const r = await enviarPorRelay({ para, asunto, texto, html });
     if (r) {
