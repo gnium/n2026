@@ -9,12 +9,23 @@ const ITEMS_INICIALES = [
   { concepto: "Aportes y sellados", monto: "" },
   { concepto: "Certificados e informes", monto: "" },
 ];
+const TIPOS_ACTO = [
+  ["compraventa", "Compraventa"],
+  ["donacion", "Donación"],
+  ["hipoteca", "Hipoteca"],
+  ["permuta", "Permuta"],
+  ["cesion", "Cesión"],
+  ["sucesion", "Sucesión"],
+  ["poder", "Poder"],
+  ["certificacion_firmas", "Certificación de firmas"],
+  ["otro", "Otro"],
+];
+const NOMBRE_QUIEN_PAGA = { comprador: "Comprador", vendedor: "Vendedor", ambos: "Ambas partes", escribano: "Escribano", cliente: "Cliente" };
 
 export function formatoMonto(n, moneda) {
   return new Intl.NumberFormat("es-AR", { style: "currency", currency: moneda, minimumFractionDigits: 2 }).format(Number(n) || 0);
 }
 
-/** Acepta "850.000,50", "850000,50", "850000.50" y "1.250" (miles). Devuelve un número o NaN. */
 export function parseMonto(texto) {
   if (typeof texto === "number") return texto;
   let s = String(texto ?? "").replace(/\s|\$/g, "").trim();
@@ -24,7 +35,6 @@ export function parseMonto(texto) {
   return Number(s);
 }
 
-/** Arma el enlace de WhatsApp con el resumen; el PDF se adjunta a mano (WhatsApp no acepta adjuntos por URL). */
 export function enlaceWhatsApp(presupuesto, cliente) {
   const texto = `Presupuesto N° ${presupuesto.numero}${cliente?.nombre ? ` para ${cliente.nombre}` : ""}: total ${formatoMonto(presupuesto.total, presupuesto.moneda)}, válido por ${presupuesto.validezDias} días. Le adjunto el detalle en PDF.`;
   let tel = String(cliente?.telefono || "").replace(/\D/g, "");
@@ -33,15 +43,12 @@ export function enlaceWhatsApp(presupuesto, cliente) {
   return `https://wa.me/${tel}?text=${encodeURIComponent(texto)}`;
 }
 
-/**
- * Alta/edicion de presupuesto en un dialogo modal. `clientes` son las opciones
- * del selector (id, nombre, telefono); `expedienteId`/`clienteId` prellenan los vinculos.
- */
-export default function PresupuestoModal({ abierto, presupuesto = null, expedienteId = null, clienteId = null, clientes = [], onCerrar, onGuardado }) {
+export default function PresupuestoModal({ abierto, presupuesto = null, expedienteId = null, clienteId = null, tipoActo: tipoActoProp = null, clientes = [], onCerrar, onGuardado }) {
   const dialogo = useRef(null);
   const [form, setForm] = useState(null);
   const [guardado, setGuardado] = useState(null);
   const [error, setError] = useState(null);
+  const [calculando, setCalculando] = useState(false);
   const [clientesExtra, setClientesExtra] = useState([]);
   const [nuevoCliente, setNuevoCliente] = useState(false);
   const todosClientes = [...clientes, ...clientesExtra.filter(c => !clientes.some(x => x.id === c.id))];
@@ -52,8 +59,25 @@ export default function PresupuestoModal({ abierto, presupuesto = null, expedien
       setGuardado(null);
       setForm(
         presupuesto
-          ? { ...presupuesto, items: presupuesto.items.map((it) => ({ concepto: it.concepto, monto: String(it.monto).replace(".", ",") })), clienteId: presupuesto.clienteId || "", fecha: String(presupuesto.fecha).slice(0, 10), notas: presupuesto.notas || "" }
-          : { clienteId: clienteId || (clientes.length === 1 ? clientes[0].id : ""), fecha: hoyISO(), moneda: "ARS", validezDias: 15, items: ITEMS_INICIALES.map((it) => ({ ...it })), notas: "" },
+          ? {
+              ...presupuesto,
+              items: presupuesto.items.map((it) => ({ concepto: it.concepto, monto: String(it.monto).replace(".", ","), quienPaga: it.quienPaga || null, categoria: it.categoria || null, esCalculado: it.esCalculado || false })),
+              clienteId: presupuesto.clienteId || "",
+              fecha: String(presupuesto.fecha).slice(0, 10),
+              notas: presupuesto.notas || "",
+              tipoActo: presupuesto.tipoActo || tipoActoProp || "",
+              montoOperacion: presupuesto.montoOperacion ? String(presupuesto.montoOperacion).replace(".", ",") : "",
+            }
+          : {
+              clienteId: clienteId || (clientes.length === 1 ? clientes[0].id : ""),
+              fecha: hoyISO(),
+              moneda: "ARS",
+              validezDias: 15,
+              items: ITEMS_INICIALES.map((it) => ({ ...it })),
+              notas: "",
+              tipoActo: tipoActoProp || "",
+              montoOperacion: "",
+            },
       );
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -69,7 +93,41 @@ export default function PresupuestoModal({ abierto, presupuesto = null, expedien
   }, [abierto]);
 
   const total = (form?.items || []).reduce((s, it) => s + (parseMonto(it.monto) || 0), 0);
+  const totalComprador = (form?.items || []).filter((it) => ["comprador", "ambos", "cliente"].includes(it.quienPaga)).reduce((s, it) => s + (parseMonto(it.monto) || 0), 0);
+  const totalVendedor = (form?.items || []).filter((it) => ["vendedor", "ambos"].includes(it.quienPaga)).reduce((s, it) => s + (parseMonto(it.monto) || 0), 0);
+  const tieneDesglose = (form?.items || []).some((it) => it.quienPaga);
   const setItem = (i, parche) => setForm({ ...form, items: form.items.map((it, j) => (j === i ? { ...it, ...parche } : it)) });
+
+  const calcularAranceles = async () => {
+    const monto = parseMonto(form.montoOperacion);
+    if (!form.tipoActo || !monto || monto <= 0) {
+      setError("Ingresá el tipo de acto y el monto de la operación para calcular.");
+      return;
+    }
+    setError(null);
+    setCalculando(true);
+    try {
+      const jurisdiccion = window.__doyfe_jurisdiccion;
+      if (!jurisdiccion) {
+        setError("Configure la jurisdicción de la escribanía en Equipo antes de calcular aranceles.");
+        return;
+      }
+      const r = await api.arancelesCalcular({ jurisdiccion, tipoActo: form.tipoActo, montoOperacion: monto });
+      const itemsManuales = form.items.filter((it) => !it.esCalculado && it.concepto.trim());
+      const itemsCalculados = r.items.map((it) => ({
+        concepto: it.concepto,
+        monto: String(it.monto).replace(".", ","),
+        quienPaga: it.quienPaga,
+        categoria: it.categoria,
+        esCalculado: true,
+      }));
+      setForm({ ...form, items: [...itemsCalculados, ...itemsManuales] });
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setCalculando(false);
+    }
+  };
 
   const guardar = async (e) => {
     e.preventDefault();
@@ -81,7 +139,15 @@ export default function PresupuestoModal({ abierto, presupuesto = null, expedien
         fecha: form.fecha,
         moneda: form.moneda,
         validezDias: Number(form.validezDias),
-        items: form.items.filter((it) => it.concepto.trim() || it.monto !== "").map((it) => ({ concepto: it.concepto, monto: parseMonto(it.monto) || 0 })),
+        tipoActo: form.tipoActo || null,
+        montoOperacion: parseMonto(form.montoOperacion) || null,
+        items: form.items.filter((it) => it.concepto.trim() || it.monto !== "").map((it) => ({
+          concepto: it.concepto,
+          monto: parseMonto(it.monto) || 0,
+          quienPaga: it.quienPaga || null,
+          categoria: it.categoria || null,
+          esCalculado: it.esCalculado || false,
+        })),
         notas: form.notas,
       };
       const r = presupuesto ? await api.presupuestoActualizar(presupuesto.id, datos) : await api.presupuestoCrear(datos);
@@ -96,7 +162,7 @@ export default function PresupuestoModal({ abierto, presupuesto = null, expedien
   const cliente = clientes.find((c) => String(c.id) === String(form?.clienteId));
 
   return (<>
-    <dialog ref={dialogo} className="modal" aria-labelledby="presupuesto-titulo" onClose={onCerrar} onClick={(e) => e.target === dialogo.current && onCerrar?.()}>
+    <dialog ref={dialogo} className="modal modal-presupuesto" aria-labelledby="presupuesto-titulo" onClose={onCerrar} onClick={(e) => e.target === dialogo.current && onCerrar?.()}>
       {form && (
         <form className="cert-form modal-caja" onSubmit={guardar}>
           <div className="protocolo-cabecera">
@@ -135,6 +201,26 @@ export default function PresupuestoModal({ abierto, presupuesto = null, expedien
                 <label className="campo"><span className="campo-titulo">Validez (días)</span><input type="number" min="0" value={form.validezDias} onChange={(e) => setForm({ ...form, validezDias: e.target.value })} /></label>
               </div>
 
+              <div className="presupuesto-calculo">
+                <div className="cert-grid">
+                  <label className="campo"><span className="campo-titulo">Tipo de acto</span>
+                    <select value={form.tipoActo} onChange={(e) => setForm({ ...form, tipoActo: e.target.value })}>
+                      <option value="">Seleccionar...</option>
+                      {TIPOS_ACTO.map(([v, t]) => <option key={v} value={v}>{t}</option>)}
+                    </select>
+                  </label>
+                  <div className="campo">
+                    <label className="campo"><span className="campo-titulo">Monto de la operación</span>
+                      <input type="text" inputMode="decimal" placeholder="0,00" value={form.montoOperacion} onChange={(e) => setForm({ ...form, montoOperacion: e.target.value })} />
+                    </label>
+                  </div>
+                </div>
+                <button type="button" className="boton" onClick={calcularAranceles} disabled={calculando || !form.tipoActo || !form.montoOperacion}>
+                  {calculando ? "Calculando…" : "Calcular aranceles"}
+                </button>
+                <small className="ayuda">Calcula honorarios, sellos, aportes y tasas según la jurisdicción configurada.</small>
+              </div>
+
               <div className="campo">
                 <span className="campo-titulo">Conceptos</span>
                 <div className="presupuesto-items">
@@ -142,14 +228,21 @@ export default function PresupuestoModal({ abierto, presupuesto = null, expedien
                     <div className="presupuesto-item" key={i}>
                       <input type="text" aria-label={`Concepto ${i + 1}`} placeholder="Concepto" value={it.concepto} onChange={(e) => setItem(i, { concepto: e.target.value })} />
                       <input type="text" inputMode="decimal" aria-label={`Monto ${i + 1}`} placeholder="0,00" value={it.monto} onChange={(e) => setItem(i, { monto: e.target.value })} className={it.monto !== "" && Number.isNaN(parseMonto(it.monto)) ? "invalido" : ""} />
+                      {it.quienPaga && <span className="etiqueta etiqueta-quien-paga">{NOMBRE_QUIEN_PAGA[it.quienPaga] || it.quienPaga}</span>}
                       <button type="button" className="boton discreto chico" aria-label={`Quitar concepto ${i + 1}`} onClick={() => setForm({ ...form, items: form.items.filter((_, j) => j !== i) })}><Icono nombre="cruz" tamano={14} /></button>
                     </div>
                   ))}
                 </div>
                 <div className="acciones">
-                  <button type="button" className="boton chico" onClick={() => setForm({ ...form, items: [...form.items, { concepto: "", monto: "" }] })}><Icono nombre="mas" tamano={14} /> Agregar concepto</button>
+                  <button type="button" className="boton chico" onClick={() => setForm({ ...form, items: [...form.items, { concepto: "", monto: "", quienPaga: null, categoria: null, esCalculado: false }] })}><Icono nombre="mas" tamano={14} /> Agregar concepto</button>
                   <strong className="presupuesto-total">Total {formatoMonto(total, form.moneda)}</strong>
                 </div>
+                {tieneDesglose && (
+                  <div className="presupuesto-desglose">
+                    <span>Comprador: <b>{formatoMonto(totalComprador, form.moneda)}</b></span>
+                    <span>Vendedor: <b>{formatoMonto(totalVendedor, form.moneda)}</b></span>
+                  </div>
+                )}
               </div>
 
               <label className="campo"><span className="campo-titulo">Notas para el cliente <small>(opcional)</small></span><textarea rows={2} maxLength={500} value={form.notas} onChange={(e) => setForm({ ...form, notas: e.target.value })} /></label>

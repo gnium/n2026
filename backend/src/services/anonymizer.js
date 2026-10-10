@@ -95,6 +95,21 @@ export function reemplazarTodo(texto, mapa) {
   return s;
 }
 
+/** Igual que reemplazarTodo pero case-insensitive: atrapa variantes de capitalizacion que el reemplazo normal deja pasar. */
+export function reemplazarTodoInsensible(texto, mapa) {
+  if (typeof texto !== "string" || !texto) return texto;
+  const pares = [...mapa.entries()].filter(([, real]) => real.length >= 4).sort((a, b) => b[1].length - a[1].length);
+  let s = texto;
+  for (const [token, real] of pares) {
+    try {
+      s = s.replace(new RegExp(escapar(real), "gi"), token);
+    } catch {
+      if (s.includes(real)) s = s.split(real).join(token);
+    }
+  }
+  return s;
+}
+
 /** Reemplaza dentro de cualquier estructura JSON las cadenas que contengan valores reales. */
 export function anonimizarProfundo(obj, mapa) {
   const pares = [...mapa.entries()].sort((a, b) => b[1].length - a[1].length);

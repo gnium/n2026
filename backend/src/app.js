@@ -32,6 +32,7 @@ import { rutasBibliotecaModelos } from "./routes/bibliotecaModelos.js";
 import { rutasClientes } from "./routes/clientes.js";
 import { rutasExpedientes } from "./routes/expedientes.js";
 import { rutasPresupuestos } from "./routes/presupuestos.js";
+import { rutasAranceles } from "./routes/aranceles.js";
 import { rutasMovimientos } from "./routes/movimientos.js";
 import { rutasComprobantes } from "./routes/comprobantes.js";
 import { rutasConfiguracionFiscal } from "./routes/configuracionFiscal.js";
@@ -133,6 +134,7 @@ app.use("/api/templates", requerirAuth, requerirModulo("biblioteca"), rutasBibli
 app.use("/api/clients", requerirAuth, requerirModulo("clientes"), rutasClientes);
 app.use("/api/cases", requerirAuth, requerirModulo("expedientes"), rutasExpedientes);
 app.use("/api/quotes", requerirAuth, requerirModulo("expedientes"), rutasPresupuestos);
+app.use("/api/aranceles", requerirAuth, rutasAranceles);
 app.use("/api/transactions", requerirAuth, requerirRol("escribano"), requerirModulo("caja"), rutasMovimientos);
 app.use("/api/invoices", requerirAuth, requerirRol("escribano"), requerirModulo("comprobantes"), rutasComprobantes);
 app.use("/api/tax-config", requerirAuth, requerirRol("escribano"), requerirModulo("comprobantes"), rutasConfiguracionFiscal);

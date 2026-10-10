@@ -153,7 +153,7 @@ function AppInner() {
 
   useEffect(() => {
     api.salud().then(setSalud).catch(() => setSalud({ ok: false }));
-    api.yo().then((r) => { setUsuario(r.usuario); api.consultasSinLeer().then((c) => setConsultasSinLeer(c.sinLeer)).catch(() => {}); }).catch(() => setUsuario(null));
+    api.yo().then((r) => { setUsuario(r.usuario); window.__doyfe_jurisdiccion = r.usuario?.jurisdiccion || null; api.consultasSinLeer().then((c) => setConsultasSinLeer(c.sinLeer)).catch(() => {}); }).catch(() => setUsuario(null));
     return () => {
       cerrarSSE.current?.();
       clearInterval(sondeo.current);
@@ -183,6 +183,7 @@ function AppInner() {
         setInvitacion(null);
         const r = await api.yo();
         setUsuario(r.usuario);
+        window.__doyfe_jurisdiccion = r.usuario?.jurisdiccion || null;
         navigate("/team");
       })
       .catch((e) => {
@@ -204,6 +205,7 @@ function AppInner() {
     cerrarSSE.current?.();
     clearInterval(sondeo.current);
     setUsuario(null);
+    window.__doyfe_jurisdiccion = null;
   };
 
   const agregarMensaje = useCallback((m) => setMensajes((prev) => [...prev, { ts: Date.now(), ...m }]), []);
@@ -398,7 +400,7 @@ function AppInner() {
 
   if (!usuario) {
     if (pathname === "/login" || invitacion || alta) {
-      return <Acceso onIngreso={setUsuario} invitacion={invitacion} alta={alta} />;
+      return <Acceso onIngreso={(u) => { setUsuario(u); window.__doyfe_jurisdiccion = u?.jurisdiccion || null; }} invitacion={invitacion} alta={alta} />;
     }
     return <Landing onIrAcceso={() => navigate("/login")} />;
   }

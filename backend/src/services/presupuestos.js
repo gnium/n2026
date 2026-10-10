@@ -21,6 +21,8 @@ function filaAVista(r) {
     expedienteCaratula: r.expediente_caratula ?? null,
     fecha: r.fecha,
     moneda: r.moneda,
+    tipoActo: r.tipo_acto ?? null,
+    montoOperacion: r.monto_operacion ? Number(r.monto_operacion) : null,
     items: typeof r.items === "string" ? JSON.parse(r.items) : r.items,
     total: Number(r.total),
     validezDias: r.validez_dias,
@@ -35,9 +37,17 @@ const SELECT = `SELECT p.*, c.nombre AS cliente_nombre, e.caratula AS expediente
                   LEFT JOIN clientes c ON c.id = p.cliente_id
                   LEFT JOIN expedientes e ON e.id = p.expediente_id`;
 
+const QUIEN_PAGA_VALIDOS = new Set(["comprador", "vendedor", "ambos", "escribano", "cliente"]);
+
 function normalizarItems(items) {
   if (!Array.isArray(items) || !items.length) throw new AppError("DATOS_INVALIDOS", "El presupuesto necesita al menos un item.", 400);
-  const limpios = items.map((it) => ({ concepto: String(it?.concepto || "").trim().slice(0, 200), monto: Number(it?.monto) }));
+  const limpios = items.map((it) => {
+    const obj = { concepto: String(it?.concepto || "").trim().slice(0, 200), monto: Number(it?.monto) };
+    if (it?.quienPaga && QUIEN_PAGA_VALIDOS.has(it.quienPaga)) obj.quienPaga = it.quienPaga;
+    if (it?.categoria) obj.categoria = String(it.categoria).slice(0, 60);
+    if (it?.esCalculado) obj.esCalculado = true;
+    return obj;
+  });
   for (const it of limpios) {
     if (!it.concepto) throw new AppError("DATOS_INVALIDOS", "Cada item necesita un concepto.", 400);
     if (!Number.isFinite(it.monto) || it.monto < 0) throw new AppError("DATOS_INVALIDOS", `Monto invalido en "${it.concepto}".`, 400);
@@ -91,18 +101,19 @@ export async function crear(usuarioId, datos) {
     ...vinculos,
     fecha: datos.fecha || hoyLocal(),
     moneda: datos.moneda || "ARS",
+    tipoActo: datos.tipoActo || null,
+    montoOperacion: datos.montoOperacion ? Number(datos.montoOperacion) : null,
     items: JSON.stringify(items),
     total: total.toFixed(2),
     validezDias: datos.validezDias ?? 15,
     notas: datos.notas?.trim().slice(0, 500) || null,
   };
-  // El numero es correlativo por cuenta; si dos altas simultaneas chocan, se reintenta.
   for (let intento = 0; intento < 3; intento++) {
     const [[n]] = await pool.query("SELECT COALESCE(MAX(numero), 0) + 1 AS numero FROM presupuestos WHERE usuario_id = ?", [usuarioId]);
     try {
       const [r] = await pool.query(
-        `INSERT INTO presupuestos (usuario_id, numero, expediente_id, cliente_id, fecha, moneda, items, total, validez_dias, notas)
-         VALUES (:usuarioId, :numero, :expedienteId, :clienteId, :fecha, :moneda, :items, :total, :validezDias, :notas)`,
+        `INSERT INTO presupuestos (usuario_id, numero, expediente_id, cliente_id, tipo_acto, monto_operacion, fecha, moneda, items, total, validez_dias, notas)
+         VALUES (:usuarioId, :numero, :expedienteId, :clienteId, :tipoActo, :montoOperacion, :fecha, :moneda, :items, :total, :validezDias, :notas)`,
         { ...base, numero: n.numero },
       );
       return obtener(usuarioId, r.insertId);
@@ -118,9 +129,9 @@ export async function actualizar(usuarioId, id, datos) {
   const vinculos = await validarVinculos(usuarioId, datos);
   const total = items.reduce((s, it) => s + it.monto, 0);
   const [r] = await pool.query(
-    `UPDATE presupuestos SET expediente_id = :expedienteId, cliente_id = :clienteId, fecha = :fecha, moneda = :moneda, items = :items, total = :total, validez_dias = :validezDias, notas = :notas
+    `UPDATE presupuestos SET expediente_id = :expedienteId, cliente_id = :clienteId, tipo_acto = :tipoActo, monto_operacion = :montoOperacion, fecha = :fecha, moneda = :moneda, items = :items, total = :total, validez_dias = :validezDias, notas = :notas
       WHERE id = :id AND usuario_id = :usuarioId`,
-    { id, usuarioId, ...vinculos, fecha: datos.fecha || hoyLocal(), moneda: datos.moneda || "ARS", items: JSON.stringify(items), total: total.toFixed(2), validezDias: datos.validezDias ?? 15, notas: datos.notas?.trim().slice(0, 500) || null },
+    { id, usuarioId, ...vinculos, tipoActo: datos.tipoActo || null, montoOperacion: datos.montoOperacion ? Number(datos.montoOperacion) : null, fecha: datos.fecha || hoyLocal(), moneda: datos.moneda || "ARS", items: JSON.stringify(items), total: total.toFixed(2), validezDias: datos.validezDias ?? 15, notas: datos.notas?.trim().slice(0, 500) || null },
   );
   if (r.affectedRows === 0) throw new AppError("NO_ENCONTRADO", "El presupuesto no existe.", 404);
   return obtener(usuarioId, id);

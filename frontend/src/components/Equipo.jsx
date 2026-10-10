@@ -5,6 +5,16 @@ import ConfirmarDialogo from "./ConfirmarDialogo.jsx";
 import { formatoMonto } from "./PresupuestoModal.jsx";
 import { fechaCorta } from "./Expedientes.jsx";
 
+const JURISDICCIONES = [
+  ["salta", "Salta"],
+  ["buenos_aires", "Buenos Aires (próximamente)"],
+  ["caba", "CABA (próximamente)"],
+  ["cordoba", "Córdoba (próximamente)"],
+  ["santa_fe", "Santa Fe (próximamente)"],
+  ["mendoza", "Mendoza (próximamente)"],
+  ["tucuman", "Tucumán (próximamente)"],
+];
+const NOMBRE_JURISDICCION = { salta: "Salta", buenos_aires: "Buenos Aires", caba: "CABA", cordoba: "Córdoba", santa_fe: "Santa Fe", mendoza: "Mendoza", tucuman: "Tucumán" };
 const NOMBRE_ROL = { titular: "Titular", escribano: "Escribano/a", empleado: "Empleado/a" };
 const DESCRIPCION_ROL = {
   titular: "Administra la instalación (IA, precios, planes, parámetros UIF) y el equipo.",
@@ -19,6 +29,7 @@ export default function Equipo({ usuario }) {
   const [invitacion, setInvitacion] = useState({ email: "", rol: "empleado" });
   const [enlace, setEnlace] = useState(null);
   const [nombreNuevo, setNombreNuevo] = useState("");
+  const [jurisdiccionNueva, setJurisdiccionNueva] = useState("");
   const [aQuitar, setAQuitar] = useState(null);
   const [error, setError] = useState(null);
   const [aviso, setAviso] = useState("");
@@ -62,7 +73,7 @@ export default function Equipo({ usuario }) {
 
   const crearEquipo = (e) => {
     e.preventDefault();
-    accion(() => api.equipoCrear(nombreNuevo), "Equipo creado.");
+    accion(() => api.equipoCrear(nombreNuevo, jurisdiccionNueva || undefined), "Equipo creado.");
   };
 
   const invitar = async (e) => {
@@ -94,6 +105,12 @@ export default function Equipo({ usuario }) {
             <label className="campo"><span className="campo-titulo">Nombre de la escribanía</span>
               <input type="text" required maxLength={160} placeholder="Escribanía Pérez" value={nombreNuevo} onChange={(e) => setNombreNuevo(e.target.value)} />
             </label>
+            <label className="campo"><span className="campo-titulo">Jurisdicción (provincia)</span>
+              <select value={jurisdiccionNueva} onChange={(e) => setJurisdiccionNueva(e.target.value)}>
+                <option value="">Seleccionar...</option>
+                {JURISDICCIONES.map(([v, t]) => <option key={v} value={v} disabled={v !== "salta"}>{t}</option>)}
+              </select>
+            </label>
             <div className="acciones"><button type="submit" className="boton primario">Crear el equipo</button></div>
           </form>
         ) : (
@@ -119,16 +136,34 @@ export default function Equipo({ usuario }) {
         </p>
       )}
 
-      <section className="bloque primero" aria-labelledby="equipo-miembros-titulo">
+      {esTitular && (
+        <section className="bloque primero" aria-labelledby="equipo-config-titulo">
+          <h3 id="equipo-config-titulo">Configuración de la escribanía</h3>
+          <div className="cert-grid">
+            <div className="campo">
+              <span className="campo-titulo">Nombre</span>
+              <form className="fila" onSubmit={(e) => { e.preventDefault(); accion(() => api.equipoRenombrar(nombreNuevo), "Nombre actualizado."); }}>
+                <input type="text" maxLength={160} value={nombreNuevo} onChange={(e) => setNombreNuevo(e.target.value)} aria-label="Nombre de la escribanía" />
+                <button type="submit" className="boton chico" disabled={!nombreNuevo.trim() || nombreNuevo === equipo.nombre}>Guardar</button>
+              </form>
+            </div>
+            <div className="campo">
+              <span className="campo-titulo">Jurisdicción</span>
+              <div className="fila">
+                <select value={equipo.jurisdiccion || ""} onChange={(e) => accion(() => api.equipoCambiarJurisdiccion(e.target.value), "Jurisdicción actualizada.")} aria-label="Jurisdicción">
+                  <option value="" disabled>Seleccionar...</option>
+                  {JURISDICCIONES.map(([v, t]) => <option key={v} value={v} disabled={v !== "salta"}>{t}</option>)}
+                </select>
+              </div>
+              <small className="ayuda">Determina los aranceles, alícuotas de sellos, tasas registrales y formularios de DDJJ.</small>
+            </div>
+          </div>
+        </section>
+      )}
+
+      <section className={esTitular ? "bloque" : "bloque primero"} aria-labelledby="equipo-miembros-titulo">
         <div className="protocolo-cabecera">
           <h3 id="equipo-miembros-titulo">Integrantes <span className="etiqueta">{equipo.miembros.length}</span></h3>
-          {esTitular && (
-            <form className="fila" onSubmit={(e) => { e.preventDefault(); accion(() => api.equipoRenombrar(nombreNuevo), "Nombre actualizado."); }}>
-              <label className="sr-only" htmlFor="equipo-nombre">Nombre de la escribanía</label>
-              <input id="equipo-nombre" type="text" maxLength={160} value={nombreNuevo} onChange={(e) => setNombreNuevo(e.target.value)} />
-              <button type="submit" className="boton chico" disabled={!nombreNuevo.trim() || nombreNuevo === equipo.nombre}>Renombrar</button>
-            </form>
-          )}
         </div>
         <div className="tabla-scroll">
           <table aria-labelledby="equipo-miembros-titulo">

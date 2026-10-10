@@ -215,8 +215,9 @@ export const api = {
   equipo: () => fetch(`${BASE}/team`).then(manejar),
   equipoCompaneros: () => fetch(`${BASE}/team/colleagues`).then(manejar),
   equipoMetricas: (dias = 30) => fetch(`${BASE}/team/metrics?dias=${dias}`).then(manejar),
-  equipoCrear: (nombre) => json("POST", "/team", { nombre }),
+  equipoCrear: (nombre, jurisdiccion) => json("POST", "/team", { nombre, jurisdiccion }),
   equipoRenombrar: (nombre) => json("PUT", "/team", { nombre }),
+  equipoCambiarJurisdiccion: (jurisdiccion) => json("PATCH", "/team/jurisdiccion", { jurisdiccion }),
   equipoInvitar: (datos) => json("POST", "/team/invitations", datos),
   equipoCancelarInvitacion: (id) => fetch(`${BASE}/team/invitations/${id}`, { method: "DELETE" }).then(manejar),
   equipoAceptarInvitacion: (token) => json("POST", "/team/invitations/accept", { token }),
@@ -225,6 +226,10 @@ export const api = {
   equipoQuitar: (usuarioId) => fetch(`${BASE}/team/members/${usuarioId}`, { method: "DELETE" }).then(manejar),
   invitacionVer: (token) => fetch(`${BASE}/auth/invitation/${encodeURIComponent(token)}`).then(manejar),
   altaVer: (token) => fetch(`${BASE}/auth/signup/${encodeURIComponent(token)}`).then(manejar),
+
+  // --- aranceles por jurisdicción ---
+  arancelesListar: (jurisdiccion, tipoActo) => fetch(`${BASE}/aranceles?jurisdiccion=${encodeURIComponent(jurisdiccion)}&tipoActo=${encodeURIComponent(tipoActo || "")}`).then(manejar),
+  arancelesCalcular: (datos) => json("POST", "/aranceles/calcular", datos),
 
   // --- compartir un expediente con el equipo ---
   expedienteColaboradores: (id) => fetch(`${BASE}/cases/${id}/collaborators`).then(manejar),

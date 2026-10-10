@@ -564,9 +564,12 @@ input.invalido { border-color: var(--error); }
 .tarea-meta { display: block; font-size: var(--t-xs); color: var(--ink-3); text-decoration: none; margin-top: 2px; }
 .tarea.hecha .tarea-meta { text-decoration: none; }
 .presupuesto-items { display: flex; flex-direction: column; gap: var(--s2); }
-.presupuesto-item { display: grid; grid-template-columns: 1fr 160px auto; gap: var(--s2); align-items: center; }
+.presupuesto-item { display: grid; grid-template-columns: 1fr 160px auto auto; gap: var(--s2); align-items: center; }
 @media (max-width: 520px) { .presupuesto-item { grid-template-columns: 1fr; } }
 .presupuesto-total { margin-left: auto; font-variant-numeric: tabular-nums; }
+.presupuesto-calculo { display: flex; flex-direction: column; gap: var(--s3); padding: var(--s3); background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-m); }
+.presupuesto-desglose { display: flex; gap: var(--s4); font-size: var(--t-sm); color: var(--ink-2); font-variant-numeric: tabular-nums; }
+.etiqueta-quien-paga { font-size: var(--t-xs); padding: 1px 6px; border-radius: var(--radius-s); background: var(--accent-soft); color: var(--accent-soft-ink, var(--accent)); white-space: nowrap; }
 
 /* ---------- caja, comprobantes y UIF ---------- */
 .caja, .comprobantes, .uif, .equipo { display: flex; flex-direction: column; gap: var(--s4); }

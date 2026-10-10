@@ -436,6 +436,7 @@ export default function Expedientes({ inicialId = null, onConsumirInicial }) {
         abierto={Boolean(presupuesto?.abierto)}
         presupuesto={presupuesto?.presupuesto || null}
         expedienteId={detalle?.id || null}
+        tipoActo={detalle?.tipoActo || null}
         clientes={clientesDelExpediente.length ? clientesDelExpediente : clientes}
         onCerrar={() => setPresupuesto(null)}
         onGuardado={() => refrescar()}

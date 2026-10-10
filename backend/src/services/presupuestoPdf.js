@@ -15,6 +15,9 @@ function fecha(d) {
   return `${dia} de ${MESES[Number(m) - 1]} de ${a}`;
 }
 
+const NOMBRE_TIPO_ACTO = { compraventa: "Compraventa", donacion: "Donación", hipoteca: "Hipoteca", permuta: "Permuta", cesion: "Cesión", sucesion: "Sucesión", poder: "Poder", certificacion_firmas: "Certificación de firmas", otro: "Otro" };
+const NOMBRE_QUIEN_PAGA = { comprador: "Comprador", vendedor: "Vendedor", ambos: "Ambas partes", escribano: "Escribano", cliente: "Cliente" };
+
 /** Genera el PDF A4 de un presupuesto. Devuelve un Buffer. */
 export function construirPresupuestoPdf({ presupuesto: p, cliente, emisor }) {
   return new Promise((resolve, reject) => {
@@ -34,6 +37,7 @@ export function construirPresupuestoPdf({ presupuesto: p, cliente, emisor }) {
     doc.font("Helvetica-Bold").fontSize(14).fillColor(ACENTO).text(`Presupuesto N° ${p.numero}`);
     doc.font("Helvetica").fontSize(10).fillColor(GRIS).text(`Fecha: ${fecha(p.fecha)}   ·   Validez: ${p.validezDias} días   ·   Moneda: ${p.moneda}`);
     if (p.expedienteCaratula) doc.text(`Expediente: ${p.expedienteCaratula}`);
+    if (p.tipoActo) doc.text(`Tipo de acto: ${NOMBRE_TIPO_ACTO[p.tipoActo] || p.tipoActo}${p.montoOperacion ? `   ·   Monto de la operación: ${moneda(p.montoOperacion, p.moneda)}` : ""}`);
     doc.moveDown(0.8);
     doc.moveTo(izq, doc.y).lineTo(izq + ancho, doc.y).strokeColor(LINEA).lineWidth(1).stroke();
     doc.moveDown(0.8);
@@ -51,23 +55,34 @@ export function construirPresupuestoPdf({ presupuesto: p, cliente, emisor }) {
     doc.moveDown(1.2);
 
     // Tabla de items
+    const tieneDesglose = p.items.some((it) => it.quienPaga);
+    const colQuien = tieneDesglose ? izq + ancho - 230 : 0;
     const colMonto = izq + ancho - 120;
     const yCab = doc.y;
     doc.rect(izq, yCab - 4, ancho, 20).fillColor("#f3f4f1").fill();
-    doc.font("Helvetica-Bold").fontSize(9).fillColor(GRIS).text("CONCEPTO", izq + 8, yCab).text("MONTO", colMonto, yCab, { width: 112, align: "right" });
+    doc.font("Helvetica-Bold").fontSize(9).fillColor(GRIS).text("CONCEPTO", izq + 8, yCab);
+    if (tieneDesglose) doc.text("A CARGO DE", colQuien, yCab, { width: 100 });
+    doc.text("MONTO", colMonto, yCab, { width: 112, align: "right" });
     doc.moveDown(1.2);
     doc.font("Helvetica").fontSize(11).fillColor(TINTA);
     for (const it of p.items) {
       const y = doc.y;
-      doc.text(it.concepto, izq + 8, y, { width: colMonto - izq - 20 });
+      doc.text(it.concepto, izq + 8, y, { width: (tieneDesglose ? colQuien : colMonto) - izq - 20 });
       const yFin = doc.y;
-      doc.text(moneda(it.monto, p.moneda), colMonto, y, { width: 112, align: "right" });
+      if (tieneDesglose && it.quienPaga) doc.font("Helvetica").fontSize(9).fillColor(GRIS).text(NOMBRE_QUIEN_PAGA[it.quienPaga] || it.quienPaga, colQuien, y, { width: 100 });
+      doc.font("Helvetica").fontSize(11).fillColor(TINTA).text(moneda(it.monto, p.moneda), colMonto, y, { width: 112, align: "right" });
       doc.y = Math.max(yFin, doc.y) + 6;
       doc.moveTo(izq, doc.y).lineTo(izq + ancho, doc.y).strokeColor(LINEA).lineWidth(0.5).stroke();
       doc.moveDown(0.5);
     }
     doc.moveDown(0.4);
     doc.font("Helvetica-Bold").fontSize(13).fillColor(TINTA).text("Total", izq + 8, doc.y, { continued: true }).text(moneda(p.total, p.moneda), { align: "right" });
+    if (tieneDesglose) {
+      const totalComprador = p.items.filter((it) => ["comprador", "ambos", "cliente"].includes(it.quienPaga)).reduce((s, it) => s + Number(it.monto), 0);
+      const totalVendedor = p.items.filter((it) => ["vendedor", "ambos"].includes(it.quienPaga)).reduce((s, it) => s + Number(it.monto), 0);
+      doc.moveDown(0.4);
+      doc.font("Helvetica").fontSize(10).fillColor(GRIS).text(`Comprador: ${moneda(totalComprador, p.moneda)}   ·   Vendedor: ${moneda(totalVendedor, p.moneda)}`, izq + 8);
+    }
     doc.moveDown(1.2);
 
     if (p.notas) {
@@ -77,8 +92,11 @@ export function construirPresupuestoPdf({ presupuesto: p, cliente, emisor }) {
       doc.moveDown(1);
     }
 
+    const esCalculado = p.items.some((it) => it.esCalculado);
     doc.font("Helvetica").fontSize(9).fillColor(GRIS).text(
-      "Este presupuesto no incluye impuestos, tasas ni aportes que se determinen al momento de la firma, salvo los detallados. Los valores en pesos pueden ajustarse si el otorgamiento se produce después del plazo de validez.",
+      esCalculado
+        ? "Presupuesto calculado según los aranceles y alícuotas vigentes al momento de la emisión. Los valores en pesos pueden ajustarse si el otorgamiento se produce después del plazo de validez."
+        : "Este presupuesto no incluye impuestos, tasas ni aportes que se determinen al momento de la firma, salvo los detallados. Los valores en pesos pueden ajustarse si el otorgamiento se produce después del plazo de validez.",
       izq,
       doc.y,
       { width: ancho },

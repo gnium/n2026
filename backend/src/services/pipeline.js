@@ -22,7 +22,7 @@
  *    empezar de cero.
  */
 import { ejecutarSkill, modoClaude } from "./claudeClient.js";
-import { aplicarEntidades, anonimizarProfundo, contieneDatosReales, reemplazarTodo, presanear, detectarEntidadesLocal } from "./anonymizer.js";
+import { aplicarEntidades, anonimizarProfundo, contieneDatosReales, reemplazarTodo, reemplazarTodoInsensible, presanear, detectarEntidadesLocal } from "./anonymizer.js";
 import { emitir } from "./sessionStore.js";
 import { ESQUEMAS } from "../skills/schemas.js";
 import { skillsActivos, plantillaParaActo, obtenerPlantilla } from "../skills/repositorio.js";
@@ -225,7 +225,13 @@ export async function ejecutarPipeline(sesion, { reintento = false, iteracionFee
 
       // Defensa en profundidad: a partir del skill 2 la entrada no puede contener valores reales.
       if (clave !== "extractor_antecedentes" && contieneDatosReales(entrada, sesion.mapa)) {
-        throw new AppError("FUGA_DATOS", "Se detectaron datos reales en la entrada de un skill posterior al extractor. Proceso abortado por seguridad.", 500);
+        for (let _ri = 0; _ri < 3 && contieneDatosReales(entrada, sesion.mapa); _ri++) {
+          entrada = reemplazarTodoInsensible(entrada, sesion.mapa);
+          mensaje(sesion, `Re-anonimización automática (intento ${_ri + 1}): se corrigieron datos reales residuales en la entrada de ${clave}.`, "alerta");
+        }
+        if (contieneDatosReales(entrada, sesion.mapa)) {
+          throw new AppError("FUGA_DATOS", "No se pudieron anonimizar todos los datos reales tras múltiples intentos. Proceso abortado por seguridad.", 500);
+        }
       }
 
       // ---- llamada al proveedor de IA ----
@@ -257,15 +263,27 @@ export async function ejecutarPipeline(sesion, { reintento = false, iteracionFee
         sesion.textoOriginal = null;
         sesion.textoModelo = null;
         sesion.instrucciones = null;
-        if (sesion.modeloAnonimizado && contieneDatosReales(sesion.modeloAnonimizado, sesion.mapa)) throw new AppError("FUGA_DATOS", "El modelo anonimizado contiene datos reales. Abortado.", 500);
-        if (sesion.instruccionesAnonimizadas && contieneDatosReales(sesion.instruccionesAnonimizadas, sesion.mapa)) throw new AppError("FUGA_DATOS", "Las instrucciones anonimizadas contienen datos reales. Abortado.", 500);
+        if (sesion.modeloAnonimizado && contieneDatosReales(sesion.modeloAnonimizado, sesion.mapa)) {
+          sesion.modeloAnonimizado = reemplazarTodoInsensible(sesion.modeloAnonimizado, sesion.mapa);
+          mensaje(sesion, "Re-anonimización automática: se corrigieron datos reales residuales en el modelo.", "alerta");
+          if (contieneDatosReales(sesion.modeloAnonimizado, sesion.mapa)) throw new AppError("FUGA_DATOS", "El modelo anonimizado contiene datos reales tras re-anonimización. Abortado.", 500);
+        }
+        if (sesion.instruccionesAnonimizadas && contieneDatosReales(sesion.instruccionesAnonimizadas, sesion.mapa)) {
+          sesion.instruccionesAnonimizadas = reemplazarTodoInsensible(sesion.instruccionesAnonimizadas, sesion.mapa);
+          mensaje(sesion, "Re-anonimización automática: se corrigieron datos reales residuales en las instrucciones.", "alerta");
+          if (contieneDatosReales(sesion.instruccionesAnonimizadas, sesion.mapa)) throw new AppError("FUGA_DATOS", "Las instrucciones anonimizadas contienen datos reales tras re-anonimización. Abortado.", 500);
+        }
         mensaje(sesion, `Extraccion completa: ${datos.entidades.length} entidades sensibles anonimizadas. Acto detectado: ${datos.resumen.tipo_acto}.`);
       } else if (clave === "analista_estudio_titulos") {
         riesgos = datos.riesgos.length;
         const bloqueantes = datos.riesgos.filter((r) => r.severidad === "bloqueante").length;
         mensaje(sesion, `Estudio de titulos: tracto ${datos.continuidad_tracto}, ${riesgos} riesgos detectados${bloqueantes ? ` (${bloqueantes} bloqueantes)` : ""}.`, bloqueantes ? "alerta" : "info");
       } else if (clave === "redactor_minuta_escritura") {
-        if (contieneDatosReales(datos.texto_escritura, sesion.mapa)) throw new AppError("FUGA_DATOS", "La minuta contiene datos reales. Abortado.", 500);
+        if (contieneDatosReales(datos.texto_escritura, sesion.mapa)) {
+          datos.texto_escritura = reemplazarTodoInsensible(datos.texto_escritura, sesion.mapa);
+          mensaje(sesion, "Re-anonimización automática: se corrigieron datos reales residuales en la minuta.", "alerta");
+          if (contieneDatosReales(datos.texto_escritura, sesion.mapa)) throw new AppError("FUGA_DATOS", "La minuta contiene datos reales tras re-anonimización. Abortado.", 500);
+        }
         const marcasModelo = [...new Set(datos.texto_escritura.match(/\[\[MODELO_[A-Z0-9_]+\]\]/g) || [])];
         if (marcasModelo.length) {
           // Nunca deben llegar al documento final: se convierten en campos a completar.
@@ -279,7 +297,11 @@ export async function ejecutarPipeline(sesion, { reintento = false, iteracionFee
         mensaje(sesion, `Minuta ${iterando ? "actualizada" : "redactada"} con la plantilla "${plantilla.nombre}". Faltan ${datos.variables_faltantes.length} datos por completar.`);
       } else if (clave === "redactor_certificacion_firmas") {
         for (const campo of ["acta_requerimiento", "certificacion"]) {
-          if (contieneDatosReales(datos[campo], sesion.mapa)) throw new AppError("FUGA_DATOS", "La certificacion contiene datos reales. Abortado.", 500);
+          if (contieneDatosReales(datos[campo], sesion.mapa)) {
+            datos[campo] = reemplazarTodoInsensible(datos[campo], sesion.mapa);
+            mensaje(sesion, `Re-anonimización automática: se corrigieron datos reales residuales en ${campo === "acta_requerimiento" ? "el acta de requerimiento" : "la certificación"}.`, "alerta");
+            if (contieneDatosReales(datos[campo], sesion.mapa)) throw new AppError("FUGA_DATOS", "La certificación contiene datos reales tras re-anonimización. Abortado.", 500);
+          }
         }
         const faltantes = datos.documentos_habilitantes_requeridos.filter((d) => d.estado === "faltante").length;
         const atencion = datos.controles.filter((c) => c.resultado !== "ok").length;

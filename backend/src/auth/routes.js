@@ -62,7 +62,7 @@ function fijarSesion(res, usuario, version) {
 async function publico(u) {
   const ctx = await contexto(u.id);
   const modulos = await modulosDelPlan(u.plan_id);
-  return { id: u.id, email: u.email, nombre: u.nombre, esAdmin: Boolean(u.es_admin), rol: ctx.rol, equipoId: ctx.equipoId, equipo: ctx.equipoNombre, suspendido: ctx.suspendido, modulos };
+  return { id: u.id, email: u.email, nombre: u.nombre, esAdmin: Boolean(u.es_admin), rol: ctx.rol, equipoId: ctx.equipoId, equipo: ctx.equipoNombre, jurisdiccion: ctx.jurisdiccion, suspendido: ctx.suspendido, modulos };
 }
 
 /** POST /api/auth/register {email, password, nombre?, codigo?} */

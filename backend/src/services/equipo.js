@@ -28,7 +28,7 @@ const DIAS_INVITACION = 7;
 /** Rol efectivo y equipo de una cuenta. Sin equipo: 'escribano' (o 'titular' si es la administradora). */
 export async function contexto(usuarioId) {
   const [[r]] = await pool.query(
-    `SELECT u.id, u.email, u.nombre, u.activo, u.es_admin, m.equipo_id, m.rol, m.estado, e.nombre AS equipo_nombre, e.titular_usuario_id
+    `SELECT u.id, u.email, u.nombre, u.activo, u.es_admin, m.equipo_id, m.rol, m.estado, e.nombre AS equipo_nombre, e.titular_usuario_id, e.jurisdiccion
        FROM usuarios u
        LEFT JOIN equipo_miembros m ON m.usuario_id = u.id
        LEFT JOIN equipos e ON e.id = m.equipo_id
@@ -48,6 +48,7 @@ export async function contexto(usuarioId) {
     esAdmin: Boolean(r.es_admin),
     equipoId: retirado ? null : r.equipo_id || null,
     equipoNombre: retirado ? null : r.equipo_nombre || null,
+    jurisdiccion: retirado ? null : r.jurisdiccion || null,
     rol,
     suspendido,
     retirado,
@@ -91,7 +92,7 @@ const miembroAVista = (r) => ({
 /** Equipo de la cuenta con sus integrantes e invitaciones pendientes (estas ultimas, solo para la titular). */
 export async function obtener(usuarioId) {
   const ctx = await contexto(usuarioId);
-  if (!ctx.equipoId) return { existe: false, rol: ctx.rol, miembros: [], invitaciones: [], nombre: null, esTitular: ctx.esAdmin };
+  if (!ctx.equipoId) return { existe: false, rol: ctx.rol, miembros: [], invitaciones: [], nombre: null, jurisdiccion: null, esTitular: ctx.esAdmin };
   const [miembros] = await pool.query(
     `SELECT m.*, u.nombre, u.email, u.activo, u.ultimo_acceso
        FROM equipo_miembros m JOIN usuarios u ON u.id = m.usuario_id
@@ -106,17 +107,29 @@ export async function obtener(usuarioId) {
     );
     invitaciones = rows.map((r) => ({ id: r.id, email: r.email, rol: r.rol, expiraEn: r.expira_en, creadoEn: r.creado_en }));
   }
-  return { existe: true, id: ctx.equipoId, nombre: ctx.equipoNombre, rol: ctx.rol, esTitular: ctx.esTitular, miembros: miembros.map(miembroAVista), invitaciones };
+  return { existe: true, id: ctx.equipoId, nombre: ctx.equipoNombre, jurisdiccion: ctx.jurisdiccion, rol: ctx.rol, esTitular: ctx.esTitular, miembros: miembros.map(miembroAVista), invitaciones };
 }
 
 /** Crea el equipo de esta cuenta (queda como titular). Solo si todavia no pertenece a ninguno. */
-export async function crear(usuarioId, nombre) {
+const JURISDICCIONES = new Set(["salta", "buenos_aires", "caba", "cordoba", "santa_fe", "mendoza", "tucuman", "entre_rios", "misiones", "chaco", "corrientes", "santiago_del_estero", "san_juan", "jujuy", "rio_negro", "neuquen", "formosa", "chubut", "san_luis", "catamarca", "la_rioja", "la_pampa", "santa_cruz", "tierra_del_fuego"]);
+
+export async function crear(usuarioId, nombre, jurisdiccion) {
   const ctx = await contexto(usuarioId);
   if (ctx.equipoId) throw new AppError("YA_TIENE_EQUIPO", "La cuenta ya pertenece a un equipo.", 409);
   const limpio = String(nombre || "").trim().slice(0, 160);
   if (!limpio) throw new AppError("DATOS_INVALIDOS", "El equipo necesita un nombre.", 400);
-  const [r] = await pool.query("INSERT INTO equipos (nombre, titular_usuario_id) VALUES (?, ?)", [limpio, usuarioId]);
+  const jur = jurisdiccion ? String(jurisdiccion).trim().toLowerCase() : null;
+  if (jur && !JURISDICCIONES.has(jur)) throw new AppError("DATOS_INVALIDOS", "Jurisdicción no válida.", 400);
+  const [r] = await pool.query("INSERT INTO equipos (nombre, jurisdiccion, titular_usuario_id) VALUES (?, ?, ?)", [limpio, jur, usuarioId]);
   await pool.query("INSERT INTO equipo_miembros (usuario_id, equipo_id, rol) VALUES (?, ?, 'titular')", [usuarioId, r.insertId]);
+  return obtener(usuarioId);
+}
+
+export async function cambiarJurisdiccion(usuarioId, jurisdiccion) {
+  const ctx = await exigirTitular(usuarioId);
+  const jur = String(jurisdiccion || "").trim().toLowerCase();
+  if (!JURISDICCIONES.has(jur)) throw new AppError("DATOS_INVALIDOS", "Jurisdicción no válida.", 400);
+  await pool.query("UPDATE equipos SET jurisdiccion = ? WHERE id = ?", [jur, ctx.equipoId]);
   return obtener(usuarioId);
 }
 
