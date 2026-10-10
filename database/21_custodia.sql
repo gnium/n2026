@@ -1,3 +1,5 @@
+USE notarius;
+
 CREATE TABLE IF NOT EXISTS custodia (
   id              BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   usuario_id      BIGINT UNSIGNED NOT NULL,
