@@ -3,6 +3,7 @@ import { api } from "../api.js";
 import Icono from "./Iconos.jsx";
 import ConfirmarDialogo from "./ConfirmarDialogo.jsx";
 import { fechaCorta } from "./Expedientes.jsx";
+import ModalNuevoCliente from "./ModalNuevoCliente.jsx";
 import { formatoMonto, parseMonto } from "./PresupuestoModal.jsx";
 
 const hoyISO = () => new Date().toLocaleDateString("sv-SE");
@@ -23,6 +24,8 @@ export default function Caja() {
   const [clientes, setClientes] = useState([]);
   const [expedientes, setExpedientes] = useState([]);
   const [form, setForm] = useState(null); // { tipo: 'pago'|'cargo', ... }
+  const [busqueda, setBusqueda] = useState("");
+  const [nuevoCliente, setNuevoCliente] = useState(false);
   const [error, setError] = useState(null);
   const [aviso, setAviso] = useState(null);
   const dialogo = useRef(null);
@@ -111,11 +114,16 @@ export default function Caja() {
               <button type="button" key={v} className={preset === v ? "activo" : ""} aria-pressed={preset === v} onClick={() => setPreset(v)}>{t}</button>
             ))}
           </div>
-          <label className="campo"><span className="sr-only">Cliente</span>
-            <select value={clienteId} onChange={(e) => setClienteId(e.target.value)}>
+          <div className="select-con-nuevo">
+            <select value={clienteId} onChange={(e) => setClienteId(e.target.value)} aria-label="Cliente">
               <option value="">Todos los clientes</option>
               {clientes.map((c) => <option key={c.id} value={c.id}>{c.nombre}</option>)}
             </select>
+            <button type="button" className="boton chico" onClick={() => setNuevoCliente(true)} title="Crear nuevo cliente"><Icono nombre="mas" tamano={14} /></button>
+          </div>
+          <label className="campo buscador">
+            <span className="sr-only">Buscar</span>
+            <input type="search" placeholder="Buscar por concepto…" value={busqueda} onChange={(e) => setBusqueda(e.target.value)} />
           </label>
         </div>
         <div className="acciones">
@@ -137,16 +145,20 @@ export default function Caja() {
         </div>
       )}
 
-      {movs === null ? (
+      {(() => {
+        const movsFiltrados = movs && busqueda.trim()
+          ? movs.filter(m => { const b = busqueda.toLowerCase(); return (m.concepto || "").toLowerCase().includes(b) || (m.clienteNombre || "").toLowerCase().includes(b) || (m.expedienteCaratula || "").toLowerCase().includes(b) || (m.referencia || "").toLowerCase().includes(b); })
+          : movs;
+        return movsFiltrados === null ? (
         <p className="vacio">Cargando…</p>
-      ) : movs.length === 0 ? (
-        <p className="vacio">Sin movimientos en el período.</p>
+      ) : movsFiltrados.length === 0 ? (
+        <p className="vacio">{busqueda.trim() ? "Ningún movimiento coincide con la búsqueda." : "Sin movimientos en el período."}</p>
       ) : (
         <div className="tabla-scroll">
           <table>
             <thead><tr><th scope="col">Fecha</th><th scope="col">Cliente</th><th scope="col">Concepto</th><th scope="col" className="num">Cargo</th><th scope="col" className="num">Pago</th><th scope="col" className="col-sec">Medio / origen</th><th scope="col"><span className="sr-only">Acciones</span></th></tr></thead>
             <tbody>
-              {movs.map((m) => (
+              {movsFiltrados.map((m) => (
                 <tr key={m.id}>
                   <td>{fechaCorta(m.fecha)}</td>
                   <td>{m.clienteNombre || "—"}</td>
@@ -160,7 +172,8 @@ export default function Caja() {
             </tbody>
           </table>
         </div>
-      )}
+      );
+      })()}
 
       <ConfirmarDialogo abierto={Boolean(aBorrar)} titulo={aBorrar ? `Borrar ${aBorrar.tipo} manual` : ""} texto={aBorrar ? `"${aBorrar.concepto}" de ${formatoMonto(aBorrar.monto, aBorrar.moneda)} (${fechaCorta(aBorrar.fecha)}). Esta acción no se puede deshacer.` : ""} confirmar="Borrar" destructivo onConfirmar={confirmarBorrado} onCancelar={() => setABorrar(null)} />
       <dialog ref={dialogo} className="modal" aria-labelledby="caja-form-titulo" onClose={() => setForm(null)} onClick={(e) => e.target === dialogo.current && setForm(null)}>
@@ -172,12 +185,16 @@ export default function Caja() {
             </div>
             {error && <p className="alerta error" role="alert">{error}</p>}
             <div className="cert-grid">
-              <label className="campo"><span className="campo-titulo">Cliente</span>
-                <select required value={form.clienteId} onChange={set("clienteId")}>
-                  <option value="">Elegir…</option>
-                  {clientes.map((c) => <option key={c.id} value={c.id}>{c.nombre}</option>)}
-                </select>
-              </label>
+              <div className="campo">
+                <span className="campo-titulo">Cliente</span>
+                <div className="select-con-nuevo">
+                  <select required value={form.clienteId} onChange={set("clienteId")}>
+                    <option value="">Elegir…</option>
+                    {clientes.map((c) => <option key={c.id} value={c.id}>{c.nombre}</option>)}
+                  </select>
+                  <button type="button" className="boton chico" onClick={() => setNuevoCliente(true)} title="Crear nuevo cliente"><Icono nombre="mas" tamano={14} /></button>
+                </div>
+              </div>
               <label className="campo"><span className="campo-titulo">Expediente <small>(opcional)</small></span>
                 <select value={form.expedienteId} onChange={set("expedienteId")}>
                   <option value="">Sin expediente</option>
@@ -207,6 +224,7 @@ export default function Caja() {
           </form>
         )}
       </dialog>
+      {nuevoCliente && <ModalNuevoCliente onCreado={(c) => { setClientes(prev => [...prev, c]); setNuevoCliente(false); }} onCerrar={() => setNuevoCliente(false)} />}
     </div>
   );
 }

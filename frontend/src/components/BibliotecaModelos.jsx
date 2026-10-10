@@ -11,6 +11,7 @@ export default function BibliotecaModelos() {
   const [nombre, setNombre] = useState("");
   const [tipoActo, setTipoActo] = useState("otro");
   const [subiendo, setSubiendo] = useState(false);
+  const [busqueda, setBusqueda] = useState("");
 
   const cargar = async () => {
     setError(null);
@@ -89,13 +90,23 @@ export default function BibliotecaModelos() {
         </div>
       </form>
 
-      {modelos === null ? (
+      {modelos && modelos.length > 0 && (
+        <label className="campo buscador" style={{ marginTop: "var(--s3)" }}>
+          <span className="sr-only">Buscar</span>
+          <input type="search" placeholder="Buscar modelo…" value={busqueda} onChange={(e) => setBusqueda(e.target.value)} />
+        </label>
+      )}
+
+      {(() => {
+        const bq = busqueda.trim().toLowerCase();
+        const modelosFiltrados = modelos && bq ? modelos.filter((m) => [m.nombre, m.tipoActo].some((v) => v && v.toLowerCase().includes(bq))) : modelos;
+        return modelosFiltrados === null ? (
         <p className="vacio">Cargando…</p>
-      ) : modelos.length === 0 ? (
-        <p className="vacio">Todavía no hay modelos guardados.</p>
+      ) : modelosFiltrados.length === 0 ? (
+        <p className="vacio">{busqueda ? "Ningún modelo coincide con la búsqueda." : "Todavía no hay modelos guardados."}</p>
       ) : (
         <ul className="biblioteca-lista">
-          {modelos.map((m) => (
+          {modelosFiltrados.map((m) => (
             <li key={m.id} className="biblioteca-item">
               <div>
                 <div className="biblioteca-item-nombre">{m.nombre}</div>
@@ -105,7 +116,8 @@ export default function BibliotecaModelos() {
             </li>
           ))}
         </ul>
-      )}
+      );
+      })()}
     </div>
   );
 }

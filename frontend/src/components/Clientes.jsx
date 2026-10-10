@@ -15,6 +15,7 @@ const NOMBRE_ESTADO_EXP = { abierto: "abierto", en_firma: "en firma", cerrado: "
 
 export default function Clientes({ onAbrirExpediente }) {
   const [q, setQ] = useState("");
+  const [filtroTipo, setFiltroTipo] = useState("");
   const [lista, setLista] = useState(null);
   const [detalle, setDetalle] = useState(null);
   const [formulario, setFormulario] = useState(null);
@@ -94,6 +95,7 @@ export default function Clientes({ onAbrirExpediente }) {
 
   const campo = (k) => ({ name: k, value: formulario?.[k] ?? "", onChange: (e) => setFormulario({ ...formulario, [k]: e.target.value }) });
   const idDoc = (c) => (c.tipo === "sociedad" ? c.cuit && `CUIT ${c.cuit}` : c.documento ? `DNI ${c.documento}` : c.cuit && `CUIT ${c.cuit}`) || (c.datosLegibles ? "—" : "(no legible)");
+  const listaFiltrada = lista && filtroTipo ? lista.filter(c => c.tipo === filtroTipo) : lista;
 
   return (
     <div className="clientes">
@@ -107,14 +109,19 @@ export default function Clientes({ onAbrirExpediente }) {
           <span className="sr-only">Buscar por nombre</span>
           <input type="search" placeholder="Buscar por nombre…" value={q} onChange={(e) => setQ(e.target.value)} />
         </label>
+        <select value={filtroTipo} onChange={(e) => setFiltroTipo(e.target.value)} aria-label="Filtrar por tipo">
+          <option value="">Todos los tipos</option>
+          <option value="persona">Persona</option>
+          <option value="sociedad">Sociedad</option>
+        </select>
         <button type="button" className="boton primario" onClick={() => setFormulario({ ...VACIO })}><Icono nombre="mas" tamano={16} /> Nuevo cliente</button>
       </div>
 
-      <p className="sr-only" role="status">{lista === null ? "Cargando clientes" : `${lista.length} cliente${lista.length === 1 ? "" : "s"}`}</p>
-      {lista === null ? (
+      <p className="sr-only" role="status">{listaFiltrada === null ? "Cargando clientes" : `${listaFiltrada.length} cliente${listaFiltrada.length === 1 ? "" : "s"}`}</p>
+      {listaFiltrada === null ? (
         <p className="vacio">Cargando…</p>
-      ) : lista.length === 0 ? (
-        <p className="vacio">{q ? "Ningún cliente coincide con la búsqueda." : "Todavía no hay clientes."}</p>
+      ) : listaFiltrada.length === 0 ? (
+        <p className="vacio">{q || filtroTipo ? "Ningún cliente coincide con los filtros." : "Todavía no hay clientes."}</p>
       ) : (
         <div className="tabla-scroll">
           <table>
@@ -122,7 +129,7 @@ export default function Clientes({ onAbrirExpediente }) {
               <tr><th scope="col">Nombre</th><th scope="col">Tipo</th><th scope="col">Documento</th><th scope="col">Teléfono</th><th scope="col" className="num">Expedientes</th><th scope="col"><span className="sr-only">Acciones</span></th></tr>
             </thead>
             <tbody>
-              {lista.map((c) => (
+              {listaFiltrada.map((c) => (
                 <tr key={c.id}>
                   <td><button type="button" className="enlace" onClick={() => abrirDetalle(c.id)}>{c.nombre}</button></td>
                   <td>{c.tipo}</td>

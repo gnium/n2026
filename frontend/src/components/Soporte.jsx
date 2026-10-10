@@ -390,9 +390,13 @@ export default function Soporte() {
         </form>
 
         {enlaceAlta && (
-          <p className="alerta" role="status">
-            No hay SMTP configurado, así que el correo no salió. Pásele este enlace a {enlaceAlta.email} por un medio seguro: <code>{enlaceAlta.enlace}</code>
-          </p>
+          <div className="alerta" role="status">
+            No hay SMTP configurado, así que el correo no salió. Comparta este enlace con <b>{enlaceAlta.email}</b> por un medio seguro:
+            <div style={{ display: "flex", gap: "var(--s2)", alignItems: "center", marginTop: "var(--s2)" }}>
+              <code style={{ flex: 1, wordBreak: "break-all", fontSize: "var(--t-xs)" }}>{enlaceAlta.enlace}</code>
+              <button type="button" className="boton chico" onClick={() => { navigator.clipboard.writeText(enlaceAlta.enlace).catch(() => {}); }}>Copiar</button>
+            </div>
+          </div>
         )}
 
         {invitaciones.length > 0 && (

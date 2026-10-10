@@ -1,11 +1,13 @@
 import { useEffect, useRef, useState } from "react";
 import { api } from "../api.js";
 import Icono from "./Iconos.jsx";
+import ModalNuevoCliente from "./ModalNuevoCliente.jsx";
 
 export default function ClientePicker({ seleccionados = [], onChange, onAutoFill }) {
   const [q, setQ] = useState("");
   const [resultados, setResultados] = useState([]);
   const [abierto, setAbierto] = useState(false);
+  const [creando, setCreando] = useState(false);
   const ref = useRef(null);
 
   useEffect(() => {
@@ -52,6 +54,9 @@ export default function ClientePicker({ seleccionados = [], onChange, onAutoFill
           onChange={(e) => { setQ(e.target.value); setAbierto(true); }}
           onFocus={() => { if (q.trim()) setAbierto(true); }}
         />
+        <button type="button" className="boton chico picker-nuevo" onClick={() => setCreando(true)} title="Crear nuevo cliente">
+          <Icono nombre="mas" tamano={14} />
+        </button>
       </div>
       {abierto && resultados.length > 0 && (
         <ul className="picker-lista">
@@ -66,6 +71,12 @@ export default function ClientePicker({ seleccionados = [], onChange, onAutoFill
             </li>
           ))}
         </ul>
+      )}
+      {creando && (
+        <ModalNuevoCliente
+          onCreado={(c) => { agregar(c); setCreando(false); }}
+          onCerrar={() => setCreando(false)}
+        />
       )}
     </div>
   );

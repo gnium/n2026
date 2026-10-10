@@ -5,6 +5,7 @@ import PresupuestoModal, { enlaceWhatsApp, formatoMonto } from "./PresupuestoMod
 import ComprobanteModal from "./ComprobanteModal.jsx";
 import UifExpediente from "./UifExpediente.jsx";
 import ConfirmarDialogo from "./ConfirmarDialogo.jsx";
+import ModalNuevoCliente from "./ModalNuevoCliente.jsx";
 
 const TIPOS_ACTO = ["compraventa", "donacion", "hipoteca", "permuta", "cesion", "sucesion", "poder", "certificacion_firmas", "otro"];
 const ESTADOS = [["abierto", "Abierto"], ["en_firma", "En firma"], ["cerrado", "Cerrado"], ["archivado", "Archivado"]];
@@ -20,6 +21,7 @@ export const fechaCorta = (d) => {
 
 export default function Expedientes({ inicialId = null, onConsumirInicial }) {
   const [filtro, setFiltro] = useState("");
+  const [q, setQ] = useState("");
   const [lista, setLista] = useState(null);
   const [detalle, setDetalle] = useState(null);
   const [clientes, setClientes] = useState([]);
@@ -32,6 +34,7 @@ export default function Expedientes({ inicialId = null, onConsumirInicial }) {
   const [configFiscal, setConfigFiscal] = useState(null);
   const [companeros, setCompaneros] = useState([]);
   const [nuevoColaborador, setNuevoColaborador] = useState({ usuarioId: "", permiso: "lectura" });
+  const [nuevoCliente, setNuevoCliente] = useState(false);
   const [error, setError] = useState(null);
   const [aviso, setAviso] = useState(null);
   const dialogo = useRef(null);
@@ -169,6 +172,10 @@ export default function Expedientes({ inicialId = null, onConsumirInicial }) {
       {!detalle ? (
         <>
           <div className="acciones agenda-toolbar">
+            <label className="campo buscador">
+              <span className="sr-only">Buscar</span>
+              <input type="search" placeholder="Buscar por carátula o parte…" value={q} onChange={(e) => setQ(e.target.value)} />
+            </label>
             <div className="segmentado" role="group" aria-label="Estado">
               <button type="button" className={filtro === "" ? "activo" : ""} aria-pressed={filtro === ""} onClick={() => setFiltro("")}>Todos</button>
               {ESTADOS.map(([v, t]) => (
@@ -177,29 +184,33 @@ export default function Expedientes({ inicialId = null, onConsumirInicial }) {
             </div>
             <button type="button" className="boton primario" onClick={() => setFormulario({ caratula: "", tipoActo: "compraventa", observaciones: "" })}><Icono nombre="mas" tamano={16} /> Nuevo expediente</button>
           </div>
-          {lista === null ? (
-            <p className="vacio">Cargando…</p>
-          ) : lista.length === 0 ? (
-            <p className="vacio">No hay expedientes{filtro ? " en este estado" : ""}.</p>
-          ) : (
-            <div className="tabla-scroll">
-              <table>
-                <thead><tr><th scope="col">Carátula</th><th scope="col">Tipo de acto</th><th scope="col">Partes</th><th scope="col" className="num">Tareas pendientes</th><th scope="col">Estado</th><th scope="col">Actualizado</th></tr></thead>
-                <tbody>
-                  {lista.map((e) => (
-                    <tr key={e.id}>
-                      <td><button type="button" className="enlace" onClick={() => cargarDetalle(e.id)}>{e.caratula}</button></td>
-                      <td>{e.tipoActo.replace(/_/g, " ")}</td>
-                      <td>{e.partes || "—"}</td>
-                      <td className="num">{e.tareasPendientes}</td>
-                      <td><span className={`etiqueta ${e.estado === "abierto" || e.estado === "en_firma" ? "ok" : ""}`}>{NOMBRE_ESTADO[e.estado]}</span></td>
-                      <td>{fechaCorta(e.actualizadoEn)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
+          {(() => {
+            const ql = q.trim().toLowerCase();
+            const filtrada = lista ? lista.filter((e) => !ql || e.caratula.toLowerCase().includes(ql) || (e.partes && e.partes.toLowerCase().includes(ql))) : null;
+            return filtrada === null ? (
+              <p className="vacio">Cargando…</p>
+            ) : filtrada.length === 0 ? (
+              <p className="vacio">{q ? "Ningún expediente coincide con la búsqueda." : `No hay expedientes${filtro ? " en este estado" : ""}.`}</p>
+            ) : (
+              <div className="tabla-scroll">
+                <table>
+                  <thead><tr><th scope="col">Carátula</th><th scope="col">Tipo de acto</th><th scope="col">Partes</th><th scope="col" className="num">Tareas pendientes</th><th scope="col">Estado</th><th scope="col">Actualizado</th></tr></thead>
+                  <tbody>
+                    {filtrada.map((e) => (
+                      <tr key={e.id}>
+                        <td><button type="button" className="enlace" onClick={() => cargarDetalle(e.id)}>{e.caratula}</button></td>
+                        <td>{e.tipoActo.replace(/_/g, " ")}</td>
+                        <td>{e.partes || "—"}</td>
+                        <td className="num">{e.tareasPendientes}</td>
+                        <td><span className={`etiqueta ${e.estado === "abierto" || e.estado === "en_firma" ? "ok" : ""}`}>{NOMBRE_ESTADO[e.estado]}</span></td>
+                        <td>{fechaCorta(e.actualizadoEn)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            );
+          })()}
         </>
       ) : (
         <div className="expediente-detalle">
@@ -241,10 +252,13 @@ export default function Expedientes({ inicialId = null, onConsumirInicial }) {
             )}
             {esPropio && (
               <form className="fila-alta" onSubmit={agregarParte}>
-                <select aria-label="Cliente" value={nuevaParte.clienteId} onChange={(e) => setNuevaParte({ ...nuevaParte, clienteId: e.target.value })}>
-                  <option value="">Agregar cliente…</option>
-                  {clientes.filter((c) => !detalle.partes.some((p) => p.clienteId === c.id)).map((c) => <option key={c.id} value={c.id}>{c.nombre}</option>)}
-                </select>
+                <div className="select-con-nuevo">
+                  <select aria-label="Cliente" value={nuevaParte.clienteId} onChange={(e) => setNuevaParte({ ...nuevaParte, clienteId: e.target.value })}>
+                    <option value="">Agregar cliente…</option>
+                    {clientes.filter((c) => !detalle.partes.some((p) => p.clienteId === c.id)).map((c) => <option key={c.id} value={c.id}>{c.nombre}</option>)}
+                  </select>
+                  <button type="button" className="boton chico" onClick={() => setNuevoCliente(true)} title="Crear nuevo cliente"><Icono nombre="mas" tamano={14} /></button>
+                </div>
                 <input type="text" aria-label="Rol" placeholder="Rol (vendedor, comprador…)" value={nuevaParte.rol} onChange={(e) => setNuevaParte({ ...nuevaParte, rol: e.target.value })} />
                 <button type="submit" className="boton chico" disabled={!nuevaParte.clienteId}>Agregar</button>
               </form>
@@ -426,6 +440,7 @@ export default function Expedientes({ inicialId = null, onConsumirInicial }) {
         onCerrar={() => setPresupuesto(null)}
         onGuardado={() => refrescar()}
       />
+      {nuevoCliente && <ModalNuevoCliente onCreado={(c) => { setClientes((prev) => [...prev, c]); setNuevoCliente(false); }} onCerrar={() => setNuevoCliente(false)} />}
     </div>
   );
 }

@@ -8,6 +8,7 @@ const ESTADOS = { en_custodia: "En custodia", devuelto: "Devuelto", entregado: "
 export default function Custodia() {
   const [registros, setRegistros] = useState([]);
   const [filtroEstado, setFiltroEstado] = useState("");
+  const [busqueda, setBusqueda] = useState("");
   const [cargando, setCargando] = useState(true);
   const [modal, setModal] = useState(null);
   const [detalle, setDetalle] = useState(null);
@@ -38,6 +39,10 @@ export default function Custodia() {
       </div>
 
       <div className="custodia-filtros">
+        <label className="campo buscador">
+          <span className="sr-only">Buscar</span>
+          <input type="search" placeholder="Buscar por código, cliente o descripción…" value={busqueda} onChange={(e) => setBusqueda(e.target.value)} />
+        </label>
         <select value={filtroEstado} onChange={(e) => setFiltroEstado(e.target.value)}>
           <option value="">Todos</option>
           <option value="en_custodia">En custodia</option>
@@ -48,13 +53,17 @@ export default function Custodia() {
 
       {error && <p className="alerta error">{error}</p>}
 
-      {cargando ? (
-        <p className="vacio">Cargando...</p>
-      ) : registros.length === 0 ? (
-        <p className="vacio">No hay registros de custodia. Use "Recibir documentación" para registrar la primera entrega.</p>
-      ) : (
-        <div className="custodia-lista">
-          {registros.map((r) => (
+      {(() => {
+        const registrosFiltrados = busqueda.trim()
+          ? registros.filter(r => { const b = busqueda.toLowerCase(); return r.codigo.toLowerCase().includes(b) || r.clienteNombre.toLowerCase().includes(b) || r.descripcion.toLowerCase().includes(b); })
+          : registros;
+        return cargando ? (
+          <p className="vacio">Cargando...</p>
+        ) : registrosFiltrados.length === 0 ? (
+          <p className="vacio">{busqueda ? "No hay registros que coincidan con la búsqueda." : "No hay registros de custodia. Use \"Recibir documentación\" para registrar la primera entrega."}</p>
+        ) : (
+          <div className="custodia-lista">
+            {registrosFiltrados.map((r) => (
             <div key={r.id} className={`custodia-card ${r.estado}`} onClick={() => setDetalle(r)}>
               <div className="custodia-card-header">
                 <span className={`custodia-estado ${r.estado}`}>{ESTADOS[r.estado]}</span>
@@ -72,7 +81,8 @@ export default function Custodia() {
             </div>
           ))}
         </div>
-      )}
+        );
+      })()}
 
       {modal === "recibir" && <ModalRecibir onCerrar={() => setModal(null)} onGuardado={() => { setModal(null); cargar(); }} />}
       {modal === "entregar" && <ModalEntregar onCerrar={() => setModal(null)} onGuardado={() => { setModal(null); cargar(); }} />}

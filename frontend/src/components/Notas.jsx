@@ -6,6 +6,7 @@ export default function Notas() {
   const [error, setError] = useState(null);
   const [contenido, setContenido] = useState("");
   const [compartida, setCompartida] = useState(false);
+  const [busqueda, setBusqueda] = useState("");
 
   const cargar = async () => {
     setError(null);
@@ -61,13 +62,23 @@ export default function Notas() {
         </div>
       </form>
 
-      {notas === null ? (
+      {notas && notas.length > 0 && (
+        <label className="campo buscador" style={{ marginTop: "var(--s3)" }}>
+          <span className="sr-only">Buscar</span>
+          <input type="search" placeholder="Buscar en notas…" value={busqueda} onChange={(e) => setBusqueda(e.target.value)} />
+        </label>
+      )}
+
+      {(() => {
+        const bq = busqueda.trim().toLowerCase();
+        const notasFiltradas = notas && bq ? notas.filter((n) => [n.contenido, n.autor].some((v) => v && v.toLowerCase().includes(bq))) : notas;
+        return notasFiltradas === null ? (
         <p className="vacio">Cargando…</p>
-      ) : notas.length === 0 ? (
-        <p className="vacio">Todavía no hay notas.</p>
+      ) : notasFiltradas.length === 0 ? (
+        <p className="vacio">{busqueda ? "Ninguna nota coincide con la búsqueda." : "Todavía no hay notas."}</p>
       ) : (
         <ul className="notas-lista">
-          {notas.map((n) => (
+          {notasFiltradas.map((n) => (
             <li key={n.id} className={`nota-item ${n.compartida ? "compartida" : ""}`}>
               <div className="nota-item-cabecera">
                 <span>{n.propia ? "Vos" : n.autor}{n.compartida && " · compartida"}</span>
@@ -82,7 +93,8 @@ export default function Notas() {
             </li>
           ))}
         </ul>
-      )}
+      );
+      })()}
     </div>
   );
 }

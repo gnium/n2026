@@ -263,7 +263,7 @@ button.estado-servidor:hover { border-color: currentColor; }
 .nota.centrado { text-align: center; margin-top: var(--s2); }
 .vacio { color: var(--ink-3); font-size: var(--t-sm); }
 .ayuda { color: var(--ink-3); font-size: var(--t-xs); line-height: 1.45; }
-.alerta { padding: var(--s3) var(--s4); border-radius: var(--radius-s); margin: 0; font-size: var(--t-sm); display: flex; gap: var(--s2); align-items: flex-start; border: 1px solid transparent; }
+.alerta { padding: var(--s3) var(--s4); border-radius: var(--radius-s); margin: 0; font-size: var(--t-sm); border: 1px solid transparent; line-height: 1.5; }
 .alerta.error { background: var(--error-soft); color: var(--error); border-color: color-mix(in srgb, var(--error) 25%, transparent); }
 .alerta.ok { background: var(--ok-soft); color: var(--ok); border-color: color-mix(in srgb, var(--ok) 25%, transparent); }
 .alerta:not(.error):not(.ok) { background: var(--accent-soft); color: var(--accent-soft-ink); }
@@ -453,6 +453,10 @@ table select { min-height: 32px; padding: 4px 8px; width: auto; }
 .picker-lista li button:hover { background: var(--surface-2); }
 .picker-nombre { font-weight: 500; }
 .picker-detalle { font-size: var(--t-xs); color: var(--muted); }
+.picker-nuevo { flex-shrink: 0; padding: var(--s1) var(--s2) !important; }
+.select-con-nuevo { display: flex; gap: var(--s2); align-items: flex-end; }
+.select-con-nuevo select { flex: 1; }
+.select-con-nuevo .boton { flex-shrink: 0; align-self: stretch; }
 
 /* ---------- métricas (consumo, suscripción) ---------- */
 .consumo { display: flex; flex-direction: column; gap: var(--s4); }

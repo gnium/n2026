@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { api } from "../api.js";
 import Icono from "./Iconos.jsx";
+import ModalNuevoCliente from "./ModalNuevoCliente.jsx";
 
 const hoyISO = () => new Date().toLocaleDateString("sv-SE");
 const ITEMS_INICIALES = [
@@ -41,6 +42,9 @@ export default function PresupuestoModal({ abierto, presupuesto = null, expedien
   const [form, setForm] = useState(null);
   const [guardado, setGuardado] = useState(null);
   const [error, setError] = useState(null);
+  const [clientesExtra, setClientesExtra] = useState([]);
+  const [nuevoCliente, setNuevoCliente] = useState(false);
+  const todosClientes = [...clientes, ...clientesExtra.filter(c => !clientes.some(x => x.id === c.id))];
 
   useEffect(() => {
     if (abierto) {
@@ -91,7 +95,7 @@ export default function PresupuestoModal({ abierto, presupuesto = null, expedien
 
   const cliente = clientes.find((c) => String(c.id) === String(form?.clienteId));
 
-  return (
+  return (<>
     <dialog ref={dialogo} className="modal" aria-labelledby="presupuesto-titulo" onClose={onCerrar} onClick={(e) => e.target === dialogo.current && onCerrar?.()}>
       {form && (
         <form className="cert-form modal-caja" onSubmit={guardar}>
@@ -114,12 +118,16 @@ export default function PresupuestoModal({ abierto, presupuesto = null, expedien
           ) : (
             <>
               <div className="cert-grid">
-                <label className="campo"><span className="campo-titulo">Cliente</span>
-                  <select value={form.clienteId} onChange={(e) => setForm({ ...form, clienteId: e.target.value })}>
-                    <option value="">Sin cliente</option>
-                    {clientes.map((c) => <option key={c.id} value={c.id}>{c.nombre}</option>)}
-                  </select>
-                </label>
+                <div className="campo">
+                  <span className="campo-titulo">Cliente</span>
+                  <div className="select-con-nuevo">
+                    <select value={form.clienteId} onChange={(e) => setForm({ ...form, clienteId: e.target.value })}>
+                      <option value="">Sin cliente</option>
+                      {todosClientes.map((c) => <option key={c.id} value={c.id}>{c.nombre}</option>)}
+                    </select>
+                    <button type="button" className="boton chico" onClick={() => setNuevoCliente(true)} title="Crear nuevo cliente"><Icono nombre="mas" tamano={14} /></button>
+                  </div>
+                </div>
                 <label className="campo"><span className="campo-titulo">Fecha</span><input type="date" required value={form.fecha} onChange={(e) => setForm({ ...form, fecha: e.target.value })} /></label>
                 <label className="campo"><span className="campo-titulo">Moneda</span>
                   <select value={form.moneda} onChange={(e) => setForm({ ...form, moneda: e.target.value })}><option value="ARS">Pesos (ARS)</option><option value="USD">Dólares (USD)</option></select>
@@ -154,5 +162,7 @@ export default function PresupuestoModal({ abierto, presupuesto = null, expedien
         </form>
       )}
     </dialog>
+    {nuevoCliente && <ModalNuevoCliente onCreado={(c) => { setClientesExtra(prev => [...prev, c]); setForm(f => ({ ...f, clienteId: c.id })); setNuevoCliente(false); }} onCerrar={() => setNuevoCliente(false)} />}
+    </>
   );
 }

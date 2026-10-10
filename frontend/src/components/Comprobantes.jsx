@@ -22,6 +22,7 @@ export default function Comprobantes() {
   const [google, setGoogle] = useState(null);
   const [modal, setModal] = useState(false);
   const [verFiscal, setVerFiscal] = useState(false);
+  const [busqueda, setBusqueda] = useState("");
   const [error, setError] = useState(null);
   const [aviso, setAviso] = useState(null);
 
@@ -81,10 +82,16 @@ export default function Comprobantes() {
       <p className={`alerta ok ${aviso ? "" : "sr-only"}`} role="status">{aviso}</p>
 
       <div className="acciones agenda-toolbar">
-        <div className="segmentado" role="group" aria-label="Período">
-          {[["30", "30 días"], ["90", "90 días"], ["365", "12 meses"], ["todo", "Todo"]].map(([v, t]) => (
-            <button type="button" key={v} className={preset === v ? "activo" : ""} aria-pressed={preset === v} onClick={() => setPreset(v)}>{t}</button>
-          ))}
+        <div className="acciones">
+          <div className="segmentado" role="group" aria-label="Período">
+            {[["30", "30 días"], ["90", "90 días"], ["365", "12 meses"], ["todo", "Todo"]].map(([v, t]) => (
+              <button type="button" key={v} className={preset === v ? "activo" : ""} aria-pressed={preset === v} onClick={() => setPreset(v)}>{t}</button>
+            ))}
+          </div>
+          <label className="campo buscador">
+            <span className="sr-only">Buscar</span>
+            <input type="search" placeholder="Buscar por receptor o número…" value={busqueda} onChange={(e) => setBusqueda(e.target.value)} />
+          </label>
         </div>
         <div className="acciones">
           <button type="button" className="boton" aria-expanded={verFiscal} aria-controls="config-fiscal" onClick={() => setVerFiscal((v) => !v)}>Datos fiscales{config && config.arcaEntorno !== "apagado" ? ` · ARCA ${config.arcaEntorno}` : ""}</button>
@@ -95,16 +102,19 @@ export default function Comprobantes() {
 
       {verFiscal && <ConfiguracionFiscal onCambio={setConfig} />}
 
-      {lista === null ? (
+      {(() => {
+        const bq = busqueda.trim().toLowerCase();
+        const listaFiltrada = lista && bq ? lista.filter((c) => [c.receptorNombre, c.numeroCompleto, c.tipoNombre, c.expedienteCaratula].some((v) => v && v.toLowerCase().includes(bq))) : lista;
+        return listaFiltrada === null ? (
         <p className="vacio">Cargando…</p>
-      ) : lista.length === 0 ? (
-        <p className="vacio">Sin comprobantes en el período.</p>
+      ) : listaFiltrada.length === 0 ? (
+        <p className="vacio">{busqueda ? "Ningún comprobante coincide con la búsqueda." : "Sin comprobantes en el período."}</p>
       ) : (
         <div className="tabla-scroll">
           <table>
             <thead><tr><th scope="col">Fecha</th><th scope="col">Comprobante</th><th scope="col">Receptor</th><th scope="col" className="num">Total</th><th scope="col">Estado</th><th scope="col" className="col-sec">CAE</th><th scope="col"><span className="sr-only">Acciones</span></th></tr></thead>
             <tbody>
-              {lista.map((c) => (
+              {listaFiltrada.map((c) => (
                 <tr key={c.id}>
                   <td>{fechaCorta(c.fecha)}</td>
                   <td className="mono">{c.numeroCompleto}<span className="recaudo-meta">{c.tipoNombre}</span></td>
@@ -126,7 +136,8 @@ export default function Comprobantes() {
             </tbody>
           </table>
         </div>
-      )}
+      );
+      })()}
 
       <ConfirmarDialogo abierto={Boolean(aAnular)} titulo={aAnular ? `Anular ${aAnular.tipoNombre} ${aAnular.numeroCompleto}` : ""} texto={aAnular?.cae ? "La factura queda marcada como anulada y se quita el cargo de la cuenta corriente. La anulación fiscal ante ARCA requiere una nota de crédito (fuera de esta app)." : "El comprobante queda marcado como anulado y se quita el cargo de la cuenta corriente. No se borra."} confirmar="Anular" destructivo conMotivo etiquetaMotivo="Motivo de anulación" onConfirmar={confirmarAnulacion} onCancelar={() => setAAnular(null)} />
       <ComprobanteModal abierto={modal} clientes={clientes} expedientes={expedientes} config={config} onCerrar={() => setModal(false)} onEmitido={() => cargar()} />

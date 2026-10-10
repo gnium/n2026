@@ -12,13 +12,18 @@ const MODOS = [
 ];
 
 const EJEMPLOS_INSTRUCCIONES = {
-  escritura: "Ej.: Compraventa. Vende el titular a la Sra. que figura en el boleto, precio USD 120.000 de contado. Usar mi modelo de compraventa con cláusula de posesión en el acto.",
-  estudio_titulos: "Ej.: Revisar especialmente la donación antecedente y el embargo informado. Jurisdicción: Provincia de Buenos Aires.",
-  completo: "Ej.: Escritura de donación de padres a hija con reserva de usufructo. Verificar asentimiento conyugal.",
-  certificacion_firmas: "Ej.: El poder fue otorgado en 2021 ante el escribano X, registro Y; verificar que no esté revocado. Certificación para presentar ante el banco.",
+  escritura: "Tipo de acto y condiciones: compraventa de contado, donación con usufructo, etc. Modelo o estilo preferido, cláusulas especiales.",
+  estudio_titulos: "Qué revisar en particular: donaciones antecedentes, embargos, inhibiciones, jurisdicción aplicable.",
+  completo: "Tipo de acto y sus condiciones. Puntos a revisar en el estudio de títulos. Modelo o estilo de la escritura.",
+  certificacion_firmas: "Contexto del documento a certificar: ante quién se otorgó, finalidad de la certificación, si hay que verificar vigencia o revocación.",
 };
 
-const EJEMPLO_ANTECEDENTES = `Ej.: Vende Juan Pérez (DNI 20.111.222, casado) a María Gómez (DNI 30.333.444) el inmueble sito en Av. Siempreviva 742, La Plata. Matrícula 55-1234/9. Precio USD 90.000 de contado. Título: compra que Pérez hizo a Carlos Ruiz en 2010, escritura 45, Registro 12. Sin gravámenes conocidos.`;
+const EJEMPLOS_ANTECEDENTES = {
+  escritura: "Partes (nombre, DNI, estado civil), inmueble (ubicación, matrícula), precio y forma de pago, título antecedente (escritura, registro, año), gravámenes o restricciones.",
+  estudio_titulos: "Datos del inmueble (ubicación, matrícula, partido), titulares actuales, cadena de títulos conocida, observaciones del informe de dominio.",
+  completo: "Partes (nombre, DNI, estado civil), inmueble (ubicación, matrícula), precio y forma de pago, título antecedente, gravámenes o restricciones.",
+  certificacion_firmas: "Firmantes (nombre, DNI), documento sobre el que se certifican las firmas, cantidad de ejemplares.",
+};
 
 export default function Configurador({ archivo, modoInicial = "escritura", onProcesar, onCancelar, deshabilitado }) {
   const [modo, setModo] = useState(modoInicial);
@@ -98,7 +103,7 @@ export default function Configurador({ archivo, modoInicial = "escritura", onPro
         <span className="campo-titulo">
           Antecedentes escritos <small>{archivo ? "(opcional: se suman al documento)" : "(requerido si no adjuntó un documento)"}</small>
         </span>
-        <textarea rows={5} value={antecedentes} onChange={(e) => setAntecedentes(e.target.value)} placeholder={EJEMPLO_ANTECEDENTES} maxLength={20000} />
+        <textarea rows={5} value={antecedentes} onChange={(e) => setAntecedentes(e.target.value)} placeholder={EJEMPLOS_ANTECEDENTES[modo]} maxLength={20000} />
         <small className="ayuda">
           {archivo
             ? "Puede agregar datos que falten en el documento (por ejemplo, algo que se acordó verbalmente)."

@@ -12,6 +12,7 @@ export default function Protocolo() {
   const [entradas, setEntradas] = useState(null);
   const [error, setError] = useState(null);
   const [aviso, setAviso] = useState(null);
+  const [busqueda, setBusqueda] = useState("");
   const [nuevo, setNuevo] = useState(null); // borrador del formulario manual | null
 
   const cargar = async (a) => {
@@ -98,7 +99,11 @@ export default function Protocolo() {
       )}
       {aviso && <p className="alerta ok" role="status">{aviso}</p>}
 
-      <div className="acciones">
+      <div className="acciones agenda-toolbar">
+        <label className="campo buscador">
+          <span className="sr-only">Buscar</span>
+          <input type="search" placeholder="Buscar por compareciente, acto u observación…" value={busqueda} onChange={(e) => setBusqueda(e.target.value)} />
+        </label>
         <label className="campo">
           <span className="campo-titulo">Año</span>
           <select value={anio} onChange={(e) => setAnio(Number(e.target.value))}>
@@ -111,7 +116,15 @@ export default function Protocolo() {
         <button type="button" className="boton primario" onClick={abrirNuevo}><Icono nombre="mas" tamano={16} /> Agregar entrada</button>
       </div>
 
-      {entradas === null ? (
+      {(() => {
+        const entradasFiltradas = entradas && busqueda.trim()
+          ? entradas.filter((f) => {
+              const b = busqueda.toLowerCase();
+              const comps = f.comparecientesLegible ? f.comparecientes.map((c) => c.nombre).join(" ") : "";
+              return comps.toLowerCase().includes(b) || (f.tipoActo || "").toLowerCase().includes(b) || (f.observaciones || "").toLowerCase().includes(b) || (f.naturaleza || "").toLowerCase().includes(b) || String(f.numeroOrden).includes(b);
+            })
+          : entradas;
+        return entradas === null ? (
         <p className="vacio">Cargando…</p>
       ) : (
         <div className="tabla-scroll">
@@ -122,12 +135,12 @@ export default function Protocolo() {
               </tr>
             </thead>
             <tbody>
-              {entradas.length === 0 && (
+              {entradasFiltradas.length === 0 && (
                 <tr>
-                  <td colSpan={8} className="vacio">Sin entradas para este año.</td>
+                  <td colSpan={8} className="vacio">{busqueda ? "Ninguna entrada coincide con la búsqueda." : "Sin entradas para este año."}</td>
                 </tr>
               )}
-              {entradas.map((f) => (
+              {entradasFiltradas.map((f) => (
                 <tr key={f.id}>
                   <td>{f.numeroOrden}</td>
                   <td>{String(f.fechaOtorgamiento).slice(0, 10).split("-").reverse().join("/")}</td>
@@ -148,7 +161,8 @@ export default function Protocolo() {
             </tbody>
           </table>
         </div>
-      )}
+      );
+      })()}
 
       {nuevo && (
         <form className="cert-form form-inline" onSubmit={guardarNuevo}>

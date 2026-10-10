@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { api } from "../api.js";
 import Icono from "./Iconos.jsx";
 import { formatoMonto, parseMonto } from "./PresupuestoModal.jsx";
+import ModalNuevoCliente from "./ModalNuevoCliente.jsx";
 
 const hoyISO = () => new Date().toLocaleDateString("sv-SE");
 export const TIPOS_COMPROBANTE = [["recibo", "Recibo"], ["nota_honorarios", "Nota de honorarios"], ["factura_c", "Factura C"], ["factura_b", "Factura B"], ["factura_a", "Factura A"]];
@@ -21,6 +22,9 @@ export default function ComprobanteModal({ abierto, presupuesto = null, clientes
   const [emitido, setEmitido] = useState(null);
   const [error, setError] = useState(null);
   const [ocupado, setOcupado] = useState(false);
+  const [clientesExtra, setClientesExtra] = useState([]);
+  const [nuevoCliente, setNuevoCliente] = useState(false);
+  const todosClientes = [...clientes, ...clientesExtra.filter(c => !clientes.some(x => x.id === c.id))];
   const arcaActivo = config && config.arcaEntorno !== "apagado";
   const emisorRI = config?.condicionIva === "responsable_inscripto";
   const tiposDisponibles = TIPOS_COMPROBANTE.filter(([v]) => !ES_FACTURA(v) || (arcaActivo && (emisorRI ? v !== "factura_c" : v === "factura_c")));
@@ -84,7 +88,7 @@ export default function ComprobanteModal({ abierto, presupuesto = null, clientes
     }
   };
 
-  return (
+  return (<>
     <dialog ref={dialogo} className="modal" aria-labelledby="comprobante-titulo" onClose={onCerrar} onClick={(e) => e.target === dialogo.current && onCerrar?.()}>
       {form && (
         <form className="cert-form modal-caja" onSubmit={emitir}>
@@ -109,12 +113,16 @@ export default function ComprobanteModal({ abierto, presupuesto = null, clientes
                     {tiposDisponibles.map(([v, t]) => <option key={v} value={v}>{t}</option>)}
                   </select>
                 </label>
-                <label className="campo"><span className="campo-titulo">Cliente {ES_FACTURA(form.tipo) && <small>(obligatorio)</small>}</span>
-                  <select value={form.clienteId} onChange={set("clienteId")} required={ES_FACTURA(form.tipo)}>
-                    <option value="">{ES_FACTURA(form.tipo) ? "Elegir…" : "Consumidor final / sin cliente"}</option>
-                    {clientes.map((c) => <option key={c.id} value={c.id}>{c.nombre}</option>)}
-                  </select>
-                </label>
+                <div className="campo">
+                  <span className="campo-titulo">Cliente {ES_FACTURA(form.tipo) && <small>(obligatorio)</small>}</span>
+                  <div className="select-con-nuevo">
+                    <select value={form.clienteId} onChange={set("clienteId")} required={ES_FACTURA(form.tipo)}>
+                      <option value="">{ES_FACTURA(form.tipo) ? "Elegir…" : "Consumidor final / sin cliente"}</option>
+                      {todosClientes.map((c) => <option key={c.id} value={c.id}>{c.nombre}</option>)}
+                    </select>
+                    <button type="button" className="boton chico" onClick={() => setNuevoCliente(true)} title="Crear nuevo cliente"><Icono nombre="mas" tamano={14} /></button>
+                  </div>
+                </div>
                 <label className="campo"><span className="campo-titulo">Expediente <small>(opcional)</small></span>
                   <select value={form.expedienteId} onChange={set("expedienteId")}>
                     <option value="">Sin expediente</option>
@@ -168,5 +176,7 @@ export default function ComprobanteModal({ abierto, presupuesto = null, clientes
         </form>
       )}
     </dialog>
+    {nuevoCliente && <ModalNuevoCliente onCreado={(c) => { setClientesExtra(prev => [...prev, c]); setForm(f => ({ ...f, clienteId: c.id })); setNuevoCliente(false); }} onCerrar={() => setNuevoCliente(false)} />}
+    </>
   );
 }
