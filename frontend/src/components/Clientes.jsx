@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { api } from "../api.js";
+import { encId, decId } from "../hashid.js";
 import Icono from "./Iconos.jsx";
 import { fechaCorta } from "./Expedientes.jsx";
 import { formatoMonto } from "./PresupuestoModal.jsx";
@@ -68,7 +69,8 @@ export default function Clientes({ onAbrirExpediente }) {
   };
 
   useEffect(() => {
-    if (paramId) abrirDetalle(Number(paramId));
+    const id = decId(paramId);
+    if (id) abrirDetalle(id);
     else setDetalle(null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [paramId]);
@@ -141,7 +143,7 @@ export default function Clientes({ onAbrirExpediente }) {
             <tbody>
               {listaFiltrada.map((c) => (
                 <tr key={c.id}>
-                  <td><button type="button" className="enlace" onClick={() => navigate(`/clients/${c.id}`)}>{c.nombre}</button></td>
+                  <td><button type="button" className="enlace" onClick={() => navigate(`/clients/${encId(c.id)}`)}>{c.nombre}</button></td>
                   <td>{c.tipo}</td>
                   <td>{idDoc(c)}</td>
                   <td>{c.telefono || "—"}</td>

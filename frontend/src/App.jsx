@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from "react-router-dom";
+import { encId } from "./hashid.js";
 import DropZone from "./components/DropZone.jsx";
 import Pipeline from "./components/Pipeline.jsx";
 import ChatLog from "./components/ChatLog.jsx";
@@ -202,7 +203,7 @@ function AppInner() {
   // Backward-compatible helper: components like Novedades still pass claves.
   const irA = useCallback((clave) => navigate(RUTA[clave] || "/"), [navigate]);
   const abrirExpediente = useCallback((id) => {
-    navigate(`/cases/${id}`);
+    navigate(`/cases/${encId(id)}`);
   }, [navigate]);
 
   const salir = async () => {

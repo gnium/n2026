@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { api } from "../api.js";
+import { encId, decId } from "../hashid.js";
 import Icono from "./Iconos.jsx";
 import PresupuestoModal, { enlaceWhatsApp, formatoMonto } from "./PresupuestoModal.jsx";
 import ComprobanteModal from "./ComprobanteModal.jsx";
@@ -77,7 +78,8 @@ export default function Expedientes() {
   }, []);
 
   useEffect(() => {
-    if (paramId) cargarDetalle(Number(paramId));
+    const id = decId(paramId);
+    if (id) cargarDetalle(id);
     else setDetalle(null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [paramId]);
@@ -106,7 +108,7 @@ export default function Expedientes() {
       await cargarLista();
       setDetalle(r);
       setAviso(formulario.id ? "Expediente actualizado." : "Expediente creado.");
-      if (!formulario.id) navigate(`/cases/${r.id}`);
+      if (!formulario.id) navigate(`/cases/${encId(r.id)}`);
     } catch (e) {
       setError(e.message);
     }
@@ -223,7 +225,7 @@ export default function Expedientes() {
                     <div key={est} className="board-columna" onDragOver={(ev) => ev.preventDefault()} onDrop={(ev) => onDrop(ev, est)}>
                       <div className="board-columna-titulo"><span>{titulo}</span><span className="board-count">{porEstado[est].length}</span></div>
                       {porEstado[est].map((e) => (
-                        <div key={e.id} className="board-tarjeta" draggable onDragStart={(ev) => onDragStart(ev, e.id)} onClick={() => navigate(`/cases/${e.id}`)}>
+                        <div key={e.id} className="board-tarjeta" draggable onDragStart={(ev) => onDragStart(ev, e.id)} onClick={() => navigate(`/cases/${encId(e.id)}`)}>
                           <strong>{e.caratula}</strong>
                           <span className="board-tipo">{e.tipoActo.replace(/_/g, " ")}</span>
                           {e.partes && <span className="board-partes">{e.partes}</span>}
@@ -246,7 +248,7 @@ export default function Expedientes() {
                   <tbody>
                     {filtrada.map((e) => (
                       <tr key={e.id}>
-                        <td><button type="button" className="enlace" onClick={() => navigate(`/cases/${e.id}`)}>{e.caratula}</button></td>
+                        <td><button type="button" className="enlace" onClick={() => navigate(`/cases/${encId(e.id)}`)}>{e.caratula}</button></td>
                         <td>{e.tipoActo.replace(/_/g, " ")}</td>
                         <td>{e.partes || "—"}</td>
                         <td className="num">{e.tareasPendientes}</td>
