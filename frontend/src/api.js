@@ -268,6 +268,26 @@ export const api = {
   soporteConsultaCerrar: (id) => json("PATCH", `/admin/tickets/${id}/close`),
   soporteConsultaReabrir: (id) => json("PATCH", `/admin/tickets/${id}/reopen`),
 
+  // --- DDJJ (declaraciones juradas) ---
+  ddijListar: (estado) => fetch(`${BASE}/ddjj${estado ? `?estado=${estado}` : ""}`).then(manejar),
+  ddijObtener: (id) => fetch(`${BASE}/ddjj/${id}`).then(manejar),
+  ddijPendientes: () => fetch(`${BASE}/ddjj/pending`).then(manejar),
+  ddijCrear: (datos) => json("POST", "/ddjj", datos),
+  ddijActualizar: (id, datos) => json("PUT", `/ddjj/${id}`, datos),
+  ddijEstado: (id, estado) => json("PATCH", `/ddjj/${id}/status`, { estado }),
+  ddijBorrar: (id) => fetch(`${BASE}/ddjj/${id}`, { method: "DELETE" }).then(manejar),
+  ddijUrlPdf: (id) => `${BASE}/ddjj/${id}/pdf`,
+
+  // --- vencimientos ---
+  vencimientosListar: (filtros = {}) => fetch(`${BASE}/deadlines?${new URLSearchParams(Object.fromEntries(Object.entries(filtros).filter(([, v]) => v)))}`).then(manejar),
+  vencimientosRango: (desde, hasta) => fetch(`${BASE}/deadlines/range?desde=${encodeURIComponent(desde)}&hasta=${encodeURIComponent(hasta)}`).then(manejar),
+  vencimientoCrear: (datos) => json("POST", "/deadlines", datos),
+  vencimientoEstado: (id, estado) => json("PATCH", `/deadlines/${id}/status`, { estado }),
+  vencimientoBorrar: (id) => fetch(`${BASE}/deadlines/${id}`, { method: "DELETE" }).then(manejar),
+
+  // --- feriados ---
+  feriadosListar: (anio, jurisdiccion) => fetch(`${BASE}/holidays?anio=${anio || ""}&jurisdiccion=${jurisdiccion || ""}`).then(manejar),
+
   // --- novedades (vencimientos y pendientes) ---
   novedades: () => fetch(`${BASE}/alerts`).then(manejar),
 

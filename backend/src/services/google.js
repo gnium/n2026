@@ -326,6 +326,37 @@ export async function borrarEventoDeTurno(usuarioId, googleEventoId) {
   await api(usuarioId, `${API_CALENDAR}/calendars/${cal}/events/${encodeURIComponent(googleEventoId)}`, { method: "DELETE" }).catch(() => {});
 }
 
+export async function sincronizarVencimiento(usuarioId, vencimiento) {
+  const [[c]] = await pool.query("SELECT sincronizar_agenda, calendario_id FROM google_cuentas WHERE usuario_id = ?", [usuarioId]);
+  if (!c?.sincronizar_agenda) return null;
+  const cal = encodeURIComponent(c.calendario_id || "primary");
+  const cuerpo = JSON.stringify({
+    summary: `[Vto] ${vencimiento.descripcion}`,
+    description: `Vencimiento generado por Doy Fe.\nTipo: ${vencimiento.tipo}`,
+    start: { date: String(vencimiento.fechaVencimiento).slice(0, 10) },
+    end: { date: String(vencimiento.fechaVencimiento).slice(0, 10) },
+    colorId: "11",
+    status: "confirmed",
+  });
+  const cabeceras = { "content-type": "application/json" };
+  if (vencimiento.googleEventoId) {
+    const r = await api(usuarioId, `${API_CALENDAR}/calendars/${cal}/events/${encodeURIComponent(vencimiento.googleEventoId)}`, { method: "PATCH", headers: cabeceras, body: cuerpo });
+    await pool.query("UPDATE vencimientos SET google_sincronizado_en = NOW() WHERE id = ?", [vencimiento.id]);
+    return r?.id || vencimiento.googleEventoId;
+  }
+  const r = await api(usuarioId, `${API_CALENDAR}/calendars/${cal}/events`, { method: "POST", headers: cabeceras, body: cuerpo });
+  if (r?.id) await pool.query("UPDATE vencimientos SET google_evento_id = ?, google_sincronizado_en = NOW() WHERE id = ?", [r.id, vencimiento.id]);
+  return r?.id || null;
+}
+
+export async function borrarEventoDeVencimiento(usuarioId, googleEventoId) {
+  if (!googleEventoId) return;
+  const [[c]] = await pool.query("SELECT sincronizar_agenda, calendario_id FROM google_cuentas WHERE usuario_id = ?", [usuarioId]);
+  if (!c) return;
+  const cal = encodeURIComponent(c.calendario_id || "primary");
+  await api(usuarioId, `${API_CALENDAR}/calendars/${cal}/events/${encodeURIComponent(googleEventoId)}`, { method: "DELETE" }).catch(() => {});
+}
+
 /** Trae los eventos del rango que la app no conoce, para mostrarlos en la agenda. */
 export async function eventosDeGoogle(usuarioId, desde, hasta) {
   const [[c]] = await pool.query("SELECT sincronizar_agenda, calendario_id FROM google_cuentas WHERE usuario_id = ?", [usuarioId]);

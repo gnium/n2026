@@ -571,12 +571,30 @@ input.invalido { border-color: var(--error); }
 .presupuesto-desglose { display: flex; gap: var(--s4); font-size: var(--t-sm); color: var(--ink-2); font-variant-numeric: tabular-nums; }
 .etiqueta-quien-paga { font-size: var(--t-xs); padding: 1px 6px; border-radius: var(--radius-s); background: var(--accent-soft); color: var(--accent-soft-ink, var(--accent)); white-space: nowrap; }
 
+/* ---------- DDJJ ---------- */
+.ddjj { display: flex; flex-direction: column; gap: var(--s4); }
+.etiqueta-estado-borrador, .etiqueta-estado-generada, .etiqueta-estado-presentada { display: inline-block; padding: 2px 8px; border-radius: var(--radius-s); font-size: var(--t-xs); font-weight: 500; }
+.etiqueta-estado-borrador { background: var(--warn-soft); color: var(--warn); }
+.etiqueta-estado-generada { background: var(--accent-soft); color: var(--accent-soft-ink, var(--accent)); }
+.etiqueta-estado-presentada { background: var(--ok-soft); color: var(--ok); }
+.ddjj-partes { display: flex; flex-direction: column; gap: var(--s2); }
+.ddjj-parte { display: grid; grid-template-columns: 1fr 120px 120px 100px auto; gap: var(--s2); align-items: center; }
+@media (max-width: 640px) { .ddjj-parte { grid-template-columns: 1fr; } }
+
 /* ---------- caja, comprobantes y UIF ---------- */
 .caja, .comprobantes, .uif, .equipo { display: flex; flex-direction: column; gap: var(--s4); }
 details > summary { cursor: pointer; font-size: var(--t-sm); color: var(--ink-2); padding: var(--s2) 0; }
 .novedades { display: flex; flex-direction: column; gap: var(--s2); background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-m); padding: var(--s4); }
 .novedades h3 { font-size: var(--t-base); display: flex; align-items: baseline; gap: var(--s2); }
 .novedades > .enlace { align-self: flex-start; }
+.agenda-chip.vencimiento { border-left-color: var(--warn); background: var(--warn-soft); color: var(--warn); }
+.agenda-chip.vencimiento.estado-por_vencer { border-left-color: var(--warn); background: var(--warn-soft); color: var(--warn); }
+.agenda-chip.vencimiento.estado-vencido { border-left-color: var(--error); background: var(--error-soft); color: var(--error); }
+.agenda-chip.vencimiento.estado-completado { border-left-color: var(--ok); background: var(--ok-soft); color: var(--ok); text-decoration: line-through; }
+.agenda-chip.vencimiento.estado-vigente { border-left-color: var(--accent); background: var(--accent-soft); color: var(--accent-soft-ink, var(--accent)); }
+.agenda-venc-badge { display: block; font-size: 10px; color: var(--warn); font-weight: 600; }
+.dias-hab { font-size: 0.85em; opacity: 0.8; }
+.dias-hab.vencido { color: var(--error); font-weight: 600; opacity: 1; }
 .agenda-chip.ajeno, .agenda-turno.ajeno { border-style: dashed; opacity: 0.85; }
 .agenda-turno-autor { opacity: 0.75; }
 .tarea-responsable { max-width: 160px; font-size: var(--t-sm); padding: var(--s1) var(--s2); }

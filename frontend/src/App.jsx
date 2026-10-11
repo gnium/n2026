@@ -22,6 +22,7 @@ import Caja from "./components/Caja.jsx";
 import Comprobantes from "./components/Comprobantes.jsx";
 import Uif from "./components/Uif.jsx";
 import Custodia from "./components/Custodia.jsx";
+import Ddjj from "./components/Ddjj.jsx";
 import Verificacion from "./components/Verificacion.jsx";
 import ParametrosUif from "./components/ParametrosUif.jsx";
 import Equipo from "./components/Equipo.jsx";
@@ -55,6 +56,7 @@ const NAV = [
       { clave: "custodia", texto: "Custodia", icono: "escudo", ruta: "/custody", modulo: "clientes" },
       { clave: "caja", texto: "Caja", icono: "caja", rolMinimo: "escribano", ruta: "/cash", modulo: "caja" },
       { clave: "comprobantes", texto: "Comprobantes", icono: "factura", rolMinimo: "escribano", ruta: "/invoices", modulo: "comprobantes" },
+      { clave: "ddjj", texto: "DDJJ", icono: "recibo", rolMinimo: "escribano", ruta: "/ddjj" },
       { clave: "uif", texto: "UIF", icono: "escudo", rolMinimo: "escribano", ruta: "/uif", modulo: "uif" },
       { clave: "agenda", texto: "Agenda", icono: "calendario", ruta: "/calendar", modulo: "agenda" },
       { clave: "notas", texto: "Notas", icono: "nota", ruta: "/notes", modulo: "notas" },
@@ -88,6 +90,7 @@ const RUTA = Object.fromEntries(NAV.flatMap((g) => g.items).map((i) => [i.clave,
 const RANGO_ROL = { empleado: 1, escribano: 2, titular: 3 };
 const puedeVer = (usuario, rolMinimo) => !rolMinimo || (RANGO_ROL[usuario?.rol] || RANGO_ROL.escribano) >= RANGO_ROL[rolMinimo];
 const tieneModulo = (usuario, modulo) => !modulo || !usuario.modulos || usuario.modulos.includes(modulo);
+const JURISDICCION_CON_DDJJ = new Set(["salta"]);
 
 /** One-column layout wrapper for simple screens. */
 function SimpleWrap({ title, children }) {
@@ -148,12 +151,13 @@ function AppInner() {
   const [alta] = useState(() => new URLSearchParams(window.location.search).get("alta"));
   const [avisoGoogle] = useState(() => new URLSearchParams(window.location.search).get("google"));
   const [consultasSinLeer, setConsultasSinLeer] = useState(0);
+  const [ddijPendientes, setDdijPendientes] = useState(0);
   const cerrarSSE = useRef(null);
   const sesionIdRef = useRef(null);
 
   useEffect(() => {
     api.salud().then(setSalud).catch(() => setSalud({ ok: false }));
-    api.yo().then((r) => { setUsuario(r.usuario); window.__doyfe_jurisdiccion = r.usuario?.jurisdiccion || null; window.__doyfe_condicion_fiscal = r.usuario?.condicionFiscal || null; api.consultasSinLeer().then((c) => setConsultasSinLeer(c.sinLeer)).catch(() => {}); }).catch(() => setUsuario(null));
+    api.yo().then((r) => { setUsuario(r.usuario); window.__doyfe_jurisdiccion = r.usuario?.jurisdiccion || null; window.__doyfe_condicion_fiscal = r.usuario?.condicionFiscal || null; api.consultasSinLeer().then((c) => setConsultasSinLeer(c.sinLeer)).catch(() => {}); if (JURISDICCION_CON_DDJJ.has(r.usuario?.jurisdiccion)) api.ddijPendientes().then((c) => setDdijPendientes(c.total)).catch(() => {}); }).catch(() => setUsuario(null));
     return () => {
       cerrarSSE.current?.();
       clearInterval(sondeo.current);
@@ -423,7 +427,7 @@ function AppInner() {
         </a>
         <nav aria-label="Secciones">
           {NAV.filter((g) => (!g.soloAdmin || usuario.esAdmin) && (!g.soloEscribanias || !usuario.esAdmin))
-            .map((g) => ({ ...g, items: g.items.filter((i) => puedeVer(usuario, i.rolMinimo) && tieneModulo(usuario, i.modulo)) }))
+            .map((g) => ({ ...g, items: g.items.filter((i) => puedeVer(usuario, i.rolMinimo) && tieneModulo(usuario, i.modulo) && (i.clave !== "ddjj" || JURISDICCION_CON_DDJJ.has(usuario.jurisdiccion))) }))
             .filter((g) => g.items.length)
             .map((g) => (
             <div className="nav-grupo" key={g.titulo}>
@@ -431,7 +435,7 @@ function AppInner() {
               {g.items.map((i) => (
                 <button key={i.clave} type="button" className={`nav-item ${esNavActivo(i.ruta, pathname) ? "activo" : ""}`} aria-current={esNavActivo(i.ruta, pathname) ? "page" : undefined} aria-label={i.texto} onClick={() => { navigate(i.ruta); if (i.clave === "consultas") setConsultasSinLeer(0); }} title={i.texto}>
                   <Icono nombre={i.icono} tamano={18} />
-                  <span>{i.texto}{i.clave === "consultas" && consultasSinLeer > 0 && <span className="nav-badge">{consultasSinLeer}</span>}</span>
+                  <span>{i.texto}{i.clave === "consultas" && consultasSinLeer > 0 && <span className="nav-badge">{consultasSinLeer}</span>}{i.clave === "ddjj" && ddijPendientes > 0 && <span className="nav-badge">{ddijPendientes}</span>}</span>
                 </button>
               ))}
             </div>
@@ -554,6 +558,7 @@ function AppInner() {
                 <Route path="/cash" element={<SimpleWrap title="Caja"><Caja /></SimpleWrap>} />
                 <Route path="/invoices" element={<SimpleWrap title="Comprobantes"><Comprobantes /></SimpleWrap>} />
                 <Route path="/uif" element={<SimpleWrap title="UIF"><Uif onAbrirExpediente={abrirExpediente} esAdmin={usuario.esAdmin} /></SimpleWrap>} />
+                <Route path="/ddjj" element={<SimpleWrap title="DDJJ"><Ddjj onActualizar={() => api.ddijPendientes().then((c) => setDdijPendientes(c.total)).catch(() => {})} /></SimpleWrap>} />
                 <Route path="/calendar" element={<SimpleWrap title="Agenda"><Agenda /></SimpleWrap>} />
                 <Route path="/notes" element={<SimpleWrap title="Notas"><Notas /></SimpleWrap>} />
                 <Route path="/templates" element={<SimpleWrap title="Biblioteca de modelos"><BibliotecaModelos /></SimpleWrap>} />

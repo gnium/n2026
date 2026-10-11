@@ -55,6 +55,7 @@ export default function Agenda() {
   const [vista, setVista] = useState("mes");
   const [fechaRef, setFechaRef] = useState(hoy());
   const [turnos, setTurnos] = useState(null);
+  const [vencimientos, setVencimientos] = useState([]);
   const [error, setError] = useState(null);
   const [aviso, setAviso] = useState(null);
   const [diaSeleccionado, setDiaSeleccionado] = useState(null);
@@ -88,7 +89,12 @@ export default function Agenda() {
     setError(null);
     setAviso(null);
     try {
-      setTurnos(await api.turnosListar(toISODate(desde), toISODate(hasta), verEquipo));
+      const [t, v] = await Promise.all([
+        api.turnosListar(toISODate(desde), toISODate(hasta), verEquipo),
+        api.vencimientosRango(toISODate(desde), toISODate(hasta)),
+      ]);
+      setTurnos(t);
+      setVencimientos(v);
     } catch (e) {
       setError(e.message);
     }
@@ -100,6 +106,7 @@ export default function Agenda() {
   }, [vista, fechaRef, verEquipo]);
 
   const turnosDelDia = (d) => (turnos || []).filter((t) => toISODate(new Date(t.fechaHora)) === toISODate(d)).sort((a, b) => new Date(a.fechaHora) - new Date(b.fechaHora));
+  const vencimientosDelDia = (d) => vencimientos.filter((v) => String(v.fechaVencimiento).slice(0, 10) === toISODate(d));
 
   const abrirNuevo = (fecha) => {
     setError(null);
@@ -246,6 +253,9 @@ export default function Agenda() {
                     <span key={t.id} className={`agenda-chip estado-${t.estado} ${t.esPropio === false ? "ajeno" : ""}`} title={t.esPropio === false ? `${t.titulo} · ${t.autor}` : t.titulo}>{hora(new Date(t.fechaHora))} {t.titulo}{t.esPropio === false && <span className="sr-only"> · agendado por {t.autor}</span>}</span>
                   ))}
                   {tDia.length > 3 && <span className="agenda-chip-mas">+{tDia.length - 3} más</span>}
+                  {vencimientosDelDia(d).slice(0, 2).map((v) => (
+                    <span key={`v-${v.id}`} className={`agenda-chip vencimiento estado-${v.estado}`} title={v.descripcion}>{v.descripcion}{v.diasHabilesRestantes != null && v.diasHabilesRestantes > 0 && <span className="dias-hab"> · {v.diasHabilesRestantes} d.h.</span>}</span>
+                  ))}
                 </span>
               </button>
             );
@@ -258,6 +268,7 @@ export default function Agenda() {
             {diasGrilla.map((d) => (
               <div className={`agenda-semana-encabezado ${toISODate(d) === toISODate(hoy()) ? "es-hoy" : ""}`} key={toISODate(d)}>
                 {DIAS[(d.getDay() + 6) % 7]} {d.getDate()}
+                {vencimientosDelDia(d).length > 0 && <span className="agenda-venc-badge">{vencimientosDelDia(d).length} vto</span>}
               </div>
             ))}
             {franjas.map((f, i) => (
@@ -305,21 +316,40 @@ export default function Agenda() {
             <h3>{capitalizar(diaSeleccionado.toLocaleDateString("es-AR", { weekday: "long", day: "numeric", month: "long" }))}</h3>
             <button type="button" className="enlace" onClick={() => abrirNuevo(diaSeleccionado)}>+ nuevo turno</button>
           </div>
-          {turnosDelDia(diaSeleccionado).length === 0 ? (
-            <p className="vacio">Sin turnos para este día.</p>
+          {turnosDelDia(diaSeleccionado).length === 0 && vencimientosDelDia(diaSeleccionado).length === 0 ? (
+            <p className="vacio">Sin turnos ni vencimientos para este día.</p>
           ) : (
-            <ul className="agenda-dia-lista">
-              {turnosDelDia(diaSeleccionado).map((t) => (
-                <li key={t.id} className={`estado-${t.estado}`}>
-                  <button type="button" className="enlace" onClick={() => abrirEdicion(t)}>{hora(new Date(t.fechaHora))} · {t.titulo}{t.esPropio === false && ` · ${t.autor}`}</button>
-                  <select value={t.estado} disabled={t.esPropio === false} onChange={(e) => cambiarEstado(t.id, e.target.value)}>
-                    {ESTADOS.map((es) => (
-                      <option key={es} value={es}>{es}</option>
+            <>
+              {turnosDelDia(diaSeleccionado).length > 0 && (
+                <ul className="agenda-dia-lista">
+                  {turnosDelDia(diaSeleccionado).map((t) => (
+                    <li key={t.id} className={`estado-${t.estado}`}>
+                      <button type="button" className="enlace" onClick={() => abrirEdicion(t)}>{hora(new Date(t.fechaHora))} · {t.titulo}{t.esPropio === false && ` · ${t.autor}`}</button>
+                      <select value={t.estado} disabled={t.esPropio === false} onChange={(e) => cambiarEstado(t.id, e.target.value)}>
+                        {ESTADOS.map((es) => (
+                          <option key={es} value={es}>{es}</option>
+                        ))}
+                      </select>
+                    </li>
+                  ))}
+                </ul>
+              )}
+              {vencimientosDelDia(diaSeleccionado).length > 0 && (
+                <>
+                  <h4 style={{ fontSize: "var(--t-sm)", color: "var(--ink-2)", marginTop: "var(--s2)" }}>Vencimientos</h4>
+                  <ul className="agenda-dia-lista">
+                    {vencimientosDelDia(diaSeleccionado).map((v) => (
+                      <li key={v.id} className={`estado-${v.estado}`}>
+                        <span>{v.descripcion}{v.diasHabilesRestantes != null && v.diasHabilesRestantes > 0 && <span className="dias-hab"> — Faltan {v.diasHabilesRestantes} día{v.diasHabilesRestantes !== 1 ? "s" : ""} háb.</span>}{v.diasHabilesRestantes === 0 && v.estado !== "completado" && <span className="dias-hab vencido"> — Vencido</span>}</span>
+                        {v.estado !== "completado" && (
+                          <button type="button" className="boton chico" onClick={async () => { try { await api.vencimientoEstado(v.id, "completado"); cargar(); } catch (e) { setError(e.message); } }}>Completar</button>
+                        )}
+                      </li>
                     ))}
-                  </select>
-                </li>
-              ))}
-            </ul>
+                  </ul>
+                </>
+              )}
+            </>
           )}
         </div>
       )}

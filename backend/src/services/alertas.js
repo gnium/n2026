@@ -121,6 +121,38 @@ async function sesionesGuardadas(usuarioId) {
   }));
 }
 
+async function vencimientosProximos(usuarioId) {
+  const [rows] = await pool.query(
+    `SELECT id, tipo, descripcion, fecha_vencimiento, estado FROM vencimientos
+      WHERE usuario_id = ? AND estado IN ('por_vencer','vencido')
+      ORDER BY fecha_vencimiento LIMIT 20`,
+    [usuarioId],
+  );
+  return rows.map((v) => ({
+    nivel: v.estado === "vencido" ? "alta" : "media",
+    tipo: "vencimiento",
+    texto: `${v.estado === "vencido" ? "Vencido" : "Por vencer"}: ${v.descripcion} (${new Date(v.fecha_vencimiento).toLocaleDateString("es-AR")})`,
+    pantalla: "agenda",
+    referenciaId: v.id,
+    fecha: fecha(v.fecha_vencimiento),
+  }));
+}
+
+async function ddijPendientesAlerta(usuarioId) {
+  const [rows] = await pool.query(
+    "SELECT id, numero, fecha_acto FROM ddjj WHERE usuario_id = ? AND estado = 'borrador' ORDER BY fecha_acto LIMIT 10",
+    [usuarioId],
+  );
+  return rows.map((d) => ({
+    nivel: "media",
+    tipo: "ddjj_pendiente",
+    texto: `DDJJ N° ${d.numero} pendiente de presentar (acto del ${new Date(d.fecha_acto).toLocaleDateString("es-AR")})`,
+    pantalla: "ddjj",
+    referenciaId: d.id,
+    fecha: fecha(d.fecha_acto),
+  }));
+}
+
 const ORDEN = { alta: 0, media: 1, baja: 2 };
 
 /**
@@ -131,7 +163,7 @@ export async function novedades(usuarioId) {
   const ctx = await contexto(usuarioId);
   const esEscribano = alcanza(ctx.rol, "escribano");
   const fuentes = [tareas(usuarioId), turnos(usuarioId), sesionesGuardadas(usuarioId)];
-  if (esEscribano) fuentes.push(certificadoArca(usuarioId), presupuestos(usuarioId), alertasUif(usuarioId).then((l) => l.map((a) => ({ ...a, pantalla: a.expedienteId ? "expedientes" : "uif", referenciaId: a.expedienteId || null }))));
+  if (esEscribano) fuentes.push(certificadoArca(usuarioId), presupuestos(usuarioId), alertasUif(usuarioId).then((l) => l.map((a) => ({ ...a, pantalla: a.expedienteId ? "expedientes" : "uif", referenciaId: a.expedienteId || null }))), vencimientosProximos(usuarioId), ddijPendientesAlerta(usuarioId));
   const partes = await Promise.allSettled(fuentes);
   const alertas = [];
   for (const p of partes) {

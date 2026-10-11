@@ -7,6 +7,7 @@ import { hoyLocal } from "../utils/fechas.js";
 import { descifrar } from "../utils/cifrado.js";
 import { AppError } from "../utils/errores.js";
 import { cargoDesdePresupuesto, quitarCargoDePresupuesto } from "./movimientos.js";
+import { logger } from "../utils/logger.js";
 
 const MONEDAS = new Set(["ARS", "USD"]);
 const ESTADOS = new Set(["borrador", "enviado", "aceptado", "rechazado"]);
@@ -116,7 +117,11 @@ export async function crear(usuarioId, datos) {
          VALUES (:usuarioId, :numero, :expedienteId, :clienteId, :tipoActo, :montoOperacion, :fecha, :moneda, :items, :total, :validezDias, :notas)`,
         { ...base, numero: n.numero },
       );
-      return obtener(usuarioId, r.insertId);
+      const p = await obtener(usuarioId, r.insertId);
+      if (p.tipoActo && items.some((it) => it.esCalculado)) {
+        import("./vencimientos.js").then((m) => m.crearDesdePresupuesto(usuarioId, p)).catch((e) => logger.warn("vencimientos-desde-presupuesto", { error: e.message }));
+      }
+      return p;
     } catch (e) {
       if (e.code !== "ER_DUP_ENTRY" || intento === 2) throw e;
     }

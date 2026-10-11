@@ -9,6 +9,8 @@ import { asegurarTablasAuth } from "./auth/repositorio.js";
 import { cargarConfiguracionIA } from "./services/configuracionIA.js";
 import { cargarPrecios } from "./services/precios.js";
 import { programarRevision } from "./services/prueba.js";
+import { programarActualizacionEstados } from "./services/vencimientos.js";
+import { programarNotificaciones } from "./services/notificacionesVencimientos.js";
 
 async function iniciar() {
   let conectado = false;
@@ -31,6 +33,8 @@ async function iniciar() {
   await cargarPrecios();
   logger.info(`Proveedor de IA: ${modoClaude()}`);
   programarRevision(); // vencimientos de la prueba, avisos y borrado definitivo
+  programarActualizacionEstados();
+  programarNotificaciones();
   const servidor = app.listen(env.port, () => logger.info(`Backend escuchando en http://localhost:${env.port}`));
 
   const apagar = (senal) => {
