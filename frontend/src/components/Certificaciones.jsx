@@ -17,6 +17,7 @@ export default function Certificaciones() {
   const [anio, setAnio] = useState(new Date().getFullYear());
   const [anios, setAnios] = useState([]);
   const [expedientes, setExpedientes] = useState([]);
+  const [google, setGoogle] = useState(null);
   const [error, setError] = useState(null);
   const [aviso, setAviso] = useState(null);
   const [formulario, setFormulario] = useState(null);
@@ -46,7 +47,10 @@ export default function Certificaciones() {
   };
 
   useEffect(() => { cargar(); }, [filtro, anio]); // eslint-disable-line react-hooks/exhaustive-deps
-  useEffect(() => { api.expedientesListar().then(setExpedientes).catch(() => {}); }, []);
+  useEffect(() => {
+    api.expedientesListar().then(setExpedientes).catch(() => {});
+    api.googleEstado().then(setGoogle).catch(() => setGoogle(null));
+  }, []);
 
   const abrirNuevo = () => {
     setError(null);
@@ -126,6 +130,17 @@ export default function Certificaciones() {
     }
   };
 
+  const aDrive = async (c) => {
+    setError(null);
+    try {
+      const r = await api.googleSubirADrive({ tipo: "certificacion", id: c.id });
+      setAviso(`Certificación N° ${c.numero}/${c.anio} copiada a Drive.`);
+      if (r?.enlace) window.open(r.enlace, "_blank", "noopener,noreferrer");
+    } catch (e) {
+      setError(e.message);
+    }
+  };
+
   return (
     <div className="ddjj">
       <h2>Certificaciones de Firmas</h2>
@@ -189,11 +204,19 @@ export default function Certificaciones() {
                       {c.estado === "certificada" && (
                         <>
                           <a className="boton discreto chico" href={api.certificacionUrlPdf(c.id)} download title="Descargar PDF"><Icono nombre="descargar" tamano={14} /></a>
+                          {google?.conectado && google?.subirDocumentos && (
+                            <button type="button" className="boton discreto chico" onClick={() => aDrive(c)} title="Copiar a Drive"><Icono nombre="nube" tamano={14} /></button>
+                          )}
                           <button type="button" className="boton discreto chico" onClick={() => marcarEntregada(c)} title="Marcar entregada"><Icono nombre="check" tamano={14} /></button>
                         </>
                       )}
                       {c.estado === "entregada" && (
-                        <a className="boton discreto chico" href={api.certificacionUrlPdf(c.id)} download title="Descargar PDF"><Icono nombre="descargar" tamano={14} /></a>
+                        <>
+                          <a className="boton discreto chico" href={api.certificacionUrlPdf(c.id)} download title="Descargar PDF"><Icono nombre="descargar" tamano={14} /></a>
+                          {google?.conectado && google?.subirDocumentos && (
+                            <button type="button" className="boton discreto chico" onClick={() => aDrive(c)} title="Copiar a Drive"><Icono nombre="nube" tamano={14} /></button>
+                          )}
+                        </>
                       )}
                     </div>
                   </td>

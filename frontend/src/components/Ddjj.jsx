@@ -32,6 +32,7 @@ function formVacio() {
 export default function Ddjj({ onActualizar }) {
   const [lista, setLista] = useState(null);
   const [filtro, setFiltro] = useState("");
+  const [google, setGoogle] = useState(null);
   const [error, setError] = useState(null);
   const [aviso, setAviso] = useState(null);
   const [formulario, setFormulario] = useState(null);
@@ -60,6 +61,7 @@ export default function Ddjj({ onActualizar }) {
 
   useEffect(() => {
     api.expedientesListar().then(setExpedientes).catch(() => {});
+    api.googleEstado().then(setGoogle).catch(() => setGoogle(null));
   }, []);
 
   const abrirNuevo = () => {
@@ -154,6 +156,17 @@ export default function Ddjj({ onActualizar }) {
     }
   };
 
+  const aDrive = async (d) => {
+    setError(null);
+    try {
+      const r = await api.googleSubirADrive({ tipo: "ddjj", id: d.id });
+      setAviso(`DDJJ N° ${d.numero} copiada a Drive.`);
+      if (r?.enlace) window.open(r.enlace, "_blank", "noopener,noreferrer");
+    } catch (e) {
+      setError(e.message);
+    }
+  };
+
   const actualizarMonto = (campo, valor) => {
     const f = { ...formulario, [campo]: valor };
     const monto = Number(campo === "montoOperacion" ? valor : f.montoOperacion) || 0;
@@ -223,11 +236,19 @@ export default function Ddjj({ onActualizar }) {
                       {d.estado === "generada" && (
                         <>
                           <a className="boton discreto chico" href={api.ddijUrlPdf(d.id)} download title="Descargar PDF"><Icono nombre="descargar" tamano={14} /></a>
+                          {google?.conectado && google?.subirDocumentos && (
+                            <button type="button" className="boton discreto chico" onClick={() => aDrive(d)} title="Copiar a Drive"><Icono nombre="nube" tamano={14} /></button>
+                          )}
                           <button type="button" className="boton discreto chico" onClick={() => marcarPresentada(d)} title="Marcar presentada"><Icono nombre="ok" tamano={14} /></button>
                         </>
                       )}
                       {d.estado === "presentada" && (
-                        <a className="boton discreto chico" href={api.ddijUrlPdf(d.id)} download title="Descargar PDF"><Icono nombre="descargar" tamano={14} /></a>
+                        <>
+                          <a className="boton discreto chico" href={api.ddijUrlPdf(d.id)} download title="Descargar PDF"><Icono nombre="descargar" tamano={14} /></a>
+                          {google?.conectado && google?.subirDocumentos && (
+                            <button type="button" className="boton discreto chico" onClick={() => aDrive(d)} title="Copiar a Drive"><Icono nombre="nube" tamano={14} /></button>
+                          )}
+                        </>
                       )}
                     </div>
                   </td>

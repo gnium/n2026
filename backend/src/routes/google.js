@@ -21,6 +21,11 @@ import { obtenerParaPdf as presupuestoParaPdf } from "../services/presupuestos.j
 import { construirPresupuestoPdf } from "../services/presupuestoPdf.js";
 import { obtenerParaPdf as comprobanteParaPdf } from "../services/comprobantes.js";
 import { construirComprobantePdf } from "../services/comprobantePdf.js";
+import { obtenerParaPdf as certificacionParaPdf } from "../services/certificaciones.js";
+import { construirCertificacionPdf } from "../services/certificacionPdf.js";
+import { obtenerParaPdf as ddjjParaPdf } from "../services/ddjj.js";
+import { construirDdjjPdf } from "../services/ddjjPdf.js";
+import { generarPdf as custodiaPdf } from "../services/custodia.js";
 import { requerirAdmin, leerCookies } from "../middleware/auth.js";
 import { contexto, alcanza } from "../services/equipo.js";
 import { env } from "../config/env.js";
@@ -78,7 +83,9 @@ rutasGoogle.put("/preferences", manejar(async (req, res) => res.json(await guard
 rutasGoogle.get("/config", requerirAdmin, manejar(async (_req, res) => res.json(await configuracionOAuth())));
 rutasGoogle.put("/config", requerirAdmin, manejar(async (req, res) => res.json(await guardarConfiguracionOAuth(req.body || {}))));
 
-/** Arma el PDF del presupuesto o del comprobante y devuelve nombre, tipo y contenido. */
+const TABLA_DRIVE = { presupuesto: "presupuestos", comprobante: "comprobantes", certificacion: "certificaciones", ddjj: "ddjj" };
+
+/** Arma el PDF del documento y devuelve nombre, tipo y contenido. */
 async function documento(usuarioId, tipo, id) {
   if (tipo === "presupuesto") {
     const datos = await presupuestoParaPdf(usuarioId, id);
@@ -86,12 +93,9 @@ async function documento(usuarioId, tipo, id) {
       nombre: `presupuesto-${datos.presupuesto.numero}.pdf`,
       tipo: "application/pdf",
       contenido: await construirPresupuestoPdf(datos),
-      asunto: `Presupuesto N° ${datos.presupuesto.numero}`,
     };
   }
   if (tipo === "comprobante") {
-    // Mismo criterio que /api/comprobantes: el rol empleado no accede a comprobantes,
-    // ni siquiera por esta puerta (el PDF trae receptor, CUIT, importes y CAE).
     const ctx = await contexto(usuarioId);
     if (!alcanza(ctx.rol, "escribano")) throw new AppError("PROHIBIDO", "Los comprobantes están reservados a la escribana o el escribano.", 403);
     const datos = await comprobanteParaPdf(usuarioId, id);
@@ -99,24 +103,52 @@ async function documento(usuarioId, tipo, id) {
       nombre: `${datos.comprobante.tipo}-${datos.comprobante.numeroCompleto}.pdf`,
       tipo: "application/pdf",
       contenido: await construirComprobantePdf(datos),
-      asunto: `${datos.comprobante.tipoNombre} ${datos.comprobante.numeroCompleto}`,
     };
   }
-  throw new AppError("DATOS_INVALIDOS", "tipo debe ser presupuesto o comprobante.", 400);
+  if (tipo === "certificacion") {
+    const datos = await certificacionParaPdf(usuarioId, id);
+    return {
+      nombre: `certificacion-${datos.cert.anio}-${datos.cert.numero}.pdf`,
+      tipo: "application/pdf",
+      contenido: construirCertificacionPdf(datos),
+    };
+  }
+  if (tipo === "ddjj") {
+    const datos = await ddjjParaPdf(usuarioId, id);
+    return {
+      nombre: `ddjj-${datos.ddjj.numero}.pdf`,
+      tipo: "application/pdf",
+      contenido: construirDdjjPdf(datos),
+    };
+  }
+  if (tipo === "custodia") {
+    const subtipo = String(id).includes(":") ? String(id).split(":")[1] : "recepcion";
+    const realId = String(id).includes(":") ? String(id).split(":")[0] : id;
+    const contenido = await custodiaPdf(usuarioId, realId, subtipo);
+    return {
+      nombre: `custodia-${subtipo}-${realId}.pdf`,
+      tipo: "application/pdf",
+      contenido,
+    };
+  }
+  throw new AppError("DATOS_INVALIDOS", "tipo debe ser presupuesto, comprobante, certificacion, ddjj o custodia.", 400);
 }
 
-/** POST /drive {tipo, id} - sube el PDF a la carpeta de la escribania en Drive. */
+/** POST /drive {tipo, id} - sube el PDF a la carpeta de la escribanía en Drive. */
 rutasGoogle.post(
   "/drive",
   manejar(async (req, res) => {
     const { tipo, id } = req.body || {};
-    if (!(await subeADrive(req.usuario.id, "comprobantes"))) {
-      throw new AppError("DRIVE_APAGADO", 'Active "Copiar comprobantes y presupuestos a Drive" en Integraciones antes de subir documentos.', 400);
+    if (!(await subeADrive(req.usuario.id))) {
+      throw new AppError("DRIVE_APAGADO", 'Active "Copiar documentos a Drive" en Integraciones antes de subir documentos.', 400);
     }
     const doc = await documento(req.usuario.id, tipo, id);
     const r = await subirADrive(req.usuario.id, { nombre: doc.nombre, tipo: doc.tipo, contenido: doc.contenido });
-    const tabla = tipo === "presupuesto" ? "presupuestos" : "comprobantes";
-    await pool.query(`UPDATE ${tabla} SET drive_archivo_id = ?, drive_enlace = ? WHERE id = ? AND usuario_id = ?`, [r.id, r.enlace, id, req.usuario.id]);
+    const tabla = TABLA_DRIVE[tipo];
+    if (tabla) {
+      const realId = tipo === "custodia" && String(id).includes(":") ? String(id).split(":")[0] : id;
+      await pool.query(`UPDATE ${tabla} SET drive_archivo_id = ?, drive_enlace = ? WHERE id = ? AND usuario_id = ?`, [r.id, r.enlace, realId, req.usuario.id]);
+    }
     res.json(r);
   }),
 );

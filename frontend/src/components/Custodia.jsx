@@ -12,7 +12,10 @@ export default function Custodia() {
   const [cargando, setCargando] = useState(true);
   const [modal, setModal] = useState(null);
   const [detalle, setDetalle] = useState(null);
+  const [google, setGoogle] = useState(null);
   const [error, setError] = useState("");
+
+  useEffect(() => { api.googleEstado().then(setGoogle).catch(() => setGoogle(null)); }, []);
 
   const cargar = useCallback(() => {
     setCargando(true);
@@ -86,7 +89,7 @@ export default function Custodia() {
 
       {modal === "recibir" && <ModalRecibir onCerrar={() => setModal(null)} onGuardado={() => { setModal(null); cargar(); }} />}
       {modal === "entregar" && <ModalEntregar onCerrar={() => setModal(null)} onGuardado={() => { setModal(null); cargar(); }} />}
-      {detalle && <ModalDetalle registro={detalle} onCerrar={() => setDetalle(null)} onActualizado={() => { setDetalle(null); cargar(); }} />}
+      {detalle && <ModalDetalle registro={detalle} google={google} onCerrar={() => setDetalle(null)} onActualizado={() => { setDetalle(null); cargar(); }} />}
     </div>
   );
 }
@@ -207,11 +210,23 @@ function ModalEntregar({ onCerrar, onGuardado }) {
   );
 }
 
-function ModalDetalle({ registro: r, onCerrar, onActualizado }) {
+function ModalDetalle({ registro: r, google, onCerrar, onActualizado }) {
   const [devolviendo, setDevolviendo] = useState(false);
   const [notasDevolucion, setNotasDevolucion] = useState("");
   const [guardando, setGuardando] = useState(false);
   const [error, setError] = useState("");
+  const [driveAviso, setDriveAviso] = useState("");
+
+  const aDrive = async (subtipo) => {
+    setError("");
+    try {
+      const res = await api.googleSubirADrive({ tipo: "custodia", id: `${r.id}:${subtipo}` });
+      setDriveAviso(`Comprobante de ${subtipo} copiado a Drive.`);
+      if (res?.enlace) window.open(res.enlace, "_blank", "noopener,noreferrer");
+    } catch (e) {
+      setError(e.message);
+    }
+  };
 
   const devolver = async () => {
     setGuardando(true);
@@ -245,20 +260,42 @@ function ModalDetalle({ registro: r, onCerrar, onActualizado }) {
 
         <div className="custodia-acciones-pdf">
           {r.recibidoEn && (
-            <a className="boton" href={api.custodiaUrlPdfRecepcion(r.id)} target="_blank" rel="noreferrer">
-              <Icono nombre="archivo" tamano={14} /> Comprobante de recepción (PDF)
-            </a>
+            <>
+              <a className="boton" href={api.custodiaUrlPdfRecepcion(r.id)} target="_blank" rel="noreferrer">
+                <Icono nombre="archivo" tamano={14} /> Comprobante de recepción (PDF)
+              </a>
+              {google?.conectado && google?.subirDocumentos && (
+                <button type="button" className="boton" onClick={() => aDrive("recepcion")}>
+                  <Icono nombre="nube" tamano={14} /> Drive
+                </button>
+              )}
+            </>
           )}
           {r.estado === "devuelto" && (
-            <a className="boton" href={api.custodiaUrlPdfDevolucion(r.id)} target="_blank" rel="noreferrer">
-              <Icono nombre="archivo" tamano={14} /> Comprobante de devolución (PDF)
-            </a>
+            <>
+              <a className="boton" href={api.custodiaUrlPdfDevolucion(r.id)} target="_blank" rel="noreferrer">
+                <Icono nombre="archivo" tamano={14} /> Comprobante de devolución (PDF)
+              </a>
+              {google?.conectado && google?.subirDocumentos && (
+                <button type="button" className="boton" onClick={() => aDrive("devolucion")}>
+                  <Icono nombre="nube" tamano={14} /> Drive
+                </button>
+              )}
+            </>
           )}
           {r.estado === "entregado" && (
-            <a className="boton" href={api.custodiaUrlPdfEntrega(r.id)} target="_blank" rel="noreferrer">
-              <Icono nombre="archivo" tamano={14} /> Comprobante de entrega (PDF)
-            </a>
+            <>
+              <a className="boton" href={api.custodiaUrlPdfEntrega(r.id)} target="_blank" rel="noreferrer">
+                <Icono nombre="archivo" tamano={14} /> Comprobante de entrega (PDF)
+              </a>
+              {google?.conectado && google?.subirDocumentos && (
+                <button type="button" className="boton" onClick={() => aDrive("entrega")}>
+                  <Icono nombre="nube" tamano={14} /> Drive
+                </button>
+              )}
+            </>
           )}
+          {driveAviso && <p className="alerta ok" role="status">{driveAviso}</p>}
         </div>
 
         {r.estado === "en_custodia" && !devolviendo && (

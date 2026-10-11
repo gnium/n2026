@@ -12,7 +12,7 @@ const AVISOS = {
 
 const OPCIONES = [
   { clave: "sincronizarAgenda", titulo: "Agenda en Google Calendar", detalle: "Cada turno que cree o edite se copia a su calendario. Viaja el título, la fecha y la duración; nada más." },
-  { clave: "subirComprobantes", titulo: "Copiar comprobantes y presupuestos a Drive", detalle: "Guarda el PDF en una carpeta \"Doy Fe\" de su Drive, cuando usted lo pide desde el comprobante o el presupuesto." },
+  { clave: "subirDocumentos", titulo: "Copiar documentos a Drive", detalle: "Guarda el PDF en una carpeta \"Doy Fe\" de su Drive, cuando usted lo pide. Aplica a comprobantes, presupuestos, certificaciones, DDJJ y custodia." },
   { clave: "subirEscrituras", titulo: "Copiar escrituras a Drive", detalle: "Guarda el .docx generado. Atención: el documento final tiene los datos reales de las partes." },
 ];
 
@@ -78,7 +78,7 @@ export default function Integraciones({ usuario, aviso: avisoUrl = null }) {
     <div className="equipo">
       <h2>Integraciones</h2>
       <p className="nota">
-        Conecte su cuenta de Google para llevar la agenda a Calendar y guardar copias de los documentos en Drive. Hasta que no conecte una cuenta, no sale nada de la escribanía. Al conectar quedan activas la agenda y la copia de comprobantes; subir la escritura final —que sí tiene los datos reales de las partes— se activa aparte. El correo se maneja fuera de la app.
+        Conecte su cuenta de Google para llevar la agenda a Calendar y guardar copias de los documentos en Drive. Hasta que no conecte una cuenta, no sale nada de la escribanía. Al conectar quedan activas la agenda y la copia de documentos a Drive; subir la escritura final —que sí tiene los datos reales de las partes— se activa aparte. El correo se maneja fuera de la app.
       </p>
       {error && <p className="alerta error" role="alert">{error}</p>}
       <p className={`alerta ${avisoUrl && AVISOS[avisoUrl]?.tipo === "error" ? "error" : "ok"} ${aviso ? "" : "sr-only"}`} role="status">{aviso}</p>

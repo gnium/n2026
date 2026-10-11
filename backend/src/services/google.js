@@ -185,8 +185,8 @@ export async function conectar(usuarioId, code) {
   // la persona vino a hacer. Subir la escritura final (con los datos reales de las
   // partes) sigue apagado y se activa a mano. Al reconectar se respetan sus elecciones.
   await pool.query(
-    `INSERT INTO google_cuentas (usuario_id, email, refresh_cifrado, access_cifrado, access_expira_en, alcances, sincronizar_agenda, subir_comprobantes)
-     VALUES (:usuarioId, :email, :refresco, :acceso, DATE_ADD(NOW(), INTERVAL :segundos SECOND), :scope, 1, 1)
+    `INSERT INTO google_cuentas (usuario_id, email, refresh_cifrado, access_cifrado, access_expira_en, alcances, sincronizar_agenda, subir_comprobantes, subir_documentos)
+     VALUES (:usuarioId, :email, :refresco, :acceso, DATE_ADD(NOW(), INTERVAL :segundos SECOND), :scope, 1, 1, 1)
      ON DUPLICATE KEY UPDATE email = VALUES(email), refresh_cifrado = VALUES(refresh_cifrado), access_cifrado = VALUES(access_cifrado),
        access_expira_en = VALUES(access_expira_en), alcances = VALUES(alcances)`,
     { usuarioId, email, refresco: cifrar(refresco, "google"), acceso: cifrar(acceso, "google"), segundos: Number(expira) || 3600, scope: String(scope || "").slice(0, 600) },
@@ -223,6 +223,7 @@ export async function estado(usuarioId) {
     sincronizarAgenda: Boolean(r?.sincronizar_agenda),
     subirEscrituras: Boolean(r?.subir_escrituras),
     subirComprobantes: Boolean(r?.subir_comprobantes),
+    subirDocumentos: Boolean(r?.subir_documentos),
     driveCarpetaNombre: r?.drive_carpeta_nombre || null,
     alcances: r?.alcances ? r.alcances.split(" ") : [],
   };
@@ -233,12 +234,13 @@ export async function guardarPreferencias(usuarioId, p) {
   if (!r) throw new AppError("GOOGLE_NO_CONECTADO", "Conecte una cuenta de Google antes de elegir que sincronizar.", 400);
   await pool.query(
     `UPDATE google_cuentas SET sincronizar_agenda = :agenda, subir_escrituras = :escrituras,
-       subir_comprobantes = :comprobantes, calendario_id = :calendario WHERE usuario_id = :usuarioId`,
+       subir_comprobantes = :comprobantes, subir_documentos = :documentos, calendario_id = :calendario WHERE usuario_id = :usuarioId`,
     {
       usuarioId,
       agenda: p.sincronizarAgenda ? 1 : 0,
       escrituras: p.subirEscrituras ? 1 : 0,
       comprobantes: p.subirComprobantes ? 1 : 0,
+      documentos: p.subirDocumentos ? 1 : 0,
       calendario: String(p.calendarioId || "primary").slice(0, 190),
     },
   );
@@ -402,12 +404,8 @@ export async function subirADrive(usuarioId, { nombre, tipo, contenido }) {
   return { id: r?.id || null, enlace: r?.webViewLink || null };
 }
 
-const CAMPO_DRIVE = { escrituras: "subir_escrituras", comprobantes: "subir_comprobantes" };
-
-/** true si esta cuenta tiene activada la subida de ese tipo de documento. */
-export async function subeADrive(usuarioId, que) {
-  const campo = CAMPO_DRIVE[que];
-  if (!campo) return false;
-  const [[c]] = await pool.query(`SELECT ${campo} AS activo FROM google_cuentas WHERE usuario_id = ?`, [usuarioId]);
+/** true si esta cuenta tiene activada la subida de documentos a Drive. */
+export async function subeADrive(usuarioId) {
+  const [[c]] = await pool.query("SELECT subir_documentos AS activo FROM google_cuentas WHERE usuario_id = ?", [usuarioId]);
   return Boolean(c?.activo);
 }

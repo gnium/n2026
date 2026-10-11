@@ -125,7 +125,7 @@ export default function Comprobantes() {
                   <td>
                     <div className="acciones">
                       <a className="enlace" href={api.comprobanteUrlPdf(c.id)} download aria-label={`Descargar PDF de ${c.tipoNombre} ${c.numeroCompleto}`}>PDF</a>
-                      {google?.conectado && google?.subirComprobantes && (
+                      {google?.conectado && google?.subirDocumentos && (
                         <button type="button" className="enlace" aria-label={`Copiar a Drive ${c.tipoNombre} ${c.numeroCompleto}`} onClick={() => aDrive(c)}>Drive</button>
                       )}
                       {c.estado === "emitido" && <button type="button" className="enlace" aria-label={`Anular ${c.tipoNombre} ${c.numeroCompleto}`} onClick={() => anular(c)}>anular</button>}
