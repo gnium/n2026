@@ -29,6 +29,8 @@ export const api = {
   logout: () => json("POST", "/auth/logout"),
   recuperar: (email) => json("POST", "/auth/recover", { email }),
   restablecer: (token, password) => json("POST", "/auth/reset", { token, password }),
+  otpSolicitar: (email) => json("POST", "/auth/otp/request", { email }),
+  otpVerificar: (email, codigo) => json("POST", "/auth/otp/verify", { email, codigo }),
 
   // --- configuracion de la IA (clave cifrada en el servidor) ---
   configuracionIA: () => fetch(`${BASE}/config/ai`).then(manejar),

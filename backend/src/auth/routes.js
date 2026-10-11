@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { randomBytes } from "node:crypto";
+import { randomBytes, randomInt } from "node:crypto";
 import { env } from "../config/env.js";
 import { AppError } from "../utils/errores.js";
 import { logger } from "../utils/logger.js";
@@ -44,6 +44,13 @@ const limiteLogin = limitar({ maximo: 30, ventanaMs: 15 * MINUTO, mensaje: "Dema
 const limiteRecuperacion = limitar({ maximo: 5, ventanaMs: 15 * MINUTO, mensaje: "Demasiados pedidos de recuperacion. Espere 15 minutos." });
 const limiteRegistro = limitar({ maximo: 10, ventanaMs: 60 * MINUTO, mensaje: "Demasiados intentos de alta. Espere una hora." });
 const limiteToken = limitar({ maximo: 30, ventanaMs: 15 * MINUTO, mensaje: "Demasiados intentos. Espere 15 minutos." });
+const limiteOtpSolicitar = limitar({ maximo: 5, ventanaMs: 15 * MINUTO, mensaje: "Demasiados pedidos de código. Espere 15 minutos." });
+const limiteOtpVerificar = limitar({ maximo: 10, ventanaMs: 15 * MINUTO, mensaje: "Demasiados intentos de verificación. Espere 15 minutos." });
+
+const otpStore = new Map();
+const OTP_EXPIRA_MS = 10 * 60 * 1000;
+const OTP_MAX_INTENTOS = 5;
+setInterval(() => { const ahora = Date.now(); for (const [k, v] of otpStore) if (ahora > v.expira) otpStore.delete(k); }, 60_000).unref();
 
 /** Comparacion en tiempo constante: el codigo de registro no se adivina midiendo respuestas. */
 function igualSeguro(a, b) {
@@ -199,6 +206,66 @@ rutasAuth.post("/reset", limiteToken, async (req, res, next) => {
     const usuario = await repo.buscarPorId(usuarioId);
     fijarSesion(res, usuario, version);
     await auditoria.evento("auth.password_restablecida", null, { cantidad: usuarioId });
+    res.json({ usuario: await publico(usuario) });
+  } catch (e) {
+    next(e);
+  }
+});
+
+/** POST /api/auth/otp/request {email} -> envia codigo de 6 digitos por email. Siempre 200. */
+rutasAuth.post(
+  "/otp/request",
+  limiteOtpSolicitar,
+  limitar({ maximo: 3, ventanaMs: 60 * MINUTO, clave: (req) => normalizarEmail(req.body?.email), mensaje: "Ya se enviaron varios códigos a ese correo. Revise su bandeja o espere una hora." }),
+  async (req, res, next) => {
+    try {
+      const email = normalizarEmail(req.body?.email);
+      const usuario = emailValido(email) ? await repo.buscarPorEmail(email) : null;
+      if (usuario && usuario.activo) {
+        const codigo = String(randomInt(100000, 1000000));
+        otpStore.set(email, { hash: repo.sha256(codigo), expira: Date.now() + OTP_EXPIRA_MS, intentos: 0 });
+        await enviarCorreo({
+          para: usuario.email,
+          asunto: "Doy Fe: código de ingreso",
+          texto: `Su código de ingreso es: ${codigo}\n\nVence en 10 minutos. Si no lo pidió, ignore este correo.`,
+          html: `<p>Su c&oacute;digo de ingreso es:</p><p style="font-size:28px;font-weight:bold;letter-spacing:4px;font-family:monospace">${codigo}</p><p>Vence en 10 minutos. Si no lo pidi&oacute;, ignore este correo.</p>`,
+        });
+        await auditoria.evento("auth.otp_solicitado", null, { cantidad: usuario.id });
+      } else {
+        logger.info("OTP solicitado para correo inexistente");
+      }
+      res.json({ ok: true, mensaje: "Si el correo está registrado, recibirá un código de 6 dígitos." });
+    } catch (e) {
+      next(e);
+    }
+  },
+);
+
+/** POST /api/auth/otp/verify {email, codigo} -> verifica codigo y crea sesion. */
+rutasAuth.post("/otp/verify", limiteOtpVerificar, async (req, res, next) => {
+  try {
+    const email = normalizarEmail(req.body?.email);
+    const codigo = String(req.body?.codigo || "").trim();
+    const otp = otpStore.get(email);
+    if (!otp || Date.now() > otp.expira) {
+      otpStore.delete(email);
+      throw new AppError("OTP_INVALIDO", "El código venció o no existe. Solicite uno nuevo.", 401);
+    }
+    otp.intentos++;
+    if (otp.intentos > OTP_MAX_INTENTOS) {
+      otpStore.delete(email);
+      throw new AppError("OTP_AGOTADO", "Demasiados intentos. Solicite un código nuevo.", 429);
+    }
+    if (otp.hash !== repo.sha256(codigo)) {
+      const restantes = OTP_MAX_INTENTOS - otp.intentos;
+      throw new AppError("OTP_INCORRECTO", `Código incorrecto. ${restantes} intento${restantes !== 1 ? "s" : ""} restante${restantes !== 1 ? "s" : ""}.`, 401);
+    }
+    otpStore.delete(email);
+    const usuario = await repo.buscarPorEmail(email);
+    if (!usuario || !usuario.activo) throw new AppError("CREDENCIALES_INVALIDAS", "La cuenta no está disponible.", 401);
+    await repo.registrarAcceso(usuario.id);
+    fijarSesion(res, usuario);
+    await auditoria.evento("auth.login_otp", null, { cantidad: usuario.id });
     res.json({ usuario: await publico(usuario) });
   } catch (e) {
     next(e);

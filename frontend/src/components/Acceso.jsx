@@ -10,7 +10,7 @@ export default function Acceso({ onIngreso, invitacion = null, alta = null }) {
   // Con una invitacion de la plataforma se entra directo a crear la cuenta:
   // quien llega por ese enlace todavia no tiene ninguna.
   const [vista, setVista] = useState(tokenUrl ? "restablecer" : alta ? "registro" : "login");
-  const [form, setForm] = useState({ email: "", password: "", password2: "", nombre: "", codigo: "" });
+  const [form, setForm] = useState({ email: "", password: "", password2: "", nombre: "", codigo: "", otp: "" });
   const [inv, setInv] = useState(null);
   const [altaInv, setAltaInv] = useState(null);
   const [error, setError] = useState(null);
@@ -64,6 +64,13 @@ export default function Acceso({ onIngreso, invitacion = null, alta = null }) {
       } else if (vista === "recuperar") {
         const r = await api.recuperar(form.email);
         setAviso(r.mensaje);
+      } else if (vista === "otp") {
+        const r = await api.otpSolicitar(form.email);
+        setAviso(r.mensaje);
+        setVista("otp_verificar");
+      } else if (vista === "otp_verificar") {
+        const r = await api.otpVerificar(form.email, form.otp);
+        onIngreso(r.usuario);
       } else if (vista === "restablecer") {
         if (form.password !== form.password2) throw new Error("Las contraseñas no coinciden.");
         const r = await api.restablecer(tokenUrl, form.password);
@@ -77,7 +84,8 @@ export default function Acceso({ onIngreso, invitacion = null, alta = null }) {
     }
   };
 
-  const titulo = { login: "Ingresar", registro: "Crear cuenta", recuperar: "Recuperar contraseña", restablecer: "Elegir nueva contraseña" }[vista];
+  const titulo = { login: "Ingresar", registro: "Crear cuenta", recuperar: "Recuperar contraseña", restablecer: "Elegir nueva contraseña", otp: "Ingresar con código", otp_verificar: "Verificar código" }[vista];
+  const textoBoton = { login: "Ingresar", registro: "Crear cuenta", recuperar: "Enviar enlace", restablecer: "Guardar contraseña", otp: "Enviar código", otp_verificar: "Verificar e ingresar" }[vista];
 
   return (
     <div className="acceso">
@@ -105,7 +113,7 @@ export default function Acceso({ onIngreso, invitacion = null, alta = null }) {
           {vista !== "restablecer" && (
             <label>
               Correo electrónico
-              <input type="email" autoComplete="email" required readOnly={Boolean(altaInv)} {...campo("email")} />
+              <input type="email" autoComplete="email" required readOnly={Boolean(altaInv) || vista === "otp_verificar"} {...campo("email")} />
             </label>
           )}
           {vista === "registro" && (
@@ -114,7 +122,14 @@ export default function Acceso({ onIngreso, invitacion = null, alta = null }) {
               <input type="text" autoComplete="name" {...campo("nombre")} />
             </label>
           )}
-          {vista !== "recuperar" && (
+          {vista === "otp_verificar" && (
+            <label>
+              Código de 6 dígitos
+              <input type="text" inputMode="numeric" pattern="[0-9]{6}" maxLength={6} autoComplete="one-time-code" required placeholder="000000" {...campo("otp")} style={{ letterSpacing: "0.3em", fontSize: "1.3rem", textAlign: "center", fontFamily: "monospace" }} />
+              <small className="ayuda">Revise su bandeja de entrada. El código vence en 10 minutos.</small>
+            </label>
+          )}
+          {vista !== "recuperar" && vista !== "otp" && vista !== "otp_verificar" && (
             <label>
               {vista === "restablecer" ? "Nueva contraseña" : "Contraseña"}
               <input type="password" autoComplete={vista === "login" ? "current-password" : "new-password"} required minLength={vista === "login" ? 1 : 10} {...campo("password")} />
@@ -142,17 +157,22 @@ export default function Acceso({ onIngreso, invitacion = null, alta = null }) {
           <p className={`alerta ok ${aviso ? "" : "sr-only"}`} role="status">{aviso}</p>
 
           <button type="submit" className="boton primario" disabled={cargando}>
-            {cargando ? "Un momento…" : titulo}
+            {cargando ? "Un momento…" : textoBoton}
           </button>
         </form>
 
         <nav className="acceso-enlaces" aria-label="Otras opciones">
-          {vista !== "login" && (
+          {vista !== "login" && vista !== "otp" && vista !== "otp_verificar" && (
             <button className="enlace" onClick={() => setVista("login")}>
               Ya tengo cuenta
             </button>
           )}
-          {vista !== "registro" && vista !== "restablecer" && (
+          {(vista === "otp" || vista === "otp_verificar") && (
+            <button className="enlace" onClick={() => setVista("login")}>
+              Ingresar con contraseña
+            </button>
+          )}
+          {vista !== "registro" && vista !== "restablecer" && vista !== "otp" && vista !== "otp_verificar" && (
             <button className="enlace" onClick={() => setVista("registro")}>
               Crear cuenta
             </button>
@@ -160,6 +180,16 @@ export default function Acceso({ onIngreso, invitacion = null, alta = null }) {
           {vista === "login" && (
             <button className="enlace" onClick={() => setVista("recuperar")}>
               Olvidé mi contraseña
+            </button>
+          )}
+          {vista === "login" && (
+            <button className="enlace" onClick={() => setVista("otp")}>
+              Ingresar con código por email
+            </button>
+          )}
+          {vista === "otp_verificar" && (
+            <button className="enlace" onClick={() => { setForm((f) => ({ ...f, otp: "" })); setVista("otp"); }}>
+              Reenviar código
             </button>
           )}
         </nav>
