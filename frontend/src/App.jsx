@@ -147,7 +147,6 @@ function AppInner() {
   const [resultados, setResultados] = useState(null);
   const [numeroIteracion, setNumeroIteracion] = useState(1);
   const [errorGeneral, setErrorGeneral] = useState(null);
-  const [expedienteAbierto, setExpedienteAbierto] = useState(null);
   const [invitacion, setInvitacion] = useState(() => new URLSearchParams(window.location.search).get("invitacion"));
   // ?alta=<token>: invitacion de la plataforma para dar de alta una escribania nueva.
   const [alta] = useState(() => new URLSearchParams(window.location.search).get("alta"));
@@ -203,8 +202,7 @@ function AppInner() {
   // Backward-compatible helper: components like Novedades still pass claves.
   const irA = useCallback((clave) => navigate(RUTA[clave] || "/"), [navigate]);
   const abrirExpediente = useCallback((id) => {
-    setExpedienteAbierto(id);
-    navigate("/cases");
+    navigate(`/cases/${id}`);
   }, [navigate]);
 
   const salir = async () => {
@@ -554,8 +552,8 @@ function AppInner() {
                 } />
 
                 {/* --- Simple screens (one-column) --- */}
-                <Route path="/cases" element={<SimpleWrap title="Expedientes"><Expedientes inicialId={expedienteAbierto} onConsumirInicial={() => setExpedienteAbierto(null)} /></SimpleWrap>} />
-                <Route path="/clients" element={<SimpleWrap title="Clientes"><Clientes onAbrirExpediente={abrirExpediente} /></SimpleWrap>} />
+                <Route path="/cases/:id?" element={<SimpleWrap title="Expedientes"><Expedientes /></SimpleWrap>} />
+                <Route path="/clients/:id?" element={<SimpleWrap title="Clientes"><Clientes onAbrirExpediente={abrirExpediente} /></SimpleWrap>} />
                 <Route path="/custody" element={<SimpleWrap title="Custodia"><Custodia /></SimpleWrap>} />
                 <Route path="/cash" element={<SimpleWrap title="Caja"><Caja /></SimpleWrap>} />
                 <Route path="/invoices" element={<SimpleWrap title="Comprobantes"><Comprobantes /></SimpleWrap>} />

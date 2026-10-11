@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import { api } from "../api.js";
 import Icono from "./Iconos.jsx";
 import { fechaCorta } from "./Expedientes.jsx";
@@ -14,6 +15,8 @@ const estadoCivilTexto = (c) => [NOMBRE_ESTADO_CIVIL[c.estadoCivil] || c.estadoC
 const NOMBRE_ESTADO_EXP = { abierto: "abierto", en_firma: "en firma", cerrado: "cerrado", archivado: "archivado" };
 
 export default function Clientes({ onAbrirExpediente }) {
+  const { id: paramId } = useParams();
+  const navigate = useNavigate();
   const [q, setQ] = useState("");
   const [filtroTipo, setFiltroTipo] = useState("");
   const [lista, setLista] = useState(null);
@@ -64,6 +67,12 @@ export default function Clientes({ onAbrirExpediente }) {
     }
   };
 
+  useEffect(() => {
+    if (paramId) abrirDetalle(Number(paramId));
+    else setDetalle(null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [paramId]);
+
   const guardar = async (e) => {
     e.preventDefault();
     setError(null);
@@ -86,6 +95,7 @@ export default function Clientes({ onAbrirExpediente }) {
     try {
       await api.clienteBorrar(id);
       setDetalle(null);
+      navigate("/clients");
       cargar();
       setAviso("Cliente borrado.");
     } catch (e) {
@@ -131,7 +141,7 @@ export default function Clientes({ onAbrirExpediente }) {
             <tbody>
               {listaFiltrada.map((c) => (
                 <tr key={c.id}>
-                  <td><button type="button" className="enlace" onClick={() => abrirDetalle(c.id)}>{c.nombre}</button></td>
+                  <td><button type="button" className="enlace" onClick={() => navigate(`/clients/${c.id}`)}>{c.nombre}</button></td>
                   <td>{c.tipo}</td>
                   <td>{idDoc(c)}</td>
                   <td>{c.telefono || "—"}</td>
@@ -160,7 +170,7 @@ export default function Clientes({ onAbrirExpediente }) {
               <button type="button" className="boton chico" onClick={() => setLegajoAbierto(true)}><Icono nombre="escudo" tamano={14} /> Legajo UIF</button>
               <button type="button" className="boton chico" onClick={() => setFormulario({ ...VACIO, ...detalle, expedientes: undefined, presupuestos: undefined })}>Editar</button>
               <button type="button" className="boton chico" onClick={() => setConfirmarBorrado(true)}><Icono nombre="basura" tamano={14} /> Borrar</button>
-              <button type="button" className="boton discreto chico" aria-label="Cerrar detalle" onClick={() => setDetalle(null)}><Icono nombre="cruz" tamano={14} /></button>
+              <button type="button" className="boton discreto chico" aria-label="Cerrar detalle" onClick={() => navigate("/clients")}><Icono nombre="cruz" tamano={14} /></button>
             </div>
           </div>
           <h4>Expedientes</h4>

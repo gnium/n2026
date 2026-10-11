@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import { api } from "../api.js";
 import Icono from "./Iconos.jsx";
 import PresupuestoModal, { enlaceWhatsApp, formatoMonto } from "./PresupuestoModal.jsx";
@@ -19,7 +20,9 @@ export const fechaCorta = (d) => {
   return new Date(s).toLocaleDateString("es-AR");
 };
 
-export default function Expedientes({ inicialId = null, onConsumirInicial }) {
+export default function Expedientes() {
+  const { id: paramId } = useParams();
+  const navigate = useNavigate();
   const [vista, setVista] = useState(() => { try { return localStorage.getItem("doyfe-exp-vista") || "lista"; } catch { return "lista"; } });
   const [filtro, setFiltro] = useState("");
   const [q, setQ] = useState("");
@@ -74,12 +77,10 @@ export default function Expedientes({ inicialId = null, onConsumirInicial }) {
   }, []);
 
   useEffect(() => {
-    if (inicialId) {
-      cargarDetalle(inicialId);
-      onConsumirInicial?.();
-    }
+    if (paramId) cargarDetalle(Number(paramId));
+    else setDetalle(null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [inicialId]);
+  }, [paramId]);
 
   useEffect(() => {
     const d = dialogo.current;
@@ -105,6 +106,7 @@ export default function Expedientes({ inicialId = null, onConsumirInicial }) {
       await cargarLista();
       setDetalle(r);
       setAviso(formulario.id ? "Expediente actualizado." : "Expediente creado.");
+      if (!formulario.id) navigate(`/cases/${r.id}`);
     } catch (e) {
       setError(e.message);
     }
@@ -146,12 +148,18 @@ export default function Expedientes({ inicialId = null, onConsumirInicial }) {
   };
 
   const [confirmar, setConfirmar] = useState(null); // { tipo: "expediente" } | { tipo: "presupuesto", p }
-  const borrarExpediente = () => {
+  const borrarExpediente = async () => {
     setConfirmar(null);
-    accion(async () => {
+    setError(null);
+    try {
       await api.expedienteBorrar(detalle.id);
       setDetalle(null);
-    }, "Expediente borrado.");
+      navigate("/cases");
+      await cargarLista();
+      setAviso("Expediente borrado.");
+    } catch (e) {
+      setError(e.message);
+    }
   };
 
   const clientesDelExpediente = detalle ? clientes.filter((c) => detalle.partes.some((p) => p.clienteId === c.id)) : [];
@@ -215,7 +223,7 @@ export default function Expedientes({ inicialId = null, onConsumirInicial }) {
                     <div key={est} className="board-columna" onDragOver={(ev) => ev.preventDefault()} onDrop={(ev) => onDrop(ev, est)}>
                       <div className="board-columna-titulo"><span>{titulo}</span><span className="board-count">{porEstado[est].length}</span></div>
                       {porEstado[est].map((e) => (
-                        <div key={e.id} className="board-tarjeta" draggable onDragStart={(ev) => onDragStart(ev, e.id)} onClick={() => cargarDetalle(e.id)}>
+                        <div key={e.id} className="board-tarjeta" draggable onDragStart={(ev) => onDragStart(ev, e.id)} onClick={() => navigate(`/cases/${e.id}`)}>
                           <strong>{e.caratula}</strong>
                           <span className="board-tipo">{e.tipoActo.replace(/_/g, " ")}</span>
                           {e.partes && <span className="board-partes">{e.partes}</span>}
@@ -238,7 +246,7 @@ export default function Expedientes({ inicialId = null, onConsumirInicial }) {
                   <tbody>
                     {filtrada.map((e) => (
                       <tr key={e.id}>
-                        <td><button type="button" className="enlace" onClick={() => cargarDetalle(e.id)}>{e.caratula}</button></td>
+                        <td><button type="button" className="enlace" onClick={() => navigate(`/cases/${e.id}`)}>{e.caratula}</button></td>
                         <td>{e.tipoActo.replace(/_/g, " ")}</td>
                         <td>{e.partes || "—"}</td>
                         <td className="num">{e.tareasPendientes}</td>
@@ -254,7 +262,7 @@ export default function Expedientes({ inicialId = null, onConsumirInicial }) {
         </>
       ) : (
         <div className="expediente-detalle">
-          <button type="button" className="enlace" onClick={() => setDetalle(null)}><Icono nombre="izquierda" tamano={14} /> Volver a la lista</button>
+          <button type="button" className="enlace" onClick={() => navigate("/cases")}><Icono nombre="izquierda" tamano={14} /> Volver a la lista</button>
           <div className="protocolo-cabecera">
             <div>
               <h3 id="exp-titulo" tabIndex={-1}>{detalle.caratula}</h3>
