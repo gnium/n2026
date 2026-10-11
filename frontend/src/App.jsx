@@ -23,6 +23,7 @@ import Comprobantes from "./components/Comprobantes.jsx";
 import Uif from "./components/Uif.jsx";
 import Custodia from "./components/Custodia.jsx";
 import Ddjj from "./components/Ddjj.jsx";
+import Certificaciones from "./components/Certificaciones.jsx";
 import Verificacion from "./components/Verificacion.jsx";
 import ParametrosUif from "./components/ParametrosUif.jsx";
 import Equipo from "./components/Equipo.jsx";
@@ -62,6 +63,7 @@ const NAV = [
       { clave: "notas", texto: "Notas", icono: "nota", ruta: "/notes", modulo: "notas" },
       { clave: "biblioteca", texto: "Biblioteca de modelos", icono: "biblioteca", ruta: "/templates", modulo: "biblioteca" },
       { clave: "protocolo", texto: "Protocolo", icono: "protocolo", rolMinimo: "escribano", ruta: "/protocol", modulo: "protocolo" },
+      { clave: "certificaciones", texto: "Certificaciones", icono: "firma", rolMinimo: "escribano", ruta: "/certifications", modulo: "protocolo" },
     ],
   },
   {
@@ -563,6 +565,7 @@ function AppInner() {
                 <Route path="/notes" element={<SimpleWrap title="Notas"><Notas /></SimpleWrap>} />
                 <Route path="/templates" element={<SimpleWrap title="Biblioteca de modelos"><BibliotecaModelos /></SimpleWrap>} />
                 <Route path="/protocol" element={<SimpleWrap title="Protocolo"><Protocolo /></SimpleWrap>} />
+                <Route path="/certifications" element={<SimpleWrap title="Certificaciones"><Certificaciones /></SimpleWrap>} />
                 <Route path="/team" element={<SimpleWrap title="Mi Escribanía"><Equipo usuario={usuario} /></SimpleWrap>} />
                 <Route path="/integrations" element={<SimpleWrap title="Integraciones"><Integraciones usuario={usuario} aviso={avisoGoogle} /></SimpleWrap>} />
                 <Route path="/usage" element={<SimpleWrap title="Consumo de IA"><Consumo esAdmin={usuario.esAdmin} /></SimpleWrap>} />

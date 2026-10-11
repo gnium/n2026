@@ -20,6 +20,7 @@ export const fechaCorta = (d) => {
 };
 
 export default function Expedientes({ inicialId = null, onConsumirInicial }) {
+  const [vista, setVista] = useState(() => { try { return localStorage.getItem("doyfe-exp-vista") || "lista"; } catch { return "lista"; } });
   const [filtro, setFiltro] = useState("");
   const [q, setQ] = useState("");
   const [lista, setLista] = useState(null);
@@ -39,10 +40,12 @@ export default function Expedientes({ inicialId = null, onConsumirInicial }) {
   const [aviso, setAviso] = useState(null);
   const dialogo = useRef(null);
 
+  useEffect(() => { try { localStorage.setItem("doyfe-exp-vista", vista); } catch { /* ignore */ } }, [vista]);
+
   const cargarLista = async () => {
     setError(null);
     try {
-      setLista(await api.expedientesListar(filtro));
+      setLista(await api.expedientesListar(vista === "board" ? "" : filtro));
     } catch (e) {
       setError(e.message);
     }
@@ -62,7 +65,7 @@ export default function Expedientes({ inicialId = null, onConsumirInicial }) {
   useEffect(() => {
     cargarLista();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filtro]);
+  }, [filtro, vista]);
 
   useEffect(() => {
     api.clientesListar().then(setClientes).catch(() => setClientes([]));
@@ -176,22 +179,59 @@ export default function Expedientes({ inicialId = null, onConsumirInicial }) {
               <span className="sr-only">Buscar</span>
               <input type="search" placeholder="Buscar por carátula o parte…" value={q} onChange={(e) => setQ(e.target.value)} />
             </label>
-            <div className="segmentado" role="group" aria-label="Estado">
-              <button type="button" className={filtro === "" ? "activo" : ""} aria-pressed={filtro === ""} onClick={() => setFiltro("")}>Todos</button>
-              {ESTADOS.map(([v, t]) => (
-                <button type="button" key={v} className={filtro === v ? "activo" : ""} aria-pressed={filtro === v} onClick={() => setFiltro(v)}>{t}</button>
-              ))}
+            {vista === "lista" && (
+              <div className="segmentado" role="group" aria-label="Estado">
+                <button type="button" className={filtro === "" ? "activo" : ""} aria-pressed={filtro === ""} onClick={() => setFiltro("")}>Todos</button>
+                {ESTADOS.map(([v, t]) => (
+                  <button type="button" key={v} className={filtro === v ? "activo" : ""} aria-pressed={filtro === v} onClick={() => setFiltro(v)}>{t}</button>
+                ))}
+              </div>
+            )}
+            <div className="segmentado" role="group" aria-label="Vista">
+              <button type="button" className={vista === "lista" ? "activo" : ""} onClick={() => setVista("lista")}><Icono nombre="capas" tamano={14} /> Lista</button>
+              <button type="button" className={vista === "board" ? "activo" : ""} onClick={() => setVista("board")}><Icono nombre="carpeta" tamano={14} /> Board</button>
             </div>
             <button type="button" className="boton primario" onClick={() => setFormulario({ caratula: "", tipoActo: "compraventa", observaciones: "" })}><Icono nombre="mas" tamano={16} /> Nuevo expediente</button>
           </div>
           {(() => {
             const ql = q.trim().toLowerCase();
             const filtrada = lista ? lista.filter((e) => !ql || e.caratula.toLowerCase().includes(ql) || (e.partes && e.partes.toLowerCase().includes(ql))) : null;
-            return filtrada === null ? (
-              <p className="vacio">Cargando…</p>
-            ) : filtrada.length === 0 ? (
-              <p className="vacio">{q ? "Ningún expediente coincide con la búsqueda." : `No hay expedientes${filtro ? " en este estado" : ""}.`}</p>
-            ) : (
+            if (filtrada === null) return <p className="vacio">Cargando…</p>;
+            if (filtrada.length === 0) return <p className="vacio">{q ? "Ningún expediente coincide con la búsqueda." : `No hay expedientes${filtro ? " en este estado" : ""}.`}</p>;
+            if (vista === "board") {
+              const porEstado = Object.fromEntries(ESTADOS.map(([v]) => [v, []]));
+              filtrada.forEach((e) => porEstado[e.estado]?.push(e));
+              const onDragStart = (ev, id) => ev.dataTransfer.setData("text/plain", id);
+              const onDrop = (ev, nuevoEstado) => {
+                ev.preventDefault();
+                const id = Number(ev.dataTransfer.getData("text/plain"));
+                if (!id) return;
+                const exp = filtrada.find((e) => e.id === id);
+                if (exp && exp.estado !== nuevoEstado) accion(() => api.expedienteEstado(id, nuevoEstado), `Estado actualizado a ${NOMBRE_ESTADO[nuevoEstado]}.`);
+              };
+              return (
+                <div className="board">
+                  {ESTADOS.map(([est, titulo]) => (
+                    <div key={est} className="board-columna" onDragOver={(ev) => ev.preventDefault()} onDrop={(ev) => onDrop(ev, est)}>
+                      <div className="board-columna-titulo"><span>{titulo}</span><span className="board-count">{porEstado[est].length}</span></div>
+                      {porEstado[est].map((e) => (
+                        <div key={e.id} className="board-tarjeta" draggable onDragStart={(ev) => onDragStart(ev, e.id)} onClick={() => cargarDetalle(e.id)}>
+                          <strong>{e.caratula}</strong>
+                          <span className="board-tipo">{e.tipoActo.replace(/_/g, " ")}</span>
+                          {e.partes && <span className="board-partes">{e.partes}</span>}
+                          <div className="board-pie">
+                            {e.tareasPendientes > 0 && <span className="etiqueta">{e.tareasPendientes} pendiente{e.tareasPendientes !== 1 ? "s" : ""}</span>}
+                            <span className="board-fecha">{fechaCorta(e.actualizadoEn)}</span>
+                          </div>
+                        </div>
+                      ))}
+                      {porEstado[est].length === 0 && <p className="board-vacio">Sin expedientes</p>}
+                    </div>
+                  ))}
+                </div>
+              );
+            }
+            return (
               <div className="tabla-scroll">
                 <table>
                   <thead><tr><th scope="col">Carátula</th><th scope="col">Tipo de acto</th><th scope="col">Partes</th><th scope="col" className="num">Tareas pendientes</th><th scope="col">Estado</th><th scope="col">Actualizado</th></tr></thead>

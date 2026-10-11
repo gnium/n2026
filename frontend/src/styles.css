@@ -577,6 +577,10 @@ input.invalido { border-color: var(--error); }
 .etiqueta-estado-borrador { background: var(--warn-soft); color: var(--warn); }
 .etiqueta-estado-generada { background: var(--accent-soft); color: var(--accent-soft-ink, var(--accent)); }
 .etiqueta-estado-presentada { background: var(--ok-soft); color: var(--ok); }
+.etiqueta-estado-borrador-cert, .etiqueta-estado-certificada-cert, .etiqueta-estado-entregada-cert { display: inline-block; padding: 2px 8px; border-radius: var(--radius-s); font-size: var(--t-xs); font-weight: 500; }
+.etiqueta-estado-borrador-cert { background: var(--warn-soft); color: var(--warn); }
+.etiqueta-estado-certificada-cert { background: var(--accent-soft); color: var(--accent-soft-ink, var(--accent)); }
+.etiqueta-estado-entregada-cert { background: var(--ok-soft); color: var(--ok); }
 .ddjj-partes { display: flex; flex-direction: column; gap: var(--s2); }
 .ddjj-parte { display: grid; grid-template-columns: 1fr 120px 120px 100px auto; gap: var(--s2); align-items: center; }
 @media (max-width: 640px) { .ddjj-parte { grid-template-columns: 1fr; } }
@@ -961,6 +965,29 @@ th[scope="row"] { font-weight: 400; text-transform: none; letter-spacing: normal
 @media (max-width: 480px) {
   .custodia-modal { max-width: 100%; }
 }
+
+/* --- Board (kanban) para expedientes --- */
+.board { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--s3); min-height: 200px; }
+.board-columna { background: var(--surface-2); border-radius: var(--radius-m); padding: var(--s3); display: flex; flex-direction: column; gap: var(--s2); min-height: 120px; }
+.board-columna-titulo { display: flex; align-items: center; justify-content: space-between; font-size: var(--t-sm); font-weight: 600; color: var(--ink-2); padding-bottom: var(--s2); border-bottom: 1px solid var(--border); }
+.board-count { background: var(--surface-3); color: var(--ink-3); font-size: var(--t-xs); font-weight: 600; padding: 2px 8px; border-radius: 10px; }
+.board-tarjeta { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-s); padding: var(--s3); cursor: grab; display: flex; flex-direction: column; gap: 4px; transition: box-shadow 0.15s; }
+.board-tarjeta:active { cursor: grabbing; }
+.board-tarjeta:hover { box-shadow: var(--shadow-2); }
+.board-tarjeta strong { font-size: var(--t-sm); color: var(--ink); line-height: 1.3; }
+.board-tipo { font-size: var(--t-xs); color: var(--ink-3); text-transform: capitalize; }
+.board-partes { font-size: var(--t-xs); color: var(--ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.board-pie { display: flex; align-items: center; gap: var(--s2); margin-top: 2px; }
+.board-pie .etiqueta { font-size: 10px; }
+.board-fecha { font-size: var(--t-xs); color: var(--ink-3); margin-left: auto; }
+.board-vacio { font-size: var(--t-sm); color: var(--ink-3); text-align: center; padding: var(--s4) 0; }
+@media (max-width: 900px) { .board { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 520px) { .board { grid-template-columns: 1fr; } }
+
+/* --- Certificaciones estado badges --- */
+.etiqueta-estado-borrador-cert, .etiqueta-cert-borrador { background: var(--surface-3); color: var(--ink-3); }
+.etiqueta-estado-certificada-cert, .etiqueta-cert-certificada { background: var(--accent-soft); color: var(--accent-soft-ink, var(--accent)); }
+.etiqueta-estado-entregada-cert, .etiqueta-cert-entregada { background: var(--ok-soft); color: var(--ok); }
 
 /* --- Prevent horizontal page scroll from any overflow edge case --- */
 html { overflow-x: hidden; }

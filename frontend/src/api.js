@@ -115,6 +115,17 @@ export const api = {
   protocoloBorrar: (id) => fetch(`${BASE}/protocol/${id}`, { method: "DELETE" }).then(manejar),
   protocoloUrlExportar: (anio) => `${BASE}/protocol/${anio}/export`,
 
+  // --- certificaciones de firmas ---
+  certificacionesListar: (filtros = {}) => { const p = new URLSearchParams(Object.entries(filtros).filter(([, v]) => v)); return fetch(`${BASE}/certifications?${p}`).then(manejar); },
+  certificacionObtener: (id) => fetch(`${BASE}/certifications/${id}`).then(manejar),
+  certificacionAnios: () => fetch(`${BASE}/certifications/years`).then(manejar),
+  certificacionSugerido: (anio) => fetch(`${BASE}/certifications/suggested?anio=${anio || new Date().getFullYear()}`).then(manejar),
+  certificacionCrear: (datos) => json("POST", "/certifications", datos),
+  certificacionActualizar: (id, datos) => json("PUT", `/certifications/${id}`, datos),
+  certificacionEstado: (id, estado) => json("PATCH", `/certifications/${id}/status`, { estado }),
+  certificacionBorrar: (id) => fetch(`${BASE}/certifications/${id}`, { method: "DELETE" }).then(manejar),
+  certificacionUrlPdf: (id) => `${BASE}/certifications/${id}/pdf`,
+
   // --- agenda de turnos ---
   turnosListar: (desde, hasta, equipo = false) => fetch(`${BASE}/appointments?desde=${encodeURIComponent(desde)}&hasta=${encodeURIComponent(hasta)}${equipo ? "&equipo=1" : ""}`).then(manejar),
   turnoCrear: (datos) => json("POST", "/appointments", datos),
