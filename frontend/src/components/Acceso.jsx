@@ -194,7 +194,7 @@ export default function Acceso({ onIngreso, invitacion = null, alta = null }) {
           )}
         </nav>
         <p className="acceso-legal">
-          <a href="/">Volver al inicio</a> · <a href="/privacidad.html">Privacidad</a> · <a href="/condiciones.html">Condiciones</a>
+          <a href="/">Volver al inicio</a> · <a href="/privacidad.html">Privacidad</a> · <a href="/condiciones.html">Condiciones</a> · <a href="/baja.html">Baja de datos</a>
           <br />© {new Date().getFullYear()} Doy Fe · Cumbre Tech S.R.L.
         </p>
       </div>

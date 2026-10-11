@@ -1,14 +1,280 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { Chart, registerables } from "chart.js";
 import { api } from "../../api.js";
 import Icono from "../Iconos.jsx";
 import { formatoMonto } from "../PresupuestoModal.jsx";
 import { PERIODOS, NOMBRE_SUSCRIPCION, soloFecha, usd, plural, pct } from "./constants.js";
 import AdminNav from "./AdminNav.jsx";
 
+Chart.register(...registerables);
+
+const MESES_CORTOS = { "01": "Ene", "02": "Feb", "03": "Mar", "04": "Abr", "05": "May", "06": "Jun", "07": "Jul", "08": "Ago", "09": "Sep", 10: "Oct", 11: "Nov", 12: "Dic" };
+const etiquetaMes = (m) => { const [, mm] = m.split("-"); return MESES_CORTOS[mm] || mm; };
+
+function useCssVar(nombre) {
+  const [val, setVal] = useState("");
+  useEffect(() => { setVal(getComputedStyle(document.documentElement).getPropertyValue(nombre).trim()); }, [nombre]);
+  return val;
+}
+
+function GraficoLinea({ datos, titulo }) {
+  const ref = useRef(null);
+  const chart = useRef(null);
+  const accent = useCssVar("--accent");
+  const ok = useCssVar("--ok");
+  const error = useCssVar("--error");
+  const ink2 = useCssVar("--ink-2");
+  const border = useCssVar("--border");
+
+  useEffect(() => {
+    if (!ref.current || !accent || !datos) return;
+    const ctx = ref.current.getContext("2d");
+    if (chart.current) chart.current.destroy();
+    const labels = datos.registrosMensuales.map((r) => etiquetaMes(r.mes));
+    chart.current = new Chart(ctx, {
+      type: "line",
+      data: {
+        labels,
+        datasets: [
+          {
+            label: "Registros",
+            data: datos.registrosMensuales.map((r) => r.total),
+            borderColor: accent,
+            backgroundColor: accent + "22",
+            fill: true,
+            tension: 0.3,
+            pointRadius: 4,
+          },
+          {
+            label: "Docs completados",
+            data: datos.documentosMensuales.map((r) => r.completados),
+            borderColor: ok,
+            backgroundColor: ok + "22",
+            fill: true,
+            tension: 0.3,
+            pointRadius: 4,
+          },
+          {
+            label: "Docs fallidos",
+            data: datos.documentosMensuales.map((r) => r.fallidos),
+            borderColor: error,
+            backgroundColor: error + "22",
+            fill: false,
+            tension: 0.3,
+            pointRadius: 3,
+            borderDash: [4, 4],
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { labels: { color: ink2, font: { size: 12 } } } },
+        scales: {
+          x: { ticks: { color: ink2 }, grid: { color: border + "66" } },
+          y: { beginAtZero: true, ticks: { color: ink2, precision: 0 }, grid: { color: border + "66" } },
+        },
+      },
+    });
+    return () => { if (chart.current) chart.current.destroy(); };
+  }, [datos, accent, ok, error, ink2, border]);
+
+  return (
+    <div className="grafico-contenedor">
+      <h4>{titulo}</h4>
+      <div style={{ position: "relative", height: 260 }}>
+        <canvas ref={ref} />
+      </div>
+    </div>
+  );
+}
+
+function GraficoDona({ datos, titulo }) {
+  const ref = useRef(null);
+  const chart = useRef(null);
+  const accent = useCssVar("--accent");
+  const ok = useCssVar("--ok");
+  const warn = useCssVar("--warn");
+  const error = useCssVar("--error");
+  const ink2 = useCssVar("--ink-2");
+
+  useEffect(() => {
+    if (!ref.current || !accent || !datos) return;
+    const ctx = ref.current.getContext("2d");
+    if (chart.current) chart.current.destroy();
+    const estados = Object.entries(datos);
+    const colores = {
+      activa: ok,
+      prueba: accent,
+      sin_suscripcion: ink2,
+      pendiente: warn,
+      pausada: warn,
+      cancelada: error,
+      vencida: error,
+    };
+    chart.current = new Chart(ctx, {
+      type: "doughnut",
+      data: {
+        labels: estados.map(([e]) => NOMBRE_SUSCRIPCION[e] || e),
+        datasets: [{
+          data: estados.map(([, n]) => n),
+          backgroundColor: estados.map(([e]) => colores[e] || ink2),
+          borderWidth: 2,
+          borderColor: "transparent",
+        }],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { position: "right", labels: { color: ink2, font: { size: 12 }, padding: 12 } },
+        },
+      },
+    });
+    return () => { if (chart.current) chart.current.destroy(); };
+  }, [datos, accent, ok, warn, error, ink2]);
+
+  return (
+    <div className="grafico-contenedor">
+      <h4>{titulo}</h4>
+      <div style={{ position: "relative", height: 220 }}>
+        <canvas ref={ref} />
+      </div>
+    </div>
+  );
+}
+
+function GraficoBarras({ datos, titulo }) {
+  const ref = useRef(null);
+  const chart = useRef(null);
+  const accent = useCssVar("--accent");
+  const ink2 = useCssVar("--ink-2");
+  const border = useCssVar("--border");
+
+  useEffect(() => {
+    if (!ref.current || !accent || !datos?.length) return;
+    const ctx = ref.current.getContext("2d");
+    if (chart.current) chart.current.destroy();
+    chart.current = new Chart(ctx, {
+      type: "bar",
+      data: {
+        labels: datos.map((r) => etiquetaMes(r.mes)),
+        datasets: [{
+          label: "Facturado (ARS)",
+          data: datos.map((r) => r.totalArs),
+          backgroundColor: accent + "99",
+          borderColor: accent,
+          borderWidth: 1,
+          borderRadius: 4,
+        }],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { labels: { color: ink2, font: { size: 12 } } } },
+        scales: {
+          x: { ticks: { color: ink2 }, grid: { display: false } },
+          y: { beginAtZero: true, ticks: { color: ink2 }, grid: { color: border + "66" } },
+        },
+      },
+    });
+    return () => { if (chart.current) chart.current.destroy(); };
+  }, [datos, accent, ink2, border]);
+
+  return (
+    <div className="grafico-contenedor">
+      <h4>{titulo}</h4>
+      <div style={{ position: "relative", height: 220 }}>
+        <canvas ref={ref} />
+      </div>
+    </div>
+  );
+}
+
+function PanelNotificaciones() {
+  const [notifs, setNotifs] = useState([]);
+  const [form, setForm] = useState({ titulo: "", mensaje: "", tipo: "info" });
+  const [enviando, setEnviando] = useState(false);
+  const [msg, setMsg] = useState("");
+
+  const cargarNotifs = () => api.notificacionesAdmin().then(setNotifs).catch(() => {});
+  useEffect(() => { cargarNotifs(); }, []);
+
+  const enviar = async (e) => {
+    e.preventDefault();
+    setEnviando(true);
+    setMsg("");
+    try {
+      await api.notificacionCrear(form);
+      setForm({ titulo: "", mensaje: "", tipo: "info" });
+      setMsg("Notificación enviada");
+      cargarNotifs();
+    } catch (err) {
+      setMsg(err.message);
+    } finally {
+      setEnviando(false);
+    }
+  };
+
+  const eliminar = async (id) => {
+    try {
+      await api.notificacionBorrar(id);
+      setNotifs((prev) => prev.filter((n) => n.id !== id));
+    } catch { /* silenciar */ }
+  };
+
+  return (
+    <section className="bloque" aria-labelledby="admin-notifs-titulo">
+      <h3 id="admin-notifs-titulo">Notificaciones a escribanos</h3>
+      <form onSubmit={enviar} className="admin-notif-form">
+        <label>
+          Título
+          <input type="text" required maxLength={200} value={form.titulo} onChange={(e) => setForm({ ...form, titulo: e.target.value })} />
+        </label>
+        <label>
+          Mensaje
+          <textarea required rows={3} value={form.mensaje} onChange={(e) => setForm({ ...form, mensaje: e.target.value })} />
+        </label>
+        <label>
+          Tipo
+          <select value={form.tipo} onChange={(e) => setForm({ ...form, tipo: e.target.value })}>
+            <option value="info">Información</option>
+            <option value="alerta">Alerta</option>
+            <option value="novedad">Novedad</option>
+          </select>
+        </label>
+        <div className="acciones">
+          <button type="submit" className="boton primario chico" disabled={enviando}>{enviando ? "Enviando…" : "Enviar a todos"}</button>
+          {msg && <span className="nota">{msg}</span>}
+        </div>
+      </form>
+      {notifs.length > 0 && (
+        <div className="tabla-scroll">
+          <table aria-label="Notificaciones enviadas">
+            <thead><tr><th scope="col">Título</th><th scope="col">Tipo</th><th scope="col">Destino</th><th scope="col">Fecha</th><th scope="col"></th></tr></thead>
+            <tbody>
+              {notifs.map((n) => (
+                <tr key={n.id}>
+                  <th scope="row">{n.titulo}</th>
+                  <td><span className={`etiqueta ${n.tipo === "alerta" ? "warn" : n.tipo === "novedad" ? "ok" : ""}`}>{n.tipo}</span></td>
+                  <td>{n.destinatario_email || "Todos"}</td>
+                  <td>{new Date(n.creado_en).toLocaleDateString("es-AR")}</td>
+                  <td><button type="button" className="boton discreto chico" onClick={() => eliminar(n.id)} title="Eliminar"><Icono nombre="basura" tamano={14} /></button></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </section>
+  );
+}
+
 export default function AdminDashboard() {
   const [dias, setDias] = useState("30");
   const [resumen, setResumen] = useState(null);
   const [ventas, setVentas] = useState(null);
+  const [tendencias, setTendencias] = useState(null);
   const [ocupado, setOcupado] = useState(false);
   const [error, setError] = useState(null);
   const [aviso, setAviso] = useState("");
@@ -16,12 +282,14 @@ export default function AdminDashboard() {
   const cargar = async () => {
     setError(null);
     try {
-      const [r, v] = await Promise.all([
+      const [r, v, t] = await Promise.all([
         api.soporteResumen(dias),
         api.soporteSuscripciones(dias),
+        api.soporteTendencias(),
       ]);
       setResumen(r);
       setVentas(v);
+      setTendencias(t);
     } catch (e) {
       setError(`No se pudieron cargar los datos: ${e.message}`);
     }
@@ -73,6 +341,21 @@ export default function AdminDashboard() {
         </button>
       </div>
 
+      {tendencias && (tendencias.alertas.invitacionesPorVencer > 0 || tendencias.alertas.pruebasPorVencer > 0) && (
+        <div className="dashboard-alertas">
+          {tendencias.alertas.invitacionesPorVencer > 0 && (
+            <div className="alerta warn" role="status">
+              <strong>{tendencias.alertas.invitacionesPorVencer}</strong> invitacion{tendencias.alertas.invitacionesPorVencer === 1 ? "" : "es"} vence{tendencias.alertas.invitacionesPorVencer === 1 ? "" : "n"} en los proximos 7 dias
+            </div>
+          )}
+          {tendencias.alertas.pruebasPorVencer > 0 && (
+            <div className="alerta warn" role="status">
+              <strong>{tendencias.alertas.pruebasPorVencer}</strong> cuenta{tendencias.alertas.pruebasPorVencer === 1 ? "" : "s"} en prueba vence{tendencias.alertas.pruebasPorVencer === 1 ? "" : "n"} esta semana
+            </div>
+          )}
+        </div>
+      )}
+
       <div className="consumo-cards">
         <div className="consumo-card">
           <span className="consumo-card-valor">{resumen.cuentas.total}</span>
@@ -98,6 +381,19 @@ export default function AdminDashboard() {
           <span className="nota">{resumen.facturacion.cargos} cargos {"·"} suscripciones activas: {resumen.suscripciones.activa || 0}</span>
         </div>
       </div>
+
+      {tendencias && (
+        <section className="bloque" aria-labelledby="dashboard-graficos">
+          <h3 id="dashboard-graficos">Tendencias (ultimos 6 meses)</h3>
+          <div className="dashboard-graficos-grid">
+            <GraficoLinea datos={tendencias} titulo="Registros y documentos" />
+            <GraficoDona datos={tendencias.suscripciones} titulo="Estado de suscripciones" />
+          </div>
+          {tendencias.ingresosMensuales.length > 0 && (
+            <GraficoBarras datos={tendencias.ingresosMensuales} titulo="Facturacion mensual (ARS)" />
+          )}
+        </section>
+      )}
 
       <section className="bloque" aria-labelledby="soporte-embudo-titulo">
         <h3 id="soporte-embudo-titulo">Embudo de las cuentas creadas en el periodo</h3>
@@ -162,6 +458,8 @@ export default function AdminDashboard() {
           )}
         </section>
       )}
+
+      <PanelNotificaciones />
     </div>
   );
 }

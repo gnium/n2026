@@ -266,6 +266,7 @@ export const api = {
   soporteEliminarInvitacionesBulk: (ids) => json("DELETE", "/admin/invitations/bulk", { ids }),
   soporteRevisarPruebas: (forzarBorrado = false) => json("POST", "/admin/trials/review", { forzarBorrado }),
   soporteSuscripciones: (dias = 30) => fetch(`${BASE}/admin/subscriptions?dias=${dias}`).then(manejar),
+  soporteTendencias: () => fetch(`${BASE}/admin/trends`).then(manejar),
 
   // --- consultas de soporte (canal de comunicacion con el operador) ---
   consultasListar: () => fetch(`${BASE}/tickets`).then(manejar),
@@ -300,6 +301,15 @@ export const api = {
 
   // --- feriados ---
   feriadosListar: (anio, jurisdiccion) => fetch(`${BASE}/holidays?anio=${anio || ""}&jurisdiccion=${jurisdiccion || ""}`).then(manejar),
+
+  // --- notificaciones (admin → escribanos) ---
+  notificacionesListar: () => fetch(`${BASE}/notifications`).then(manejar),
+  notificacionesSinLeer: () => fetch(`${BASE}/notifications/unread`).then(manejar),
+  notificacionMarcarLeida: (id) => json("PATCH", `/notifications/${id}/read`),
+  notificacionesMarcarTodasLeidas: () => json("PATCH", "/notifications/read-all"),
+  notificacionCrear: (datos) => json("POST", "/notifications", datos),
+  notificacionesAdmin: () => fetch(`${BASE}/notifications/admin`).then(manejar),
+  notificacionBorrar: (id) => fetch(`${BASE}/notifications/${id}`, { method: "DELETE" }).then(manejar),
 
   // --- novedades (vencimientos y pendientes) ---
   novedades: () => fetch(`${BASE}/alerts`).then(manejar),

@@ -39,6 +39,8 @@ import Ayuda from "./components/Ayuda.jsx";
 import Landing from "./components/Landing.jsx";
 import TemaToggle from "./components/TemaToggle.jsx";
 import Icono from "./components/Iconos.jsx";
+import { CampanaNotificaciones } from "./components/Notificaciones.jsx";
+import ConfigGoogle from "./components/ConfigGoogle.jsx";
 import { api } from "./api.js";
 
 const BIENVENIDA = {
@@ -464,6 +466,7 @@ function AppInner() {
                 <span className="estado-servidor-texto">{textoIAEscribano}</span>
               </div>
             )}
+            <CampanaNotificaciones usuario={usuario} />
             <div className="usuario">
               <span title={usuario.email}>{usuario.nombre || usuario.email}</span>
               {usuario.esAdmin && <span className="admin-badge">admin</span>}
@@ -492,6 +495,7 @@ function AppInner() {
                   <div className="principal una-columna">
                     <section className="columna" aria-label="Configuración">
                       <Configuracion onCambio={recargarSalud} />
+                      <ConfigGoogle />
                       <ConfigNer />
                       <ParametrosUif />
                       <PlanesFacturacion />
@@ -588,7 +592,7 @@ function AppInner() {
           <span>{usuario.esAdmin
             ? "Panel de administración de Doy Fe. Gestión de cuentas, invitaciones, consultas y configuración de la plataforma."
             : "Los nombres, documentos, domicilios y datos catastrales se anonimizan antes del análisis y se conservan solo en la memoria del servidor hasta que descarga el documento o cierra la sesión. Excepciones, siempre a su pedido: el índice de protocolo y \"Guardar y continuar después\" (cifrados); agenda, notas y biblioteca de modelos (sin cifrar)."}</span>
-          <span className="pie-legal">© {new Date().getFullYear()} Doy Fe · Cumbre Tech S.R.L.</span>
+          <span className="pie-legal"><a href="/privacidad.html">Privacidad</a> · <a href="/condiciones.html">Condiciones</a> · <a href="/baja.html">Baja de datos</a> · © {new Date().getFullYear()} Doy Fe · Cumbre Tech S.R.L.</span>
         </footer>
       </div>
     </div>

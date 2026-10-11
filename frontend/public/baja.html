@@ -1,0 +1,212 @@
+<!doctype html>
+<html lang="es-AR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="light dark">
+<title>Baja de cuenta y eliminación de datos · Doy Fe</title>
+<meta name="description" content="Cómo dar de baja su cuenta en Doy Fe, qué datos se eliminan, cómo exportar su información y el plazo de eliminación.">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap">
+<style>
+:root{--bg:#f3f4f1;--surface:#fff;--ink:#1b1f24;--ink-2:#566069;--border:#dadcd6;--accent:#24466b;--accent-hover:#1c3856;--accent-ink:#ffffff;--seal:#9a7b3f;--mark-bg:#f4e7c4;--mark-ink:#5a4516}
+@media (prefers-color-scheme:dark){:root{--bg:#14171a;--surface:#1b1f23;--ink:#e7e9ec;--ink-2:#a3abb4;--border:#2e353c;--accent:#7ea6d0;--accent-hover:#98b9dc;--accent-ink:#0f1a26;--seal:#c2a36a;--mark-bg:#3a3121;--mark-ink:#e9d5a6}}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 1rem/1.65 "IBM Plex Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+a{color:var(--accent);text-underline-offset:2px}
+a:hover{color:var(--accent-hover)}
+a:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:2px}
+h1,h2,h3{font-family:"Source Serif 4",Georgia,"Times New Roman",serif;font-weight:600;line-height:1.25;color:var(--ink)}
+h1{font-size:clamp(1.9rem,4vw,2.5rem);margin:0 0 .5rem}
+h2{font-size:1.4rem;margin:2.75rem 0 .75rem;padding-top:1.25rem;border-top:1px solid var(--border)}
+h3{font-size:1.1rem;margin:1.75rem 0 .5rem}
+p,ul,ol{margin:0 0 1rem}
+li{margin-bottom:.35rem}
+mark{background:var(--mark-bg);color:var(--mark-ink);padding:0 .25em;border-radius:3px;font-weight:500}
+.cabecera{background:var(--surface);border-bottom:1px solid var(--border)}
+.cabecera-in{max-width:72rem;margin:0 auto;padding:.85rem 1.25rem;display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap}
+.marca{display:inline-flex;align-items:center;gap:.6rem;color:var(--ink);text-decoration:none;font-family:"Source Serif 4",Georgia,serif;font-weight:600;font-size:1.25rem}
+.marca:hover{color:var(--ink)}
+.cabecera nav{display:flex;gap:1.25rem;flex-wrap:wrap;font-size:.95rem}
+.cabecera nav a{color:var(--ink-2);text-decoration:none}
+.cabecera nav a:hover,.cabecera nav a[aria-current]{color:var(--accent)}
+main{padding:2.5rem 1.25rem 4rem}
+.hoja{max-width:72ch;margin:0 auto;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:clamp(1.5rem,5vw,3rem)}
+.vigencia{color:var(--ink-2);font-size:.95rem;margin-bottom:1.5rem}
+.vigencia::before{content:"";display:inline-block;width:.5rem;height:.5rem;border-radius:50%;background:var(--seal);margin-right:.5rem;vertical-align:middle}
+.aviso{border-left:3px solid var(--accent);background:var(--bg);padding:.9rem 1.1rem;border-radius:0 6px 6px 0;margin:1.25rem 0}
+.aviso p:last-child{margin-bottom:0}
+.indice{background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:1rem 1.25rem;margin:1.5rem 0}
+.indice strong{display:block;margin-bottom:.4rem;font-weight:600}
+.indice ol{margin:0;padding-left:1.25rem;columns:2;column-gap:2rem}
+.indice li{break-inside:avoid;font-size:.95rem}
+.pasos{counter-reset:paso;list-style:none;padding-left:0}
+.pasos li{counter-increment:paso;position:relative;padding-left:2.5rem;margin-bottom:1.25rem}
+.pasos li::before{content:counter(paso);position:absolute;left:0;top:.1rem;width:1.8rem;height:1.8rem;background:var(--accent);color:var(--accent-ink);border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:.85rem}
+.check-list{list-style:none;padding-left:.25rem}
+.check-list li{position:relative;padding-left:1.6rem;margin-bottom:.5rem}
+.check-list li::before{content:"✓";position:absolute;left:0;color:var(--accent);font-weight:700}
+.pie{border-top:1px solid var(--border);background:var(--surface)}
+.pie-in{max-width:72rem;margin:0 auto;padding:1.5rem 1.25rem;display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap;color:var(--ink-2);font-size:.9rem}
+.pie nav{display:flex;gap:1.25rem;flex-wrap:wrap}
+.pie a{color:var(--ink-2)}
+.pie a:hover{color:var(--accent)}
+@media (max-width:640px){.indice ol{columns:1}}
+@media print{.cabecera nav,.pie{display:none}.hoja{border:0;padding:0}body{background:#fff}}
+</style>
+</head>
+<body>
+<header class="cabecera">
+  <div class="cabecera-in">
+    <a href="/" class="marca"><img src="/favicon.svg" width="32" height="32" alt=""> <span>Doy Fe</span></a>
+    <nav aria-label="Principal">
+      <a href="/">Inicio</a>
+      <a href="/privacidad.html">Privacidad</a>
+      <a href="/condiciones.html">Condiciones</a>
+      <a href="/baja.html" aria-current="page">Baja de datos</a>
+      <a href="https://app.doyfegestion.com">Ingresar</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+<article class="hoja">
+  <h1>Baja de cuenta y eliminación de datos</h1>
+  <p class="vigencia">Vigente desde octubre de 2026</p>
+
+  <p>En Doy Fe creemos que sus datos son suyos. Cuando deja de usar el servicio, no nos quedamos con nada. Esta página explica cómo cancelar su cuenta, qué se elimina, cómo exportar su información antes de irse y en qué plazo se completa todo.</p>
+
+  <div class="aviso">
+    <p><strong>Compromiso de eliminación total.</strong> Al dar de baja su cuenta, todos sus datos se eliminan de forma definitiva e irreversible. Doy Fe no retiene copias, backups personalizados ni claves de cifrado. No hay letra chica.</p>
+  </div>
+
+  <nav class="indice" aria-label="Contenido">
+    <strong>Contenido</strong>
+    <ol>
+      <li><a href="#como">Cómo dar de baja la cuenta</a></li>
+      <li><a href="#que-pasa">Qué sucede al cancelar</a></li>
+      <li><a href="#que-se-elimina">Qué se elimina</a></li>
+      <li><a href="#que-no-se-retiene">Qué NO se retiene</a></li>
+      <li><a href="#exportar">Exportación previa</a></li>
+      <li><a href="#plazo">Plazo de eliminación</a></li>
+      <li><a href="#prueba">Cuentas de prueba</a></li>
+      <li><a href="#google">Datos en Google</a></li>
+      <li><a href="#contacto">Contacto</a></li>
+    </ol>
+  </nav>
+
+  <h2 id="como">1. Cómo dar de baja la cuenta</h2>
+  <p>Puede solicitar la baja de dos maneras:</p>
+
+  <h3>Desde la aplicación</h3>
+  <ol class="pasos">
+    <li>Ingrese a <strong>Doy Fe</strong> con su cuenta.</li>
+    <li>Vaya a <strong>Suscripción</strong> en el menú lateral.</li>
+    <li>Haga clic en <strong>Cancelar suscripción</strong>.</li>
+    <li>Confirme la cancelación. La aplicación le informará hasta cuándo conserva el acceso.</li>
+  </ol>
+
+  <h3>Por correo electrónico</h3>
+  <p>Si prefiere o no puede acceder a la aplicación, escriba a <a href="mailto:sebastian@cumbre.tech">sebastian@cumbre.tech</a> desde el correo asociado a su cuenta, indicando que desea dar de baja su cuenta y eliminar sus datos. Podemos pedirle que confirme su identidad.</p>
+
+  <h2 id="que-pasa">2. Qué sucede al cancelar</h2>
+  <ul>
+    <li><strong>Acceso hasta fin del período pagado.</strong> Si tiene una suscripción activa, conserva el acceso hasta que termine el ciclo de facturación en curso. No se genera un nuevo cobro.</li>
+    <li><strong>Exportación.</strong> Durante ese período puede exportar su información (ver sección 5).</li>
+    <li><strong>Eliminación automática.</strong> Al finalizar el período, la cuenta y todos sus datos se eliminan de forma definitiva.</li>
+    <li><strong>Si pide eliminación inmediata</strong>, la procesamos dentro de los 5 días hábiles.</li>
+  </ul>
+
+  <h2 id="que-se-elimina">3. Qué se elimina</h2>
+  <p>Se eliminan <strong>todos</strong> los datos asociados a su cuenta, sin excepción:</p>
+  <ul class="check-list">
+    <li>Datos de la cuenta (email, nombre, contraseña hasheada, rol)</li>
+    <li>Clientes y sus datos cifrados (DNI, CUIT, domicilio, teléfono, email, estado civil, nacionalidad)</li>
+    <li>Expedientes, tareas y carátulas</li>
+    <li>Protocolo e índice anual (comparecientes cifrados)</li>
+    <li>Agenda y turnos</li>
+    <li>Notas y biblioteca de modelos</li>
+    <li>Presupuestos y comprobantes emitidos</li>
+    <li>Certificaciones de firmas</li>
+    <li>Movimientos de caja y cuenta corriente</li>
+    <li>Legajos UIF (datos cifrados de beneficiarios, actividad, PEP)</li>
+    <li>Sesiones de IA guardadas (cifradas)</li>
+    <li>Credenciales de ARCA y tokens de Google (cifrados)</li>
+    <li>Métricas de uso de IA y registros de auditoría</li>
+    <li>Invitaciones al equipo pendientes</li>
+    <li>Configuración de la escribanía</li>
+  </ul>
+  <p>La eliminación es en cascada: al borrar la cuenta de usuario, la base de datos elimina automáticamente todos los registros vinculados.</p>
+
+  <h2 id="que-no-se-retiene">4. Qué NO se retiene</h2>
+  <div class="aviso">
+    <p><strong>Doy Fe no retiene nada después de la baja.</strong></p>
+    <ul>
+      <li>No hay backups individuales de cuentas eliminadas.</li>
+      <li>Las claves de cifrado son únicas por instalación y por tipo de dato; una vez eliminada la cuenta, los datos cifrados son irrecuperables.</li>
+      <li>Las sesiones de IA se procesan en memoria y se destruyen al cerrar o descargar; las guardadas para continuar después se eliminan con la cuenta.</li>
+      <li>No se conservan datos para análisis, marketing ni ningún otro fin.</li>
+    </ul>
+  </div>
+  <p>La única excepción es la información que una norma legal obliga a conservar (por ejemplo, registros de facturación por la normativa tributaria). Esos datos se conservan anonimizados por el plazo legal y luego se eliminan.</p>
+
+  <h2 id="exportar">5. Exportación previa</h2>
+  <p>Antes de dar de baja su cuenta, le recomendamos exportar lo que necesite conservar:</p>
+  <ul>
+    <li><strong>Índice de protocolo</strong>: descargue el índice anual en formato <code>.docx</code> desde <em>Protocolo → Índice</em>.</li>
+    <li><strong>Escrituras y minutas</strong>: descargue cada documento en <code>.docx</code> desde la sesión de IA correspondiente.</li>
+    <li><strong>Comprobantes y presupuestos</strong>: descargue los PDF desde <em>Comprobantes</em> o <em>Presupuestos</em>.</li>
+    <li><strong>Certificaciones</strong>: descargue los PDF desde <em>Certificaciones</em>.</li>
+    <li><strong>Copias en Google Drive</strong>: si activó la copia a Drive, sus documentos ya están en su cuenta de Google y permanecen allí tras la baja.</li>
+  </ul>
+  <p>Si necesita una exportación masiva o en otro formato, escríbanos a <a href="mailto:sebastian@cumbre.tech">sebastian@cumbre.tech</a> y lo coordinamos antes de la eliminación.</p>
+
+  <h2 id="plazo">6. Plazo de eliminación</h2>
+  <ul>
+    <li><strong>Cancelación estándar</strong>: los datos se eliminan al finalizar el período de suscripción pagado, y como máximo dentro de los 30 (treinta) días corridos siguientes.</li>
+    <li><strong>Eliminación inmediata</strong>: si lo solicita expresamente por correo, procesamos la eliminación dentro de los 5 (cinco) días hábiles.</li>
+    <li><strong>Cuentas de prueba</strong>: se eliminan automáticamente al vencer el período de prueba si no se activa una suscripción.</li>
+  </ul>
+
+  <h2 id="prueba">7. Cuentas de prueba</h2>
+  <p>Las cuentas creadas con una invitación de prueba tienen una fecha de vencimiento clara, informada al crear la cuenta. Si al llegar esa fecha no se activó una suscripción:</p>
+  <ul>
+    <li>La cuenta se marca para eliminación automática.</li>
+    <li>Todos los datos se eliminan de la misma forma que en una baja voluntaria.</li>
+    <li>No se envían recordatorios de cobro ni se generan deudas.</li>
+  </ul>
+
+  <h2 id="google">8. Datos en Google</h2>
+  <p>Si conectó su cuenta de Google para sincronizar la agenda o copiar documentos a Drive:</p>
+  <ul>
+    <li>Al dar de baja la cuenta, Doy Fe revoca los permisos de Google y elimina los tokens almacenados.</li>
+    <li>Los eventos creados en Google Calendar y los archivos copiados a Google Drive <strong>permanecen en su cuenta de Google</strong>, bajo su control. Doy Fe no los borra.</li>
+    <li>Si desea revocar el acceso manualmente: <a href="https://myaccount.google.com/permissions">myaccount.google.com/permissions</a>.</li>
+  </ul>
+
+  <h2 id="contacto">9. Contacto</h2>
+  <p>Para solicitar la baja, pedir una eliminación inmediata o resolver cualquier duda sobre este proceso:</p>
+  <p>Cumbre Tech S.R.L. · General Güemes 1717, 2.° piso, depto. C, Salta, Argentina<br>
+  Correo: <a href="mailto:sebastian@cumbre.tech">sebastian@cumbre.tech</a></p>
+  <p>Para más detalles sobre el tratamiento de datos, consulte la <a href="/privacidad.html">Política de privacidad</a>. Para las condiciones generales del servicio, consulte las <a href="/condiciones.html">Condiciones del servicio</a>.</p>
+</article>
+</main>
+
+<footer class="pie">
+  <div class="pie-in">
+    <span>Doy Fe · Cumbre Tech S.R.L.</span>
+    <nav aria-label="Legales">
+      <a href="/">Inicio</a>
+      <a href="/privacidad.html">Política de privacidad</a>
+      <a href="/condiciones.html">Condiciones del servicio</a>
+      <a href="/baja.html">Baja de datos</a>
+      <a href="mailto:sebastian@cumbre.tech">sebastian@cumbre.tech</a>
+    </nav>
+  </div>
+</footer>
+</body>
+</html>

@@ -4,7 +4,7 @@
  * metadatos y agregados; ver la regla del modulo en services/soporte.js.
  */
 import { Router } from "express";
-import { resumen, cuentas, cuenta, cambiarActivo, eliminarDefinitivamente, suscripciones } from "../services/soporte.js";
+import { resumen, cuentas, cuenta, cambiarActivo, eliminarDefinitivamente, suscripciones, tendencias } from "../services/soporte.js";
 import * as invitaciones from "../services/invitacionesPlataforma.js";
 import { revisar } from "../services/prueba.js";
 import { rutasConsultasAdmin } from "./consultasSoporte.js";
@@ -20,6 +20,7 @@ const manejar = (fn) => async (req, res, next) => {
 };
 
 rutasSoporte.get("/summary", manejar(async (req, res) => res.json(await resumen(req.query.dias))));
+rutasSoporte.get("/trends", manejar(async (_req, res) => res.json(await tendencias())));
 rutasSoporte.get("/subscriptions", manejar(async (req, res) => res.json(await suscripciones(req.query.dias))));
 rutasSoporte.get("/accounts", manejar(async (req, res) => res.json(await cuentas({ q: req.query.q, periodo: req.query.dias, soloProblemas: req.query.problemas === "1" }))));
 rutasSoporte.get("/accounts/:id", manejar(async (req, res) => res.json(await cuenta(req.params.id, req.query.dias))));

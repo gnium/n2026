@@ -40,6 +40,7 @@ import { rutasUif } from "./routes/uif.js";
 import { rutasCustodia, rutaVerificacion } from "./routes/custodia.js";
 import { rutasDdjj } from "./routes/ddjj.js";
 import { rutasCertificaciones } from "./routes/certificaciones.js";
+import { rutasNotificaciones } from "./routes/notificaciones.js";
 import { rutasVencimientos } from "./routes/vencimientos.js";
 import { rutasFeriados } from "./routes/feriados.js";
 import { verificarOrigen } from "./middleware/origen.js";
@@ -148,6 +149,7 @@ app.use("/api/ddjj", requerirAuth, requerirRol("escribano"), rutasDdjj);
 app.use("/api/deadlines", requerirAuth, rutasVencimientos);
 app.use("/api/holidays", requerirAuth, rutasFeriados);
 app.use("/api/custody", requerirAuth, requerirModulo("clientes"), rutasCustodia);
+app.use("/api/notifications", requerirAuth, rutasNotificaciones);
 app.use("/api/verify", rutaVerificacion);
 app.use("/api", requerirAuth, requerirAdmin, rutasConfiguracion);
 

@@ -989,5 +989,47 @@ th[scope="row"] { font-weight: 400; text-transform: none; letter-spacing: normal
 .etiqueta-estado-certificada-cert, .etiqueta-cert-certificada { background: var(--accent-soft); color: var(--accent-soft-ink, var(--accent)); }
 .etiqueta-estado-entregada-cert, .etiqueta-cert-entregada { background: var(--ok-soft); color: var(--ok); }
 
+/* --- Toast notifications --- */
+.toast-container { position: fixed; bottom: var(--s4); right: var(--s4); z-index: 9999; display: flex; flex-direction: column; gap: var(--s2); pointer-events: none; }
+.toast { pointer-events: auto; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-m); padding: var(--s3) var(--s4); box-shadow: var(--shadow-2); max-width: 380px; animation: toast-in 0.3s ease; display: flex; gap: var(--s3); align-items: flex-start; }
+.toast-info { border-left: 3px solid var(--accent); }
+.toast-alerta { border-left: 3px solid var(--warn); }
+.toast-novedad { border-left: 3px solid var(--ok); }
+.toast h4 { margin: 0; font-size: var(--t-sm); }
+.toast p { margin: 0; font-size: var(--t-xs); color: var(--ink-2); }
+.toast button { background: none; border: none; cursor: pointer; color: var(--ink-3); padding: 2px; }
+@keyframes toast-in { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+/* --- Notification bell & panel --- */
+.notif-bell { position: relative; }
+.notif-badge { position: absolute; top: -4px; right: -4px; background: var(--error); color: white; font-size: 10px; font-weight: 700; min-width: 16px; height: 16px; border-radius: 999px; display: flex; align-items: center; justify-content: center; pointer-events: none; }
+.notif-panel { position: absolute; right: 0; top: calc(100% + 4px); background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-m); box-shadow: var(--shadow-2); width: 360px; max-height: 400px; overflow-y: auto; z-index: 100; }
+.notif-panel-header { display: flex; align-items: center; justify-content: space-between; padding: var(--s3); border-bottom: 1px solid var(--border); }
+.notif-panel-header strong { font-size: var(--t-sm); }
+.notif-vacio { padding: var(--s5); text-align: center; color: var(--ink-3); font-size: var(--t-sm); }
+.notif-item { padding: var(--s3); border-bottom: 1px solid var(--border); cursor: pointer; }
+.notif-item.sin-leer { background: var(--accent-soft); }
+.notif-item:hover { background: var(--surface-2); }
+.notif-item-header { display: flex; align-items: center; justify-content: space-between; gap: var(--s2); }
+.notif-item h4 { font-size: var(--t-sm); margin: 0; }
+.notif-item p { font-size: var(--t-xs); color: var(--ink-2); margin: var(--s1) 0 0; }
+.notif-item time { font-size: var(--t-xs); color: var(--ink-3); white-space: nowrap; }
+.notif-tipo { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
+.notif-tipo-info { color: var(--accent); }
+.notif-tipo-alerta { color: var(--warn); }
+.notif-tipo-novedad { color: var(--ok); }
+@media (max-width: 480px) { .notif-panel { width: 300px; right: -60px; } }
+
+/* --- Admin notification form --- */
+.admin-notif-form { display: flex; flex-direction: column; gap: var(--s3); max-width: 500px; margin-bottom: var(--s4); }
+.admin-notif-form label { display: flex; flex-direction: column; gap: var(--s1); font-size: var(--t-sm); font-weight: 500; }
+.admin-notif-form textarea { font-family: var(--font-ui); font-size: var(--t-sm); resize: vertical; }
+
+.dashboard-alertas { display: flex; flex-direction: column; gap: var(--s2); }
+.dashboard-graficos-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: var(--s4); }
+@media (max-width: 800px) { .dashboard-graficos-grid { grid-template-columns: 1fr; } }
+.grafico-contenedor { border: 1px solid var(--border); border-radius: var(--radius-m); padding: var(--s4); background: var(--surface-2); }
+.grafico-contenedor h4 { font-size: var(--t-sm); color: var(--ink-2); margin: 0 0 var(--s3); }
+
 /* --- Prevent horizontal page scroll from any overflow edge case --- */
 html { overflow-x: hidden; }

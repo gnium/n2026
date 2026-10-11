@@ -20,6 +20,59 @@ import { enPrueba, pruebaVencida } from "./prueba.js";
 
 const dias = (v, def = 30) => Math.min(Math.max(Number(v) || def, 1), 365);
 
+/** Datos para los graficos del dashboard: tendencias mensuales y alertas. */
+export async function tendencias() {
+  const [registros] = await pool.query(
+    `SELECT DATE_FORMAT(creado_en, '%Y-%m') AS mes, COUNT(*) AS total
+       FROM usuarios
+      WHERE creado_en >= DATE_SUB(NOW(), INTERVAL 6 MONTH)
+      GROUP BY mes ORDER BY mes ASC`,
+  );
+  const [documentos] = await pool.query(
+    `SELECT DATE_FORMAT(iniciado_en, '%Y-%m') AS mes,
+            SUM(estado = 'completada') AS completados,
+            SUM(estado = 'fallida') AS fallidos
+       FROM ejecuciones
+      WHERE iniciado_en >= DATE_SUB(NOW(), INTERVAL 6 MONTH)
+      GROUP BY mes ORDER BY mes ASC`,
+  );
+  const [suscripciones] = await pool.query(
+    "SELECT estado_suscripcion AS estado, COUNT(*) AS n FROM usuarios GROUP BY estado_suscripcion",
+  );
+  const [[invPorVencer]] = await pool.query(
+    `SELECT COUNT(*) AS total FROM invitaciones_plataforma
+      WHERE aceptada_en IS NULL AND cancelada_en IS NULL
+        AND expira_en >= NOW() AND expira_en <= DATE_ADD(NOW(), INTERVAL 7 DAY)`,
+  );
+  const [[pruebasPorVencer]] = await pool.query(
+    `SELECT COUNT(*) AS total FROM usuarios
+      WHERE prueba_termina_en IS NOT NULL
+        AND prueba_termina_en >= CURDATE()
+        AND DATEDIFF(prueba_termina_en, CURDATE()) <= 7
+        AND estado_suscripcion <> 'activa'`,
+  );
+  const [ingresosMensuales] = await pool.query(
+    `SELECT DATE_FORMAT(creado_en, '%Y-%m') AS mes, SUM(monto_ars) AS totalArs
+       FROM cargos_uso
+      WHERE creado_en >= DATE_SUB(NOW(), INTERVAL 6 MONTH)
+      GROUP BY mes ORDER BY mes ASC`,
+  );
+  return {
+    registrosMensuales: registros.map((r) => ({ mes: r.mes, total: Number(r.total) })),
+    documentosMensuales: documentos.map((r) => ({
+      mes: r.mes,
+      completados: Number(r.completados || 0),
+      fallidos: Number(r.fallidos || 0),
+    })),
+    suscripciones: Object.fromEntries(suscripciones.map((s) => [s.estado, Number(s.n)])),
+    alertas: {
+      invitacionesPorVencer: Number(invPorVencer.total),
+      pruebasPorVencer: Number(pruebasPorVencer.total),
+    },
+    ingresosMensuales: ingresosMensuales.map((r) => ({ mes: r.mes, totalArs: Number(r.totalArs) })),
+  };
+}
+
 /** Detalle de suscripciones para el control de ventas. */
 export async function suscripciones(periodo) {
   const d = dias(periodo);
