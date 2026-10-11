@@ -494,7 +494,7 @@ table select { min-height: 32px; padding: 4px 8px; width: auto; }
 
 /* ---------- agenda ---------- */
 .agenda { display: flex; flex-direction: column; gap: var(--s4); }
-.agenda-toolbar { display: flex; justify-content: space-between; flex-wrap: wrap; gap: var(--s3); }
+.agenda-toolbar { display: flex; justify-content: space-between; flex-wrap: wrap; gap: var(--s3); align-items: end; }
 .agenda-rango { margin-left: var(--s2); font-weight: 600; }
 .agenda-mes { display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: var(--radius-m); overflow: hidden; }
 .agenda-mes-encabezado { background: var(--surface-2); padding: var(--s2); font-size: var(--t-xs); font-weight: 500; text-align: center; color: var(--ink-2); text-transform: uppercase; letter-spacing: 0.05em; }
