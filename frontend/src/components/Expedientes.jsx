@@ -199,7 +199,7 @@ export default function Expedientes() {
             )}
             <div className="segmentado" role="group" aria-label="Vista">
               <button type="button" className={vista === "lista" ? "activo" : ""} onClick={() => setVista("lista")}><Icono nombre="capas" tamano={14} /> Lista</button>
-              <button type="button" className={vista === "board" ? "activo" : ""} onClick={() => setVista("board")}><Icono nombre="carpeta" tamano={14} /> Board</button>
+              <button type="button" className={vista === "board" ? "activo" : ""} onClick={() => setVista("board")}><Icono nombre="carpeta" tamano={14} /> Tablero</button>
             </div>
             <button type="button" className="boton primario" onClick={() => setFormulario({ caratula: "", tipoActo: "compraventa", observaciones: "" })}><Icono nombre="mas" tamano={16} /> Nuevo expediente</button>
           </div>
