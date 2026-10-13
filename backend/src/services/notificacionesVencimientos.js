@@ -1,6 +1,7 @@
 import { pool } from "../config/db.js";
 import { enviarCorreo, escaparHtml } from "./correo.js";
 import { logger } from "../utils/logger.js";
+import { ZONA } from "../utils/fechas.js";
 
 async function enviarNotificacionesDiarias() {
   const [rows] = await pool.query(
@@ -25,7 +26,7 @@ async function enviarNotificacionesDiarias() {
 
   for (const [, u] of porUsuario) {
     const filas = u.vencs
-      .map((v) => `<tr><td style="padding:6px 12px;border-bottom:1px solid #eee">${escaparHtml(v.descripcion)}</td><td style="padding:6px 12px;border-bottom:1px solid #eee">${new Date(v.fecha_vencimiento).toLocaleDateString("es-AR")}</td></tr>`)
+      .map((v) => `<tr><td style="padding:6px 12px;border-bottom:1px solid #eee">${escaparHtml(v.descripcion)}</td><td style="padding:6px 12px;border-bottom:1px solid #eee">${new Date(v.fecha_vencimiento).toLocaleDateString("es-AR", { timeZone: ZONA })}</td></tr>`)
       .join("");
     const html = `<div style="font-family:sans-serif;max-width:600px;margin:auto">
 <h2 style="color:#24466b">Vencimientos próximos</h2>
@@ -33,7 +34,7 @@ async function enviarNotificacionesDiarias() {
 <table style="border-collapse:collapse;width:100%"><thead><tr><th style="text-align:left;padding:6px 12px;border-bottom:2px solid #24466b">Descripción</th><th style="text-align:left;padding:6px 12px;border-bottom:2px solid #24466b">Vence</th></tr></thead><tbody>${filas}</tbody></table>
 <p style="margin-top:16px;font-size:13px;color:#666">Ingresá a Doy Fe para ver el detalle y marcarlos como completados.</p>
 </div>`;
-    const texto = u.vencs.map((v) => `- ${v.descripcion}: vence el ${new Date(v.fecha_vencimiento).toLocaleDateString("es-AR")}`).join("\n");
+    const texto = u.vencs.map((v) => `- ${v.descripcion}: vence el ${new Date(v.fecha_vencimiento).toLocaleDateString("es-AR", { timeZone: ZONA })}`).join("\n");
     await enviarCorreo({
       para: u.email,
       asunto: `Doy Fe: tenés ${u.vencs.length} vencimiento${u.vencs.length > 1 ? "s" : ""} próximo${u.vencs.length > 1 ? "s" : ""}`,

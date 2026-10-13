@@ -125,7 +125,7 @@ export default function PresupuestoModal({ abierto, presupuesto = null, expedien
       }
       const condicionFiscal = window.__doyfe_condicion_fiscal || null;
       const r = await api.arancelesCalcular({ jurisdiccion, tipoActo: form.tipoActo, montoOperacion: monto, condicionFiscal });
-      const itemsManuales = form.items.filter((it) => !it.esCalculado && it.concepto.trim());
+      const itemsManuales = form.items.filter((it) => !it.esCalculado && it.concepto.trim() && parseMonto(it.monto));
       const itemsCalculados = r.items.map((it) => ({
         concepto: it.concepto,
         monto: String(it.monto).replace(".", ","),

@@ -33,6 +33,7 @@ import { logger } from "../utils/logger.js";
 import { enviarCorreo, escaparHtml } from "./correo.js";
 import { eliminarCuenta } from "./bajaCuenta.js";
 import { invalidarCache } from "../auth/repositorio.js";
+import { ZONA } from "../utils/fechas.js";
 
 const CLAVES = ["prueba_dias", "prueba_gracia_dias", "prueba_borrado_automatico"];
 const ESTADOS_PAGOS = ["activa", "pendiente"]; // no se toca a quien ya esta pagando o autorizando
@@ -103,7 +104,7 @@ export function vista(usuario) {
   };
 }
 
-const formatoFecha = (v) => new Date(`${String(v).slice(0, 10)}T00:00:00`).toLocaleDateString("es-AR", { day: "2-digit", month: "long", year: "numeric" });
+const formatoFecha = (v) => new Date(`${String(v).slice(0, 10)}T00:00:00`).toLocaleDateString("es-AR", { day: "2-digit", month: "long", year: "numeric", timeZone: ZONA });
 
 async function avisar(u, { asunto, cuerpo }) {
   const enlace = `${env.appUrl}/suscripcion`;

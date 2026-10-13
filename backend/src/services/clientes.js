@@ -10,13 +10,19 @@ import { AppError } from "../utils/errores.js";
 const TIPOS = new Set(["persona", "sociedad"]);
 // Estados civiles del Codigo Civil y Comercial; la union convivencial (arts. 509 y ss.) se incluye por el asentimiento del art. 522.
 export const ESTADOS_CIVILES = new Set(["soltero", "casado", "divorciado", "viudo", "union_convivencial"]);
-export const CAMPOS_CIFRADOS = ["documento", "cuit", "domicilio", "telefono", "email", "estadoCivil", "estadoCivilObs", "nacionalidad"];
+export const CAMPOS_CIFRADOS = ["documento", "cuit", "domicilio", "telefono", "email", "estadoCivil", "estadoCivilObs", "actaPresentada", "sentenciaPresentada", "nacionalidad"];
+
+const CAMPOS_BOOL = new Set(["actaPresentada", "sentenciaPresentada"]);
 
 function empaquetar(datos) {
   const obj = {};
   for (const k of CAMPOS_CIFRADOS) {
     const v = datos[k];
-    if (typeof v === "string" && v.trim()) obj[k] = v.trim().slice(0, 200);
+    if (CAMPOS_BOOL.has(k)) {
+      if (v === true || v === "true" || v === 1) obj[k] = true;
+    } else if (typeof v === "string" && v.trim()) {
+      obj[k] = v.trim().slice(0, 200);
+    }
   }
   return Object.keys(obj).length ? cifrar(JSON.stringify(obj), "cliente") : null;
 }

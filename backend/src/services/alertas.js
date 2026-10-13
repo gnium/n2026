@@ -16,7 +16,7 @@ import { alertas as alertasUif } from "./uif.js";
 import { descifrar } from "../utils/cifrado.js";
 import { vencimientoCertificado } from "./arca.js";
 import { logger } from "../utils/logger.js";
-import { hoyLocal } from "../utils/fechas.js";
+import { hoyLocal, ZONA } from "../utils/fechas.js";
 
 const DIAS_AVISO_CERTIFICADO = 45;
 const DIAS_AVISO_TAREA = 7;
@@ -34,8 +34,8 @@ async function certificadoArca(usuarioId) {
   const vence = vencimientoCertificado(pem);
   if (!vence) return [];
   const dias = Math.floor((vence.getTime() - Date.now()) / 86400000);
-  if (dias < 0) return [{ nivel: "alta", tipo: "arca_certificado", texto: `El certificado de ARCA venció el ${vence.toLocaleDateString("es-AR")}: no se pueden emitir facturas electrónicas hasta renovarlo.`, pantalla: "comprobantes", fecha: fecha(vence.toISOString()) }];
-  if (dias <= DIAS_AVISO_CERTIFICADO) return [{ nivel: dias <= 15 ? "alta" : "media", tipo: "arca_certificado", texto: `El certificado de ARCA vence en ${dias} día${dias === 1 ? "" : "s"} (${vence.toLocaleDateString("es-AR")}). Renuévelo en el portal de ARCA y vuelva a cargarlo.`, pantalla: "comprobantes", fecha: fecha(vence.toISOString()) }];
+  if (dias < 0) return [{ nivel: "alta", tipo: "arca_certificado", texto: `El certificado de ARCA venció el ${vence.toLocaleDateString("es-AR", { timeZone: ZONA })}: no se pueden emitir facturas electrónicas hasta renovarlo.`, pantalla: "comprobantes", fecha: fecha(vence.toISOString()) }];
+  if (dias <= DIAS_AVISO_CERTIFICADO) return [{ nivel: dias <= 15 ? "alta" : "media", tipo: "arca_certificado", texto: `El certificado de ARCA vence en ${dias} día${dias === 1 ? "" : "s"} (${vence.toLocaleDateString("es-AR", { timeZone: ZONA })}). Renuévelo en el portal de ARCA y vuelva a cargarlo.`, pantalla: "comprobantes", fecha: fecha(vence.toISOString()) }];
   return [];
 }
 
@@ -79,7 +79,7 @@ async function turnos(usuarioId) {
   return rows.map((t) => ({
     nivel: "baja",
     tipo: "turno",
-    texto: `Turno: ${t.titulo} · ${new Date(t.fecha_hora).toLocaleString("es-AR", { dateStyle: "short", timeStyle: "short" })}`,
+    texto: `Turno: ${t.titulo} · ${new Date(t.fecha_hora).toLocaleString("es-AR", { dateStyle: "short", timeStyle: "short", timeZone: ZONA })}`,
     pantalla: "agenda",
     referenciaId: t.id,
     fecha: fecha(t.fecha_hora),
@@ -115,7 +115,7 @@ async function sesionesGuardadas(usuarioId) {
   return rows.map((s) => ({
     nivel: "media",
     tipo: "sesion_guardada",
-    texto: `Una sesión guardada (${s.modo}) vence el ${new Date(s.expira_en).toLocaleDateString("es-AR")} y se borra sola. Reanúdela o descárguela.`,
+    texto: `Una sesión guardada (${s.modo}) vence el ${new Date(s.expira_en).toLocaleDateString("es-AR", { timeZone: ZONA })} y se borra sola. Reanúdela o descárguela.`,
     pantalla: "principal",
     fecha: fecha(s.expira_en),
   }));
@@ -131,7 +131,7 @@ async function vencimientosProximos(usuarioId) {
   return rows.map((v) => ({
     nivel: v.estado === "vencido" ? "alta" : "media",
     tipo: "vencimiento",
-    texto: `${v.estado === "vencido" ? "Vencido" : "Por vencer"}: ${v.descripcion} (${new Date(v.fecha_vencimiento).toLocaleDateString("es-AR")})`,
+    texto: `${v.estado === "vencido" ? "Vencido" : "Por vencer"}: ${v.descripcion} (${new Date(v.fecha_vencimiento).toLocaleDateString("es-AR", { timeZone: ZONA })})`,
     pantalla: "agenda",
     referenciaId: v.id,
     fecha: fecha(v.fecha_vencimiento),
@@ -146,7 +146,7 @@ async function ddijPendientesAlerta(usuarioId) {
   return rows.map((d) => ({
     nivel: "media",
     tipo: "ddjj_pendiente",
-    texto: `DDJJ N° ${d.numero} pendiente de presentar (acto del ${new Date(d.fecha_acto).toLocaleDateString("es-AR")})`,
+    texto: `DDJJ N° ${d.numero} pendiente de presentar (acto del ${new Date(d.fecha_acto).toLocaleDateString("es-AR", { timeZone: ZONA })})`,
     pantalla: "ddjj",
     referenciaId: d.id,
     fecha: fecha(d.fecha_acto),

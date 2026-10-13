@@ -6,6 +6,7 @@ import { construirCustodiaPdf } from "./custodiaPdf.js";
 import { enviarCorreo, escaparHtml } from "./correo.js";
 import { env } from "../config/env.js";
 import { logger } from "../utils/logger.js";
+import { ZONA } from "../utils/fechas.js";
 
 function generarCodigo() {
   return randomBytes(6).toString("base64url").slice(0, 8).toUpperCase();
@@ -143,7 +144,7 @@ async function notificarCustodia(registro, cliente, escribano, tipo, canales) {
   const url = urlVerificacion(registro.codigo);
   const accion = tipo === "recepcion" ? "recibida" : tipo === "entrega" ? "entregada" : "devuelta";
   const tipoLegible = tipo === "recepcion" ? "recepción" : tipo === "entrega" ? "entrega" : "devolución";
-  const fechaHora = new Date().toLocaleString("es-AR", { dateStyle: "long", timeStyle: "short" });
+  const fechaHora = new Date().toLocaleString("es-AR", { dateStyle: "long", timeStyle: "short", timeZone: ZONA });
   const asunto = `Comprobante de ${tipoLegible} de documentación — ${registro.codigo}`;
 
   const cuerpoHtml = (destinatario, esCopia) => `

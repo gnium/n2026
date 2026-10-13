@@ -10,6 +10,7 @@ import { AppError } from "../utils/errores.js";
 import { logger } from "../utils/logger.js";
 import { idsDelEquipo } from "./equipo.js";
 import { sincronizarTurno, borrarEventoDeTurno } from "./google.js";
+import { ZONA } from "../utils/fechas.js";
 
 /** Sincroniza con Google Calendar sin bloquear ni romper la agenda si Google falla. */
 function aGoogle(usuarioId, turno) {
@@ -171,7 +172,7 @@ async function enviarRecordatoriosPendientes() {
         AND TIMESTAMPDIFF(MINUTE, NOW(), t.fecha_hora) <= t.recordatorio_minutos_antes`,
   );
   for (const t of filas) {
-    const fecha = new Date(t.fecha_hora).toLocaleString("es-AR", { dateStyle: "short", timeStyle: "short" });
+    const fecha = new Date(t.fecha_hora).toLocaleString("es-AR", { dateStyle: "short", timeStyle: "short", timeZone: ZONA });
     try {
       await enviarCorreo({
         para: t.email,

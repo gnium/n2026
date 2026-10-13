@@ -2,7 +2,7 @@
  * Fechas "de calendario" en la zona horaria de la escribania (Argentina), sin la
  * deriva de toISOString() (UTC): a las 21:00 de Buenos Aires ya es manana en UTC.
  */
-const ZONA = process.env.TZ_APP || "America/Argentina/Buenos_Aires";
+export const ZONA = process.env.TZ_APP || "America/Argentina/Buenos_Aires";
 const fmt = new Intl.DateTimeFormat("sv-SE", { timeZone: ZONA, year: "numeric", month: "2-digit", day: "2-digit" });
 
 /** AAAA-MM-DD de hoy en la zona horaria de la app. */

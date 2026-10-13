@@ -2,8 +2,9 @@ import { useState } from "react";
 import { api } from "../api.js";
 import Icono from "./Iconos.jsx";
 
-const VACIO = { tipo: "persona", nombre: "", documento: "", cuit: "", domicilio: "", telefono: "", email: "", estadoCivil: "", estadoCivilObs: "", nacionalidad: "", observaciones: "" };
+const VACIO = { tipo: "persona", nombre: "", documento: "", cuit: "", domicilio: "", telefono: "", email: "", estadoCivil: "", estadoCivilObs: "", actaPresentada: false, sentenciaPresentada: false, nacionalidad: "", observaciones: "" };
 const ESTADOS_CIVILES = [["soltero", "Soltero/a"], ["casado", "Casado/a"], ["divorciado", "Divorciado/a"], ["viudo", "Viudo/a"], ["union_convivencial", "Unión convivencial"]];
+const REQUIERE_DOCUMENTACION = new Set(["divorciado", "union_convivencial"]);
 
 export default function ModalNuevoCliente({ onCreado, onCerrar }) {
   const [form, setForm] = useState({ ...VACIO });
@@ -52,6 +53,13 @@ export default function ModalNuevoCliente({ onCreado, onCerrar }) {
                   {ESTADOS_CIVILES.map(([v, t]) => <option key={v} value={v}>{t}</option>)}
                 </select>
               </label>
+            )}
+            {form.tipo === "persona" && REQUIERE_DOCUMENTACION.has(form.estadoCivil) && (
+              <div className="campo">
+                <span className="campo-titulo">Documentación presentada</span>
+                <label className="campo-check"><input type="checkbox" checked={Boolean(form.actaPresentada)} onChange={(e) => setForm({ ...form, actaPresentada: e.target.checked })} /> Presenta acta {form.estadoCivil === "divorciado" ? "de divorcio" : "de unión convivencial"}</label>
+                <label className="campo-check"><input type="checkbox" checked={Boolean(form.sentenciaPresentada)} onChange={(e) => setForm({ ...form, sentenciaPresentada: e.target.checked })} /> Presenta sentencia {form.estadoCivil === "divorciado" ? "de divorcio" : "de inscripción"}</label>
+              </div>
             )}
             {form.tipo === "persona" && <label className="campo"><span className="campo-titulo">Nacionalidad</span><input type="text" {...campo("nacionalidad")} /></label>}
           </div>

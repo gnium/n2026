@@ -8,11 +8,20 @@ import { formatoMonto } from "./PresupuestoModal.jsx";
 import UifLegajo from "./UifLegajo.jsx";
 import ConfirmarDialogo from "./ConfirmarDialogo.jsx";
 
-const VACIO = { tipo: "persona", nombre: "", documento: "", cuit: "", domicilio: "", telefono: "", email: "", estadoCivil: "", estadoCivilObs: "", nacionalidad: "", observaciones: "" };
+const VACIO = { tipo: "persona", nombre: "", documento: "", cuit: "", domicilio: "", telefono: "", email: "", estadoCivil: "", estadoCivilObs: "", actaPresentada: false, sentenciaPresentada: false, nacionalidad: "", observaciones: "" };
+const REQUIERE_DOCUMENTACION = new Set(["divorciado", "union_convivencial"]);
 // Estados civiles del Código Civil y Comercial; la unión convivencial (arts. 509 y ss.) importa para el asentimiento del art. 522.
 const ESTADOS_CIVILES = [["soltero", "Soltero/a"], ["casado", "Casado/a"], ["divorciado", "Divorciado/a"], ["viudo", "Viudo/a"], ["union_convivencial", "Unión convivencial"]];
 const NOMBRE_ESTADO_CIVIL = Object.fromEntries(ESTADOS_CIVILES);
-const estadoCivilTexto = (c) => [NOMBRE_ESTADO_CIVIL[c.estadoCivil] || c.estadoCivil, c.estadoCivilObs].filter(Boolean).join(", ");
+const estadoCivilTexto = (c) => {
+  const partes = [NOMBRE_ESTADO_CIVIL[c.estadoCivil] || c.estadoCivil];
+  if (REQUIERE_DOCUMENTACION.has(c.estadoCivil)) {
+    const docs = [c.actaPresentada && "acta", c.sentenciaPresentada && "sentencia"].filter(Boolean);
+    partes.push(docs.length ? `presenta ${docs.join(" y ")}` : "sin documentación presentada");
+  }
+  if (c.estadoCivilObs) partes.push(c.estadoCivilObs);
+  return partes.filter(Boolean).join(", ");
+};
 const NOMBRE_ESTADO_EXP = { abierto: "abierto", en_firma: "en firma", cerrado: "cerrado", archivado: "archivado" };
 
 export default function Clientes({ onAbrirExpediente }) {
@@ -232,6 +241,13 @@ export default function Clientes({ onAbrirExpediente }) {
                     {ESTADOS_CIVILES.map(([v, t]) => <option key={v} value={v}>{t}</option>)}
                   </select>
                 </label>
+              )}
+              {formulario.tipo === "persona" && REQUIERE_DOCUMENTACION.has(formulario.estadoCivil) && (
+                <div className="campo">
+                  <span className="campo-titulo">Documentación presentada</span>
+                  <label className="campo-check"><input type="checkbox" checked={Boolean(formulario.actaPresentada)} onChange={(e) => setFormulario({ ...formulario, actaPresentada: e.target.checked })} /> Presenta acta {formulario.estadoCivil === "divorciado" ? "de divorcio" : "de unión convivencial"}</label>
+                  <label className="campo-check"><input type="checkbox" checked={Boolean(formulario.sentenciaPresentada)} onChange={(e) => setFormulario({ ...formulario, sentenciaPresentada: e.target.checked })} /> Presenta sentencia {formulario.estadoCivil === "divorciado" ? "de divorcio" : "de inscripción"}</label>
+                </div>
               )}
               {formulario.tipo === "persona" && <label className="campo"><span className="campo-titulo">Detalle del estado civil <small>(opcional)</small></span><input type="text" placeholder="en segundas nupcias con…" maxLength={200} {...campo("estadoCivilObs")} /></label>}
               {formulario.tipo === "persona" && <label className="campo"><span className="campo-titulo">Nacionalidad</span><input type="text" {...campo("nacionalidad")} /></label>}

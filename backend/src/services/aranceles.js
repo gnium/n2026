@@ -63,26 +63,37 @@ export async function calcular(jurisdiccion, tipoActo, montoOperacion, { condici
 }
 
 function calcularMonto(arancel, base) {
+  let resultado;
   switch (arancel.tipoCalculo) {
     case "porcentaje":
-      return base * (arancel.valor / 100);
+      resultado = base * (arancel.valor / 100);
+      break;
     case "fijo":
-      return arancel.valor;
+      resultado = arancel.valor;
+      break;
     case "por_unidad":
-      return arancel.valor;
+      resultado = arancel.valor;
+      break;
     case "escala": {
       const escala = arancel.escala;
       if (!Array.isArray(escala) || !escala.length) return 0;
+      let total = 0;
+      let prevHasta = 0;
       for (const tramo of escala) {
-        if (tramo.hasta === null || base <= tramo.hasta) {
-          return base * (tramo.valor / 100);
-        }
+        if (base <= prevHasta) break;
+        const techo = tramo.hasta ?? Infinity;
+        const aplicable = Math.min(base, techo) - prevHasta;
+        total += aplicable * (tramo.valor / 100);
+        prevHasta = techo;
       }
-      return base * (escala[escala.length - 1].valor / 100);
+      resultado = total;
+      break;
     }
     default:
       return 0;
   }
+  if (arancel.minimo != null && resultado < arancel.minimo) resultado = arancel.minimo;
+  return resultado;
 }
 
 function redondear(n) {
@@ -99,6 +110,7 @@ function filaAVista(r) {
     tipoCalculo: r.tipo_calculo,
     valor: r.valor != null ? Number(r.valor) : null,
     escala: typeof r.escala === "string" ? JSON.parse(r.escala) : r.escala,
+    minimo: r.minimo != null ? Number(r.minimo) : null,
     base: r.base,
     quienPaga: r.quien_paga,
     obligatorio: Boolean(r.obligatorio),
@@ -121,6 +133,7 @@ export async function actualizar(id, datos) {
   if (datos.nombre !== undefined) campos.nombre = String(datos.nombre).trim().slice(0, 160);
   if (datos.valor !== undefined) campos.valor = datos.valor;
   if (datos.escala !== undefined) campos.escala = datos.escala ? JSON.stringify(datos.escala) : null;
+  if (datos.minimo !== undefined) campos.minimo = datos.minimo ?? null;
   if (datos.activo !== undefined) campos.activo = datos.activo ? 1 : 0;
   if (datos.quienPaga !== undefined) campos.quien_paga = datos.quienPaga;
   if (datos.notas !== undefined) campos.notas = datos.notas?.slice(0, 300) || null;
@@ -133,12 +146,12 @@ export async function actualizar(id, datos) {
 }
 
 export async function crear(datos) {
-  const { jurisdiccion, categoria, tipoActo, nombre, tipoCalculo, valor, escala, base, quienPaga, obligatorio, orden, notas } = datos;
+  const { jurisdiccion, categoria, tipoActo, nombre, tipoCalculo, valor, escala, minimo, base, quienPaga, obligatorio, orden, notas } = datos;
   if (!jurisdiccion || !categoria || !nombre || !tipoCalculo) throw new AppError("DATOS_INVALIDOS", "Faltan campos obligatorios.", 400);
   const [r] = await pool.query(
-    `INSERT INTO aranceles (jurisdiccion, categoria, tipo_acto, nombre, tipo_calculo, valor, escala, base, quien_paga, obligatorio, orden, notas)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    [jurisdiccion, categoria, tipoActo || null, nombre, tipoCalculo, valor ?? null, escala ? JSON.stringify(escala) : null, base || "monto_operacion", quienPaga || "cliente", obligatorio ? 1 : 0, orden || 0, notas?.slice(0, 300) || null],
+    `INSERT INTO aranceles (jurisdiccion, categoria, tipo_acto, nombre, tipo_calculo, valor, escala, minimo, base, quien_paga, obligatorio, orden, notas)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [jurisdiccion, categoria, tipoActo || null, nombre, tipoCalculo, valor ?? null, escala ? JSON.stringify(escala) : null, minimo ?? null, base || "monto_operacion", quienPaga || "cliente", obligatorio ? 1 : 0, orden || 0, notas?.slice(0, 300) || null],
   );
   return obtener(r.insertId);
 }
