@@ -13,6 +13,13 @@ const RECORDATORIOS = [
   { valor: 2880, texto: "2 días antes" },
 ];
 const ESTADOS = ["pendiente", "confirmado", "cancelado", "realizado"];
+const TIPOS_VENCIMIENTO = [
+  ["certificado_dominio", "Certificado de dominio"],
+  ["certificado_inhibiciones", "Certificado de inhibiciones"],
+  ["inscripcion_dgi", "Inscripción DGI"],
+  ["ddjj_sellos", "DDJJ Sellos"],
+  ["otro", "Otro"],
+];
 
 const toISODate = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 const sumarDias = (d, n) => {
@@ -37,7 +44,7 @@ const capitalizar = (s) => s.charAt(0).toUpperCase() + s.slice(1);
 function borradorVacio(fecha = new Date()) {
   const f = new Date(fecha);
   const mins = f.getMinutes();
-  if (mins % 30 !== 0) f.setMinutes(mins < 30 ? 30 : 60, 0, 0); // setMinutes(60,...) rueda a la hora siguiente
+  if (mins % 30 !== 0) f.setMinutes(mins < 30 ? 30 : 60, 0, 0);
   return {
     id: null,
     titulo: "",
@@ -56,11 +63,16 @@ export default function Agenda() {
   const [fechaRef, setFechaRef] = useState(hoy());
   const [turnos, setTurnos] = useState(null);
   const [vencimientos, setVencimientos] = useState([]);
+  const [feriados, setFeriados] = useState([]);
   const [error, setError] = useState(null);
   const [aviso, setAviso] = useState(null);
   const [diaSeleccionado, setDiaSeleccionado] = useState(null);
   const [formulario, setFormulario] = useState(null);
+  const [formVencimiento, setFormVencimiento] = useState(null);
+  const [formFeriado, setFormFeriado] = useState(null);
   const dialogo = useRef(null);
+  const dialogoVenc = useRef(null);
+  const dialogoFeriado = useRef(null);
 
   useEffect(() => {
     const d = dialogo.current;
@@ -70,6 +82,24 @@ export default function Agenda() {
       d.querySelector("input")?.focus();
     } else if (!formulario && d.open) d.close();
   }, [formulario]);
+
+  useEffect(() => {
+    const d = dialogoVenc.current;
+    if (!d) return;
+    if (formVencimiento && !d.open) {
+      d.showModal();
+      d.querySelector("input, select")?.focus();
+    } else if (!formVencimiento && d.open) d.close();
+  }, [formVencimiento]);
+
+  useEffect(() => {
+    const d = dialogoFeriado.current;
+    if (!d) return;
+    if (formFeriado && !d.open) {
+      d.showModal();
+      d.querySelector("input")?.focus();
+    } else if (!formFeriado && d.open) d.close();
+  }, [formFeriado]);
 
   const { desde, hasta, diasGrilla } = useMemo(() => {
     if (vista === "semana") {
@@ -89,12 +119,15 @@ export default function Agenda() {
     setError(null);
     setAviso(null);
     try {
-      const [t, v] = await Promise.all([
+      const anio = fechaRef.getFullYear();
+      const [t, v, f] = await Promise.all([
         api.turnosListar(toISODate(desde), toISODate(hasta), verEquipo),
         api.vencimientosRango(toISODate(desde), toISODate(hasta)),
+        api.feriadosListar(anio),
       ]);
       setTurnos(t);
       setVencimientos(v);
+      setFeriados(f);
     } catch (e) {
       setError(e.message);
     }
@@ -107,6 +140,8 @@ export default function Agenda() {
 
   const turnosDelDia = (d) => (turnos || []).filter((t) => toISODate(new Date(t.fechaHora)) === toISODate(d)).sort((a, b) => new Date(a.fechaHora) - new Date(b.fechaHora));
   const vencimientosDelDia = (d) => vencimientos.filter((v) => String(v.fechaVencimiento).slice(0, 10) === toISODate(d));
+  const feriadosDelDia = (d) => feriados.filter((f) => String(f.fecha).slice(0, 10) === toISODate(d));
+  const esFeriadoDia = (d) => feriadosDelDia(d).length > 0;
 
   const abrirNuevo = (fecha) => {
     setError(null);
@@ -135,6 +170,26 @@ export default function Agenda() {
     });
   };
 
+  const abrirNuevoVencimiento = (fecha) => {
+    setError(null);
+    setAviso(null);
+    setFormVencimiento({
+      tipo: "otro",
+      descripcion: "",
+      fechaOrigen: toISODate(hoy()),
+      fechaVencimiento: toISODate(fecha || hoy()),
+    });
+  };
+
+  const abrirNuevoFeriado = (fecha) => {
+    setError(null);
+    setAviso(null);
+    setFormFeriado({
+      nombre: "",
+      fecha: toISODate(fecha || hoy()),
+    });
+  };
+
   const guardar = async (e) => {
     e.preventDefault();
     setError(null);
@@ -153,6 +208,52 @@ export default function Agenda() {
       setFormulario(null);
       cargar();
       setAviso(formulario.id ? "Turno actualizado." : "Turno agendado.");
+    } catch (e) {
+      setError(e.message);
+    }
+  };
+
+  const guardarVencimiento = async (e) => {
+    e.preventDefault();
+    setError(null);
+    try {
+      await api.vencimientoCrear({
+        tipo: formVencimiento.tipo,
+        descripcion: formVencimiento.descripcion.trim(),
+        fechaOrigen: formVencimiento.fechaOrigen,
+        fechaVencimiento: formVencimiento.fechaVencimiento,
+      });
+      setFormVencimiento(null);
+      cargar();
+      setAviso("Vencimiento creado.");
+    } catch (e) {
+      setError(e.message);
+    }
+  };
+
+  const guardarFeriado = async (e) => {
+    e.preventDefault();
+    setError(null);
+    try {
+      await api.feriadoCrear({
+        nombre: formFeriado.nombre.trim(),
+        fecha: formFeriado.fecha,
+        tipo: "propio",
+      });
+      setFormFeriado(null);
+      cargar();
+      setAviso("Día no laborable agregado.");
+    } catch (e) {
+      setError(e.message);
+    }
+  };
+
+  const borrarFeriado = async (id) => {
+    setError(null);
+    try {
+      await api.feriadoBorrar(id);
+      cargar();
+      setAviso("Día no laborable eliminado.");
     } catch (e) {
       setError(e.message);
     }
@@ -203,7 +304,7 @@ export default function Agenda() {
       <p className="nota">
         El título y las notas de cada turno se guardan en texto plano en la base de datos (no cifrados como el índice de protocolo). Evite anotar datos innecesarios; el nombre del cliente alcanza para identificar el turno.
       </p>
-      {error && !formulario && <p className="alerta error" role="alert">{error}</p>}
+      {error && !formulario && !formVencimiento && !formFeriado && <p className="alerta error" role="alert">{error}</p>}
       <p className={`alerta ok ${aviso ? "" : "sr-only"}`} role="status">{aviso}</p>
 
       <div className="acciones agenda-toolbar">
@@ -223,6 +324,8 @@ export default function Agenda() {
             <button type="button" className={verEquipo ? "activo" : ""} aria-pressed={verEquipo} onClick={() => setVerEquipo(true)}>Equipo</button>
           </div>
           <button type="button" className="boton primario" onClick={() => abrirNuevo(diaSeleccionado || new Date())}><Icono nombre="mas" tamano={16} /> Nuevo turno</button>
+          <button type="button" className="boton" onClick={() => abrirNuevoVencimiento(diaSeleccionado || new Date())}><Icono nombre="mas" tamano={16} /> Vencimiento</button>
+          <button type="button" className="boton" onClick={() => abrirNuevoFeriado(diaSeleccionado || new Date())}><Icono nombre="mas" tamano={16} /> Día no laborable</button>
         </div>
       </div>
 
@@ -237,17 +340,20 @@ export default function Agenda() {
             const delMes = d.getMonth() === fechaRef.getMonth();
             const esHoy = toISODate(d) === toISODate(hoy());
             const tDia = turnosDelDia(d);
+            const fDia = feriadosDelDia(d);
             const seleccionada = Boolean(diaSeleccionado && toISODate(diaSeleccionado) === toISODate(d));
+            const esFeriado = fDia.length > 0;
             return (
               <button
                 type="button"
                 key={toISODate(d)}
-                className={`agenda-celda ${delMes ? "" : "fuera-de-mes"} ${esHoy ? "es-hoy" : ""} ${seleccionada ? "seleccionada" : ""}`}
-                aria-label={`${d.toLocaleDateString("es-AR", { weekday: "long", day: "numeric", month: "long" })}${esHoy ? ", hoy" : ""}, ${tDia.length} turno${tDia.length === 1 ? "" : "s"}${tDia.length ? `: ${tDia.map((t) => `${hora(new Date(t.fechaHora))} ${t.titulo}${t.esPropio === false ? `, agendado por ${t.autor}` : ""}`).join("; ")}` : ""}`}
+                className={`agenda-celda ${delMes ? "" : "fuera-de-mes"} ${esHoy ? "es-hoy" : ""} ${seleccionada ? "seleccionada" : ""} ${esFeriado ? "es-feriado" : ""}`}
+                aria-label={`${d.toLocaleDateString("es-AR", { weekday: "long", day: "numeric", month: "long" })}${esHoy ? ", hoy" : ""}${esFeriado ? `, feriado: ${fDia.map((f) => f.nombre).join(", ")}` : ""}, ${tDia.length} turno${tDia.length === 1 ? "" : "s"}${tDia.length ? `: ${tDia.map((t) => `${hora(new Date(t.fechaHora))} ${t.titulo}${t.esPropio === false ? `, agendado por ${t.autor}` : ""}`).join("; ")}` : ""}`}
                 aria-pressed={seleccionada}
                 onClick={() => setDiaSeleccionado(d)}
               >
                 <span className="agenda-celda-numero">{d.getDate()}</span>
+                {esFeriado && <span className="agenda-feriado-label" title={fDia.map((f) => f.nombre).join(", ")}>{fDia[0].nombre}</span>}
                 <span className="agenda-celda-chips">
                   {tDia.slice(0, 3).map((t) => (
                     <span key={t.id} className={`agenda-chip estado-${t.estado} ${t.esPropio === false ? "ajeno" : ""}`} title={t.esPropio === false ? `${t.titulo} · ${t.autor}` : t.titulo}>{hora(new Date(t.fechaHora))} {t.titulo}{t.esPropio === false && <span className="sr-only"> · agendado por {t.autor}</span>}</span>
@@ -265,12 +371,16 @@ export default function Agenda() {
         <div className="agenda-semana-scroll">
           <div className="agenda-semana" style={{ gridTemplateRows: `auto repeat(${franjas.length}, 26px)` }}>
             <div className="agenda-semana-esquina" />
-            {diasGrilla.map((d) => (
-              <div className={`agenda-semana-encabezado ${toISODate(d) === toISODate(hoy()) ? "es-hoy" : ""}`} key={toISODate(d)}>
-                {DIAS[(d.getDay() + 6) % 7]} {d.getDate()}
-                {vencimientosDelDia(d).length > 0 && <span className="agenda-venc-badge">{vencimientosDelDia(d).length} vto</span>}
-              </div>
-            ))}
+            {diasGrilla.map((d) => {
+              const fDia = feriadosDelDia(d);
+              return (
+                <div className={`agenda-semana-encabezado ${toISODate(d) === toISODate(hoy()) ? "es-hoy" : ""} ${fDia.length ? "es-feriado" : ""}`} key={toISODate(d)}>
+                  {DIAS[(d.getDay() + 6) % 7]} {d.getDate()}
+                  {fDia.length > 0 && <span className="agenda-feriado-badge" title={fDia.map((f) => f.nombre).join(", ")}>{fDia[0].nombre}</span>}
+                  {vencimientosDelDia(d).length > 0 && <span className="agenda-venc-badge">{vencimientosDelDia(d).length} vto</span>}
+                </div>
+              );
+            })}
             {franjas.map((f, i) => (
               <div className="agenda-semana-hora" style={{ gridRow: i + 2 }} key={i}>
                 {f.m === 0 ? `${String(f.h).padStart(2, "0")}:00` : ""}
@@ -281,7 +391,7 @@ export default function Agenda() {
                 <button
                   type="button"
                   key={`${col}-${fila}`}
-                  className="agenda-semana-slot"
+                  className={`agenda-semana-slot ${esFeriadoDia(d) ? "es-feriado" : ""}`}
                   style={{ gridColumn: col + 2, gridRow: fila + 2 }}
                   aria-label={`Nuevo turno el ${DIAS[(d.getDay() + 6) % 7]} ${d.getDate()} a las ${String(HORA_DESDE + Math.floor(fila / 2)).padStart(2, "0")}:${fila % 2 ? "30" : "00"}`}
                   onClick={() => abrirNuevo(new Date(d.getFullYear(), d.getMonth(), d.getDate(), HORA_DESDE + Math.floor(fila / 2), fila % 2 ? 30 : 0))}
@@ -314,10 +424,27 @@ export default function Agenda() {
         <div className="agenda-dia-panel">
           <div className="protocolo-cabecera">
             <h3>{capitalizar(diaSeleccionado.toLocaleDateString("es-AR", { weekday: "long", day: "numeric", month: "long" }))}</h3>
-            <button type="button" className="enlace" onClick={() => abrirNuevo(diaSeleccionado)}>+ nuevo turno</button>
+            <div className="acciones">
+              <button type="button" className="enlace" onClick={() => abrirNuevo(diaSeleccionado)}>+ turno</button>
+              <button type="button" className="enlace" onClick={() => abrirNuevoVencimiento(diaSeleccionado)}>+ vencimiento</button>
+              <button type="button" className="enlace" onClick={() => abrirNuevoFeriado(diaSeleccionado)}>+ día no laborable</button>
+            </div>
           </div>
-          {turnosDelDia(diaSeleccionado).length === 0 && vencimientosDelDia(diaSeleccionado).length === 0 ? (
-            <p className="vacio">Sin turnos ni vencimientos para este día.</p>
+          {feriadosDelDia(diaSeleccionado).length > 0 && (
+            <>
+              <h4 style={{ fontSize: "var(--t-sm)", color: "var(--ink-2)" }}>Feriados / Días no laborables</h4>
+              <ul className="agenda-dia-lista">
+                {feriadosDelDia(diaSeleccionado).map((f) => (
+                  <li key={f.id}>
+                    <span>{f.nombre} <span className={`etiqueta etiqueta-feriado-${f.tipo}`}>{f.tipo === "propio" ? "Personal" : f.tipo}</span></span>
+                    {f.esPropio && <button type="button" className="boton chico" onClick={() => borrarFeriado(f.id)}>Quitar</button>}
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
+          {turnosDelDia(diaSeleccionado).length === 0 && vencimientosDelDia(diaSeleccionado).length === 0 && feriadosDelDia(diaSeleccionado).length === 0 ? (
+            <p className="vacio">Sin turnos, vencimientos ni feriados para este día.</p>
           ) : (
             <>
               {turnosDelDia(diaSeleccionado).length > 0 && (
@@ -354,6 +481,7 @@ export default function Agenda() {
         </div>
       )}
 
+      {/* Modal turno */}
       <dialog ref={dialogo} className="modal" aria-labelledby="turno-form-titulo" onClose={() => setFormulario(null)} onClick={(e) => e.target === dialogo.current && setFormulario(null)}>
         {formulario && (
         <form className="cert-form modal-caja" onSubmit={guardar}>
@@ -408,6 +536,71 @@ export default function Agenda() {
             <button type="submit" className="boton primario">Guardar</button>
             <button type="button" className="boton" onClick={() => setFormulario(null)}>Cancelar</button>
             {formulario.id && <button type="button" className="boton" onClick={() => borrar(formulario.id)}>Borrar turno</button>}
+          </div>
+        </form>
+        )}
+      </dialog>
+
+      {/* Modal nuevo vencimiento */}
+      <dialog ref={dialogoVenc} className="modal" aria-labelledby="venc-form-titulo" onClose={() => setFormVencimiento(null)} onClick={(e) => e.target === dialogoVenc.current && setFormVencimiento(null)}>
+        {formVencimiento && (
+        <form className="cert-form modal-caja" onSubmit={guardarVencimiento}>
+          <div className="protocolo-cabecera">
+            <h3 id="venc-form-titulo">Nuevo vencimiento</h3>
+            <button type="button" className="boton discreto chico" aria-label="Cerrar" onClick={() => setFormVencimiento(null)}><Icono nombre="cruz" tamano={16} /></button>
+          </div>
+          {error && <p className="alerta error" role="alert">{error}</p>}
+          <div className="cert-grid">
+            <label className="campo">
+              <span className="campo-titulo">Tipo</span>
+              <select value={formVencimiento.tipo} onChange={(e) => setFormVencimiento({ ...formVencimiento, tipo: e.target.value })}>
+                {TIPOS_VENCIMIENTO.map(([v, t]) => <option key={v} value={v}>{t}</option>)}
+              </select>
+            </label>
+            <label className="campo">
+              <span className="campo-titulo">Descripción</span>
+              <input type="text" value={formVencimiento.descripcion} onChange={(e) => setFormVencimiento({ ...formVencimiento, descripcion: e.target.value })} placeholder="Ej: Certificado dominio - Lote 15" required maxLength={300} />
+            </label>
+            <label className="campo">
+              <span className="campo-titulo">Fecha origen</span>
+              <input type="date" value={formVencimiento.fechaOrigen} onChange={(e) => setFormVencimiento({ ...formVencimiento, fechaOrigen: e.target.value })} required />
+            </label>
+            <label className="campo">
+              <span className="campo-titulo">Fecha vencimiento</span>
+              <input type="date" value={formVencimiento.fechaVencimiento} onChange={(e) => setFormVencimiento({ ...formVencimiento, fechaVencimiento: e.target.value })} required />
+            </label>
+          </div>
+          <div className="acciones">
+            <button type="submit" className="boton primario">Crear vencimiento</button>
+            <button type="button" className="boton" onClick={() => setFormVencimiento(null)}>Cancelar</button>
+          </div>
+        </form>
+        )}
+      </dialog>
+
+      {/* Modal nuevo feriado / día no laborable */}
+      <dialog ref={dialogoFeriado} className="modal" aria-labelledby="feriado-form-titulo" onClose={() => setFormFeriado(null)} onClick={(e) => e.target === dialogoFeriado.current && setFormFeriado(null)}>
+        {formFeriado && (
+        <form className="cert-form modal-caja" onSubmit={guardarFeriado}>
+          <div className="protocolo-cabecera">
+            <h3 id="feriado-form-titulo">Agregar día no laborable</h3>
+            <button type="button" className="boton discreto chico" aria-label="Cerrar" onClick={() => setFormFeriado(null)}><Icono nombre="cruz" tamano={16} /></button>
+          </div>
+          {error && <p className="alerta error" role="alert">{error}</p>}
+          <p className="nota">Los días no laborables personales (vacaciones, licencias) se descontarán del cálculo de días hábiles para sus vencimientos.</p>
+          <div className="cert-grid">
+            <label className="campo">
+              <span className="campo-titulo">Fecha</span>
+              <input type="date" value={formFeriado.fecha} onChange={(e) => setFormFeriado({ ...formFeriado, fecha: e.target.value })} required />
+            </label>
+            <label className="campo">
+              <span className="campo-titulo">Motivo</span>
+              <input type="text" autoFocus value={formFeriado.nombre} onChange={(e) => setFormFeriado({ ...formFeriado, nombre: e.target.value })} placeholder="Ej: Vacaciones, Licencia personal" required maxLength={160} />
+            </label>
+          </div>
+          <div className="acciones">
+            <button type="submit" className="boton primario">Agregar</button>
+            <button type="button" className="boton" onClick={() => setFormFeriado(null)}>Cancelar</button>
           </div>
         </form>
         )}

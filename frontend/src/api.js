@@ -127,6 +127,7 @@ export const api = {
   certificacionEstado: (id, estado) => json("PATCH", `/certifications/${id}/status`, { estado }),
   certificacionBorrar: (id) => fetch(`${BASE}/certifications/${id}`, { method: "DELETE" }).then(manejar),
   certificacionUrlPdf: (id) => `${BASE}/certifications/${id}/pdf`,
+  certificacionUrlDocx: (id) => `${BASE}/certifications/${id}/docx`,
 
   // --- agenda de turnos ---
   turnosListar: (desde, hasta, equipo = false) => fetch(`${BASE}/appointments?desde=${encodeURIComponent(desde)}&hasta=${encodeURIComponent(hasta)}${equipo ? "&equipo=1" : ""}`).then(manejar),
@@ -301,6 +302,8 @@ export const api = {
 
   // --- feriados ---
   feriadosListar: (anio, jurisdiccion) => fetch(`${BASE}/holidays?anio=${anio || ""}&jurisdiccion=${jurisdiccion || ""}`).then(manejar),
+  feriadoCrear: (datos) => json("POST", "/holidays", datos),
+  feriadoBorrar: (id) => fetch(`${BASE}/holidays/${id}`, { method: "DELETE" }).then(manejar),
 
   // --- notificaciones (admin → escribanos) ---
   notificacionesListar: () => fetch(`${BASE}/notifications`).then(manejar),

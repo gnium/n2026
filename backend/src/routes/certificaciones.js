@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { listar, obtener, listarAniosDisponibles, proximoNumero, crear, actualizar, actualizarEstado, borrar, obtenerParaPdf } from "../services/certificaciones.js";
 import { construirCertificacionPdf } from "../services/certificacionPdf.js";
+import { construirCertificacionDocx } from "../services/certificacionDocx.js";
 
 export const rutasCertificaciones = Router();
 
@@ -12,7 +13,7 @@ const manejar = (fn) => async (req, res, next) => {
   }
 };
 
-rutasCertificaciones.get("/", manejar(async (req, res) => res.json(await listar(req.usuario.id, { estado: req.query.estado, anio: req.query.anio }))));
+rutasCertificaciones.get("/", manejar(async (req, res) => res.json(await listar(req.usuario.id, { estado: req.query.estado, anio: req.query.anio, q: req.query.q }))));
 rutasCertificaciones.get("/years", manejar(async (req, res) => res.json(await listarAniosDisponibles(req.usuario.id))));
 rutasCertificaciones.get("/suggested", manejar(async (req, res) => res.json(await proximoNumero(req.usuario.id, req.query.anio || new Date().getFullYear()))));
 rutasCertificaciones.get("/:id", manejar(async (req, res) => res.json(await obtener(req.usuario.id, req.params.id))));
@@ -30,6 +31,17 @@ rutasCertificaciones.get("/:id/pdf", manejar(async (req, res) => {
   res.set({
     "Content-Type": "application/pdf",
     "Content-Disposition": `attachment; filename="certificacion-${datos.cert.anio}-${datos.cert.numero}.pdf"`,
+    "Content-Length": buffer.length,
+  });
+  res.send(buffer);
+}));
+
+rutasCertificaciones.get("/:id/docx", manejar(async (req, res) => {
+  const datos = await obtenerParaPdf(req.usuario.id, req.params.id);
+  const buffer = await construirCertificacionDocx(datos);
+  res.set({
+    "Content-Type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    "Content-Disposition": `attachment; filename="certificacion-${datos.cert.anio}-${datos.cert.numero}.docx"`,
     "Content-Length": buffer.length,
   });
   res.send(buffer);

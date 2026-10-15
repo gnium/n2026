@@ -8,7 +8,7 @@ function formatoFecha(d) {
   return `${y}-${m}-${day}`;
 }
 
-export async function sumarDiasHabiles(fechaOrigen, dias, jurisdiccion) {
+export async function sumarDiasHabiles(fechaOrigen, dias, jurisdiccion, usuarioId) {
   const inicio = new Date(fechaOrigen);
   if (Number.isNaN(inicio.getTime())) throw new AppError("DATOS_INVALIDOS", "fechaOrigen invalida.", 400);
   if (!Number.isInteger(dias) || dias < 0) throw new AppError("DATOS_INVALIDOS", "dias debe ser un entero positivo.", 400);
@@ -19,8 +19,11 @@ export async function sumarDiasHabiles(fechaOrigen, dias, jurisdiccion) {
   const [rows] = await pool.query(
     `SELECT fecha FROM feriados
       WHERE fecha BETWEEN ? AND ?
-        AND (jurisdiccion IS NULL OR jurisdiccion = ?)`,
-    [formatoFecha(inicio), formatoFecha(margen), jurisdiccion || null],
+        AND (jurisdiccion IS NULL OR jurisdiccion = ?)
+        AND (usuario_id IS NULL${usuarioId ? " OR usuario_id = ?" : ""})`,
+    usuarioId
+      ? [formatoFecha(inicio), formatoFecha(margen), jurisdiccion || null, usuarioId]
+      : [formatoFecha(inicio), formatoFecha(margen), jurisdiccion || null],
   );
   const feriados = new Set(rows.map((r) => formatoFecha(new Date(r.fecha))));
 
@@ -36,7 +39,7 @@ export async function sumarDiasHabiles(fechaOrigen, dias, jurisdiccion) {
   return formatoFecha(actual);
 }
 
-export async function contarDiasHabiles(fechaDesde, fechaHasta, jurisdiccion) {
+export async function contarDiasHabiles(fechaDesde, fechaHasta, jurisdiccion, usuarioId) {
   const desde = new Date(fechaDesde);
   const hasta = new Date(fechaHasta);
   if (Number.isNaN(desde.getTime()) || Number.isNaN(hasta.getTime())) return 0;
@@ -45,8 +48,11 @@ export async function contarDiasHabiles(fechaDesde, fechaHasta, jurisdiccion) {
   const [rows] = await pool.query(
     `SELECT fecha FROM feriados
       WHERE fecha BETWEEN ? AND ?
-        AND (jurisdiccion IS NULL OR jurisdiccion = ?)`,
-    [formatoFecha(desde), formatoFecha(hasta), jurisdiccion || null],
+        AND (jurisdiccion IS NULL OR jurisdiccion = ?)
+        AND (usuario_id IS NULL${usuarioId ? " OR usuario_id = ?" : ""})`,
+    usuarioId
+      ? [formatoFecha(desde), formatoFecha(hasta), jurisdiccion || null, usuarioId]
+      : [formatoFecha(desde), formatoFecha(hasta), jurisdiccion || null],
   );
   const feriados = new Set(rows.map((r) => formatoFecha(new Date(r.fecha))));
 
@@ -72,7 +78,7 @@ export async function esFeriado(fecha, jurisdiccion) {
   return Boolean(row);
 }
 
-export async function listar(anio, jurisdiccion) {
+export async function listar(anio, jurisdiccion, usuarioId) {
   const where = ["1=1"];
   const params = [];
   if (anio) {
@@ -83,24 +89,34 @@ export async function listar(anio, jurisdiccion) {
     where.push("(jurisdiccion IS NULL OR jurisdiccion = ?)");
     params.push(jurisdiccion);
   }
+  if (usuarioId) {
+    where.push("(usuario_id IS NULL OR usuario_id = ?)");
+    params.push(usuarioId);
+  } else {
+    where.push("usuario_id IS NULL");
+  }
   const [rows] = await pool.query(
-    `SELECT id, fecha, nombre, tipo, jurisdiccion FROM feriados WHERE ${where.join(" AND ")} ORDER BY fecha`,
+    `SELECT id, fecha, nombre, tipo, jurisdiccion, usuario_id FROM feriados WHERE ${where.join(" AND ")} ORDER BY fecha`,
     params,
   );
-  return rows.map((r) => ({ id: r.id, fecha: r.fecha, nombre: r.nombre, tipo: r.tipo, jurisdiccion: r.jurisdiccion }));
+  return rows.map((r) => ({ id: r.id, fecha: r.fecha, nombre: r.nombre, tipo: r.tipo, jurisdiccion: r.jurisdiccion, esPropio: r.usuario_id != null }));
 }
 
-export async function crear(datos) {
+export async function crear(datos, usuarioId) {
   if (!datos.fecha || !datos.nombre) throw new AppError("DATOS_INVALIDOS", "fecha y nombre son obligatorios.", 400);
+  const tipo = datos.tipo || (usuarioId ? "propio" : "nacional");
+  const uid = tipo === "propio" ? usuarioId : null;
   const [r] = await pool.query(
-    `INSERT INTO feriados (fecha, nombre, tipo, jurisdiccion)
-     VALUES (?, ?, ?, ?)`,
-    [datos.fecha, datos.nombre.trim(), datos.tipo || "nacional", datos.jurisdiccion || null],
+    `INSERT INTO feriados (usuario_id, fecha, nombre, tipo, jurisdiccion)
+     VALUES (?, ?, ?, ?, ?)`,
+    [uid, datos.fecha, datos.nombre.trim(), tipo, datos.jurisdiccion || null],
   );
-  return { id: r.insertId, fecha: datos.fecha, nombre: datos.nombre.trim(), tipo: datos.tipo || "nacional", jurisdiccion: datos.jurisdiccion || null };
+  return { id: r.insertId, fecha: datos.fecha, nombre: datos.nombre.trim(), tipo, jurisdiccion: datos.jurisdiccion || null, esPropio: uid != null };
 }
 
-export async function borrar(id) {
-  const [r] = await pool.query("DELETE FROM feriados WHERE id = ?", [id]);
+export async function borrar(id, usuarioId) {
+  const where = usuarioId ? "id = ? AND usuario_id = ?" : "id = ?";
+  const params = usuarioId ? [id, usuarioId] : [id];
+  const [r] = await pool.query(`DELETE FROM feriados WHERE ${where}`, params);
   if (r.affectedRows === 0) throw new AppError("NO_ENCONTRADO", "El feriado no existe.", 404);
 }

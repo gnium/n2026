@@ -50,12 +50,17 @@ function filaAVista(r) {
     expedienteCaratula: r.expediente_caratula ?? null,
     ejecucionId: r.ejecucion_id,
     observaciones: r.observaciones,
+    acta: r.acta,
+    folio: r.folio,
+    libro: r.libro,
+    libroFirmas: r.libro_firmas,
+    fojaActuacion: r.foja_actuacion,
     creadoEn: r.creado_en,
     actualizadoEn: r.actualizado_en,
   };
 }
 
-export async function listar(usuarioId, { estado, anio } = {}) {
+export async function listar(usuarioId, { estado, anio, q } = {}) {
   let sql = `${SELECT} WHERE c.usuario_id = ?`;
   const params = [usuarioId];
   if (estado && ESTADOS.has(estado)) {
@@ -65,6 +70,11 @@ export async function listar(usuarioId, { estado, anio } = {}) {
   if (anio) {
     sql += " AND c.anio = ?";
     params.push(Number(anio));
+  }
+  if (q && q.trim()) {
+    sql += " AND (c.acta LIKE ? OR c.folio LIKE ? OR c.libro LIKE ? OR c.libro_firmas LIKE ? OR c.documento LIKE ? OR c.observaciones LIKE ?)";
+    const patron = `%${q.trim()}%`;
+    params.push(patron, patron, patron, patron, patron, patron);
   }
   sql += " ORDER BY c.anio DESC, c.numero DESC LIMIT 300";
   const [rows] = await pool.query(sql, params);
@@ -114,14 +124,19 @@ export async function crear(usuarioId, datos) {
     expedienteId: datos.expedienteId || null,
     ejecucionId: datos.ejecucionId || null,
     observaciones: datos.observaciones?.trim().slice(0, 500) || null,
+    acta: datos.acta?.trim().slice(0, 80) || null,
+    folio: datos.folio?.trim().slice(0, 80) || null,
+    libro: datos.libro?.trim().slice(0, 80) || null,
+    libroFirmas: datos.libroFirmas?.trim().slice(0, 80) || null,
+    fojaActuacion: datos.fojaActuacion?.trim().slice(0, 120) || null,
   };
 
   for (let intento = 0; intento < 3; intento++) {
     const [[n]] = await pool.query("SELECT COALESCE(MAX(numero), 0) + 1 AS sig FROM certificaciones WHERE usuario_id = ? AND anio = ?", [usuarioId, anio]);
     try {
       const [r] = await pool.query(
-        `INSERT INTO certificaciones (usuario_id, anio, numero, modalidad, firmantes_cifrado, representada, documento, jurisdiccion, expediente_id, ejecucion_id, observaciones)
-         VALUES (:usuarioId, :anio, :numero, :modalidad, :firmantesCifrado, :representada, :documento, :jurisdiccion, :expedienteId, :ejecucionId, :observaciones)`,
+        `INSERT INTO certificaciones (usuario_id, anio, numero, modalidad, firmantes_cifrado, representada, documento, jurisdiccion, expediente_id, ejecucion_id, observaciones, acta, folio, libro, libro_firmas, foja_actuacion)
+         VALUES (:usuarioId, :anio, :numero, :modalidad, :firmantesCifrado, :representada, :documento, :jurisdiccion, :expedienteId, :ejecucionId, :observaciones, :acta, :folio, :libro, :libroFirmas, :fojaActuacion)`,
         { ...base, numero: n.sig },
       );
       return obtener(usuarioId, r.insertId);
@@ -137,7 +152,8 @@ export async function actualizar(usuarioId, id, datos) {
   validarDatos(datos);
 
   await pool.query(
-    `UPDATE certificaciones SET modalidad = ?, firmantes_cifrado = ?, representada = ?, documento = ?, jurisdiccion = ?, expediente_id = ?, observaciones = ?
+    `UPDATE certificaciones SET modalidad = ?, firmantes_cifrado = ?, representada = ?, documento = ?, jurisdiccion = ?, expediente_id = ?, observaciones = ?,
+            acta = ?, folio = ?, libro = ?, libro_firmas = ?, foja_actuacion = ?
      WHERE id = ? AND usuario_id = ?`,
     [
       datos.modalidad,
@@ -147,6 +163,11 @@ export async function actualizar(usuarioId, id, datos) {
       datos.jurisdiccion || null,
       datos.expedienteId || null,
       datos.observaciones?.trim().slice(0, 500) || null,
+      datos.acta?.trim().slice(0, 80) || null,
+      datos.folio?.trim().slice(0, 80) || null,
+      datos.libro?.trim().slice(0, 80) || null,
+      datos.libroFirmas?.trim().slice(0, 80) || null,
+      datos.fojaActuacion?.trim().slice(0, 120) || null,
       id,
       usuarioId,
     ],

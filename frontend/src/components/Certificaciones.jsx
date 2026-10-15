@@ -14,6 +14,7 @@ function formVacio() {
 export default function Certificaciones() {
   const [lista, setLista] = useState(null);
   const [filtro, setFiltro] = useState("");
+  const [busqueda, setBusqueda] = useState("");
   const [anio, setAnio] = useState(new Date().getFullYear());
   const [anios, setAnios] = useState([]);
   const [expedientes, setExpedientes] = useState([]);
@@ -21,6 +22,7 @@ export default function Certificaciones() {
   const [error, setError] = useState(null);
   const [aviso, setAviso] = useState(null);
   const [formulario, setFormulario] = useState(null);
+  const [guardando, setGuardando] = useState(false);
   const dialogo = useRef(null);
 
   useEffect(() => {
@@ -36,7 +38,7 @@ export default function Certificaciones() {
     setError(null);
     try {
       const [l, a] = await Promise.all([
-        api.certificacionesListar({ estado: filtro || undefined, anio: anio || undefined }),
+        api.certificacionesListar({ estado: filtro || undefined, anio: anio || undefined, q: busqueda.trim() || undefined }),
         api.certificacionAnios(),
       ]);
       setLista(l);
@@ -51,6 +53,12 @@ export default function Certificaciones() {
     api.expedientesListar().then(setExpedientes).catch(() => {});
     api.googleEstado().then(setGoogle).catch(() => setGoogle(null));
   }, []);
+
+  useEffect(() => {
+    if (!busqueda.trim()) { cargar(); return; }
+    const t = setTimeout(cargar, 400);
+    return () => clearTimeout(t);
+  }, [busqueda]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const abrirNuevo = () => {
     setError(null);
@@ -67,16 +75,23 @@ export default function Certificaciones() {
       modalidad: c.modalidad,
       firmantes: c.firmantes?.length ? c.firmantes.map((f) => ({ nombre: f.nombre || "", dni: f.dni || "", domicilio: f.domicilio || "", caracter: f.caracter || "apoderado", clienteId: f.clienteId || null })) : DATOS_CERTIFICACION_INICIAL.firmantes,
       representada: c.representada || { ...DATOS_CERTIFICACION_INICIAL.representada },
-      documento: c.documento || { ...DATOS_CERTIFICACION_INICIAL.documento },
+      documento: { ...DATOS_CERTIFICACION_INICIAL.documento, ...c.documento },
       jurisdiccion: c.jurisdiccion || "",
       observaciones: c.observaciones || "",
       expedienteId: c.expedienteId || "",
+      acta: c.acta || "",
+      folio: c.folio || "",
+      libro: c.libro || "",
+      libroFirmas: c.libroFirmas || "",
+      fojaActuacion: c.fojaActuacion || "",
     });
   };
 
   const guardar = async (e) => {
     e.preventDefault();
+    if (guardando) return;
     setError(null);
+    setGuardando(true);
     try {
       const datos = {
         modalidad: formulario.modalidad,
@@ -86,6 +101,11 @@ export default function Certificaciones() {
         jurisdiccion: formulario.jurisdiccion || null,
         observaciones: formulario.observaciones.trim() || null,
         expedienteId: formulario.expedienteId ? Number(formulario.expedienteId) : null,
+        acta: formulario.acta?.trim() || null,
+        folio: formulario.folio?.trim() || null,
+        libro: formulario.libro?.trim() || null,
+        libroFirmas: formulario.libroFirmas?.trim() || null,
+        fojaActuacion: formulario.fojaActuacion?.trim() || null,
       };
       if (formulario.id) await api.certificacionActualizar(formulario.id, datos);
       else await api.certificacionCrear(datos);
@@ -94,6 +114,8 @@ export default function Certificaciones() {
       setAviso(formulario.id ? "Certificación actualizada." : "Certificación creada.");
     } catch (e) {
       setError(e.message);
+    } finally {
+      setGuardando(false);
     }
   };
 
@@ -102,7 +124,7 @@ export default function Certificaciones() {
     try {
       await api.certificacionEstado(c.id, "certificada");
       cargar();
-      window.open(api.certificacionUrlPdf(c.id), "_blank");
+      setAviso(`Certificación N° ${c.numero}/${c.anio} certificada.`);
     } catch (e) {
       setError(e.message);
     }
@@ -144,31 +166,40 @@ export default function Certificaciones() {
   return (
     <div className="ddjj">
       <h2>Certificaciones de Firmas</h2>
-      <p className="nota">Libro de Requerimientos — Registro de certificaciones de firmas realizadas. Cada certificación tiene su propia numeración anual correlativa, independiente del protocolo de escrituras.</p>
+      <p className="nota">Libro de Requerimientos — Registro de certificaciones de firmas realizadas. No se almacena el texto del instrumento certificado.</p>
       {error && !formulario && <p className="alerta error" role="alert">{error}</p>}
       <p className={`alerta ok ${aviso ? "" : "sr-only"}`} role="status">{aviso}</p>
 
       <div className="acciones agenda-toolbar">
-        <div className="segmentado" role="group" aria-label="Filtro por estado">
-          {FILTROS.map(([v, t]) => (
-            <button key={v} type="button" className={filtro === v ? "activo" : ""} aria-pressed={filtro === v} onClick={() => setFiltro(v)}>{t}</button>
-          ))}
-        </div>
-        <label className="campo">
-          <span className="campo-titulo">Año</span>
-          <select value={anio} onChange={(e) => setAnio(Number(e.target.value))}>
-            {[...new Set([anio, ...anios])].sort((a, b) => b - a).map((a) => (
-              <option key={a} value={a}>{a}</option>
+        <div className="acciones" style={{ flexWrap: "wrap", gap: "var(--s2)" }}>
+          <div className="segmentado" role="group" aria-label="Filtro por estado">
+            {FILTROS.map(([v, t]) => (
+              <button key={v} type="button" className={filtro === v ? "activo" : ""} aria-pressed={filtro === v} onClick={() => setFiltro(v)}>{t}</button>
             ))}
-          </select>
-        </label>
+          </div>
+          <label className="campo">
+            <span className="campo-titulo">Año</span>
+            <select value={anio} onChange={(e) => setAnio(Number(e.target.value))}>
+              {[...new Set([anio, ...anios])].sort((a, b) => b - a).map((a) => (
+                <option key={a} value={a}>{a}</option>
+              ))}
+            </select>
+          </label>
+          <input
+            type="search"
+            className="cert-busqueda"
+            placeholder="Buscar por acta, folio, libro, instrumento…"
+            value={busqueda}
+            onChange={(e) => setBusqueda(e.target.value)}
+          />
+        </div>
         <button type="button" className="boton primario" onClick={abrirNuevo}><Icono nombre="mas" tamano={16} /> Nueva certificación</button>
       </div>
 
       {lista === null ? (
         <p className="vacio">Cargando…</p>
       ) : lista.length === 0 ? (
-        <p className="vacio">No hay certificaciones{filtro ? ` en estado "${NOMBRE_ESTADO[filtro]}"` : ""} en {anio}.</p>
+        <p className="vacio">No hay certificaciones{filtro ? ` en estado "${NOMBRE_ESTADO[filtro]}"` : ""}{busqueda ? ` que coincidan con "${busqueda}"` : ""} en {anio}.</p>
       ) : (
         <div className="tabla-scroll">
           <table>
@@ -176,9 +207,11 @@ export default function Certificaciones() {
               <tr>
                 <th>N°</th>
                 <th>Fecha</th>
-                <th>Modalidad</th>
                 <th>Firmantes</th>
-                <th>Documento</th>
+                <th>Instrumento</th>
+                <th>Acta</th>
+                <th className="col-sec">Folio</th>
+                <th className="col-sec">Libro</th>
                 <th>Estado</th>
                 <th>Acciones</th>
               </tr>
@@ -188,22 +221,25 @@ export default function Certificaciones() {
                 <tr key={c.id}>
                   <td>{c.numero}/{c.anio}</td>
                   <td>{fechaCorta(c.fechaCertificacion || c.creadoEn)}</td>
-                  <td>{c.modalidad === "representacion" ? "Representación" : "Personal"}</td>
-                  <td>{c.firmantesLegible ? c.firmantes.map((f) => f.nombre).join(", ") : "(no se pudo leer)"}</td>
+                  <td>{c.firmantesLegible ? c.firmantes.map((f) => f.nombre).join(", ") : "(cifrado)"}</td>
                   <td>{c.documento?.naturaleza || "—"}</td>
+                  <td>{c.acta || "—"}</td>
+                  <td className="col-sec">{c.folio || "—"}</td>
+                  <td className="col-sec">{c.libro || "—"}</td>
                   <td><span className={`etiqueta etiqueta-estado-${c.estado}-cert`}>{NOMBRE_ESTADO[c.estado]}</span></td>
                   <td>
                     <div className="acciones" style={{ gap: "var(--s1)" }}>
                       {c.estado === "borrador" && (
                         <>
                           <button type="button" className="boton discreto chico" onClick={() => abrirEdicion(c)} title="Editar"><Icono nombre="pluma" tamano={14} /></button>
-                          <button type="button" className="boton discreto chico" onClick={() => certificar(c)} title="Certificar y generar PDF"><Icono nombre="firma" tamano={14} /></button>
+                          <button type="button" className="boton discreto chico" onClick={() => certificar(c)} title="Certificar"><Icono nombre="firma" tamano={14} /></button>
                           <button type="button" className="boton discreto chico" onClick={() => borrar(c)} title="Borrar"><Icono nombre="cruz" tamano={14} /></button>
                         </>
                       )}
                       {c.estado === "certificada" && (
                         <>
-                          <a className="boton discreto chico" href={api.certificacionUrlPdf(c.id)} download title="Descargar PDF"><Icono nombre="descargar" tamano={14} /></a>
+                          <a className="boton discreto chico" href={api.certificacionUrlDocx(c.id)} download title="Descargar Word"><Icono nombre="descargar" tamano={14} /></a>
+                          <a className="boton discreto chico" href={api.certificacionUrlPdf(c.id)} download title="Descargar PDF"><Icono nombre="archivo" tamano={14} /></a>
                           {google?.conectado && google?.subirDocumentos && (
                             <button type="button" className="boton discreto chico" onClick={() => aDrive(c)} title="Copiar a Drive"><Icono nombre="nube" tamano={14} /></button>
                           )}
@@ -212,7 +248,8 @@ export default function Certificaciones() {
                       )}
                       {c.estado === "entregada" && (
                         <>
-                          <a className="boton discreto chico" href={api.certificacionUrlPdf(c.id)} download title="Descargar PDF"><Icono nombre="descargar" tamano={14} /></a>
+                          <a className="boton discreto chico" href={api.certificacionUrlDocx(c.id)} download title="Descargar Word"><Icono nombre="descargar" tamano={14} /></a>
+                          <a className="boton discreto chico" href={api.certificacionUrlPdf(c.id)} download title="Descargar PDF"><Icono nombre="archivo" tamano={14} /></a>
                           {google?.conectado && google?.subirDocumentos && (
                             <button type="button" className="boton discreto chico" onClick={() => aDrive(c)} title="Copiar a Drive"><Icono nombre="nube" tamano={14} /></button>
                           )}
@@ -258,7 +295,7 @@ export default function Certificaciones() {
 
             <div className="acciones" style={{ justifyContent: "flex-end", gap: "var(--s2)" }}>
               <button type="button" className="boton" onClick={() => setFormulario(null)}>Cancelar</button>
-              <button type="submit" className="boton primario">{formulario.id ? "Guardar cambios" : "Crear certificación"}</button>
+              <button type="submit" className="boton primario" disabled={guardando}>{guardando ? "Guardando…" : formulario.id ? "Guardar cambios" : "Crear certificación"}</button>
             </div>
           </form>
         )}

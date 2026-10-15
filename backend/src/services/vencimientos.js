@@ -217,10 +217,25 @@ async function actualizarEstados() {
     `UPDATE vencimientos SET estado = 'vencido'
       WHERE estado IN ('vigente','por_vencer') AND fecha_vencimiento < CURDATE()`,
   );
-  await pool.query(
-    `UPDATE vencimientos SET estado = 'por_vencer'
-      WHERE estado = 'vigente' AND fecha_vencimiento <= DATE_ADD(CURDATE(), INTERVAL 7 DAY)`,
+  // 5 días hábiles en vez de 7 calendario
+  const [vigentes] = await pool.query(
+    `SELECT v.id, v.fecha_vencimiento, COALESCE(eq.jurisdiccion, 'salta') AS jur, v.usuario_id
+       FROM vencimientos v
+       LEFT JOIN equipo_miembros m ON m.usuario_id = v.usuario_id
+       LEFT JOIN equipos eq ON eq.id = m.equipo_id
+      WHERE v.estado = 'vigente'`,
   );
+  const hoy = new Date().toISOString().slice(0, 10);
+  const aPorVencer = [];
+  for (const v of vigentes) {
+    const fv = String(v.fecha_vencimiento).slice(0, 10);
+    if (fv <= hoy) continue;
+    const dh = await contarDiasHabiles(hoy, fv, v.jur, v.usuario_id);
+    if (dh <= 5) aPorVencer.push(v.id);
+  }
+  if (aPorVencer.length) {
+    await pool.query(`UPDATE vencimientos SET estado = 'por_vencer' WHERE id IN (?)`, [aPorVencer]);
+  }
 }
 
 export function programarActualizacionEstados() {

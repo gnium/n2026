@@ -440,6 +440,15 @@ table select { min-height: 32px; padding: 4px 8px; width: auto; }
 .cert-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s3); }
 .compareciente-fila { display: grid; grid-template-columns: 2fr 1fr auto; gap: var(--s2); align-items: center; }
 @media (max-width: 700px) { .cert-firmante-campos, .cert-grid, .compareciente-fila { grid-template-columns: 1fr; } }
+.cert-buscador-cliente { position: relative; margin-bottom: var(--s2); }
+.cert-buscador-cliente input[type="search"] { width: 100%; }
+.cert-buscador-resultados { list-style: none; margin: 0; padding: var(--s1) 0; position: absolute; z-index: 10; top: 100%; left: 0; right: 0; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-s); box-shadow: 0 4px 12px rgba(0,0,0,0.1); max-height: 200px; overflow-y: auto; }
+.cert-buscador-resultados li { padding: var(--s2) var(--s3); }
+.cert-buscador-resultados li:hover { background: var(--surface-2); }
+.cert-opciones-doc { display: flex; gap: var(--s4); flex-wrap: wrap; }
+.cert-radio-grupo { border: 1px solid var(--border); border-radius: var(--radius-s); padding: var(--s3); display: flex; flex-direction: column; gap: var(--s2); flex: 1; min-width: 220px; }
+.cert-radio-grupo legend { font-size: var(--t-xs); font-weight: 600; color: var(--ink-2); padding: 0 var(--s1); }
+.cert-busqueda { min-width: 220px; }
 
 /* ---------- client picker ---------- */
 .cliente-picker { position: relative; }
@@ -599,6 +608,14 @@ details > summary { cursor: pointer; font-size: var(--t-sm); color: var(--ink-2)
 .agenda-chip.vencimiento.estado-completado { border-left-color: var(--ok); background: var(--ok-soft); color: var(--ok); text-decoration: line-through; }
 .agenda-chip.vencimiento.estado-vigente { border-left-color: var(--accent); background: var(--accent-soft); color: var(--accent-soft-ink, var(--accent)); }
 .agenda-venc-badge { display: block; font-size: 10px; color: var(--warn); font-weight: 600; }
+.agenda-celda.es-feriado { background: var(--warn-soft); }
+.agenda-celda.es-feriado.fuera-de-mes { background: color-mix(in srgb, var(--warn-soft) 50%, var(--surface-2)); }
+.agenda-feriado-label { font-size: 9px; color: var(--warn); font-weight: 600; text-transform: uppercase; letter-spacing: 0.03em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; }
+.agenda-feriado-badge { display: block; font-size: 9px; color: var(--warn); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.agenda-semana-encabezado.es-feriado { background: var(--warn-soft); }
+.agenda-semana-slot.es-feriado { background: color-mix(in srgb, var(--warn-soft) 30%, transparent); }
+.etiqueta-feriado-nacional, .etiqueta-feriado-provincial { background: var(--accent-soft); color: var(--accent-soft-ink, var(--accent)); font-size: var(--t-xs); padding: 1px 6px; border-radius: 999px; }
+.etiqueta-feriado-propio { background: var(--warn-soft); color: var(--warn); font-size: var(--t-xs); padding: 1px 6px; border-radius: 999px; }
 .dias-hab { font-size: 0.85em; opacity: 0.8; }
 .dias-hab.vencido { color: var(--error); font-weight: 600; opacity: 1; }
 .agenda-chip.ajeno, .agenda-turno.ajeno { border-style: dashed; opacity: 0.85; }
