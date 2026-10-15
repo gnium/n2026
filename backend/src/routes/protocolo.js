@@ -99,11 +99,12 @@ rutasProtocolo.get("/:anio/export", async (req, res, next) => {
   try {
     const anio = Number(req.params.anio);
     if (!Number.isInteger(anio)) throw new AppError("DATOS_INVALIDOS", "Año invalido.", 400);
-    const filas = await obtenerParaExport(req.usuario.id, anio);
-    const buffer = await construirIndiceProtocoloDocx(anio, filas);
+    const orden = req.query.orden === "fecha" ? "fecha" : "numero";
+    const filas = await obtenerParaExport(req.usuario.id, anio, orden);
+    const buffer = await construirIndiceProtocoloDocx(anio, filas, orden);
     res.set({
       "Content-Type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-      "Content-Disposition": `attachment; filename="indice-protocolo-${anio}.docx"`,
+      "Content-Disposition": `attachment; filename="indice-protocolo-${anio}${orden === "fecha" ? "-por-fecha" : ""}.docx"`,
       "Content-Length": buffer.length,
     });
     res.send(buffer);

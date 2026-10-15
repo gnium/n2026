@@ -167,6 +167,11 @@ export async function borrarUltimaEntrada(usuarioId, id) {
   await pool.query("DELETE FROM protocolo_escrituras WHERE id = ? AND usuario_id = ?", [id, usuarioId]);
 }
 
-export async function obtenerParaExport(usuarioId, anio) {
-  return listarPorAnio(usuarioId, anio);
+/** orden: "numero" (correlativo, por defecto) o "fecha" (fecha de otorgamiento; empate por numero de orden). */
+export async function obtenerParaExport(usuarioId, anio, orden = "numero") {
+  const filas = await listarPorAnio(usuarioId, anio);
+  if (orden === "fecha") {
+    filas.sort((a, b) => String(a.fechaOtorgamiento).localeCompare(String(b.fechaOtorgamiento)) || a.numeroOrden - b.numeroOrden);
+  }
+  return filas;
 }

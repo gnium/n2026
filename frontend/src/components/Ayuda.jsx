@@ -134,7 +134,7 @@ const SECCIONES = [
   },
   {
     id: "protocolo",
-    titulo: "Protocolo",
+    titulo: "Índice de protocolo",
     icono: "protocolo",
     ruta: "/protocol",
     rolMinimo: "escribano",

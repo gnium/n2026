@@ -18,6 +18,7 @@ const TIPOS_VENCIMIENTO = [
   ["certificado_inhibiciones", "Certificado de inhibiciones"],
   ["inscripcion_dgi", "Inscripción DGI"],
   ["ddjj_sellos", "DDJJ Sellos"],
+  ["arca", "ARCA"],
   ["otro", "Otro"],
 ];
 

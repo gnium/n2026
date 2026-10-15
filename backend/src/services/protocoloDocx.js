@@ -24,10 +24,13 @@ function textoComparecientes(fila) {
   return fila.comparecientes.map((c) => `${c.rol ? `${c.rol}: ` : ""}${c.nombre}`).join("; ");
 }
 
-export async function construirIndiceProtocoloDocx(anio, filas) {
+export async function construirIndiceProtocoloDocx(anio, filas, orden = "numero") {
   const cuerpo = [
-    new Paragraph({ alignment: AlignmentType.CENTER, spacing: { after: 320 }, children: [new TextRun({ text: `INDICE DEL PROTOCOLO - AÑO ${anio}`, font: FUENTE, size: 28, bold: true })] }),
+    new Paragraph({ alignment: AlignmentType.CENTER, spacing: { after: orden === "fecha" ? 80 : 320 }, children: [new TextRun({ text: `INDICE DEL PROTOCOLO - AÑO ${anio}`, font: FUENTE, size: 28, bold: true })] }),
   ];
+  if (orden === "fecha") {
+    cuerpo.push(new Paragraph({ alignment: AlignmentType.CENTER, spacing: { after: 320 }, children: [new TextRun({ text: "Ordenado por fecha del acto", font: FUENTE, size: 22, italics: true })] }));
+  }
   if (!filas.length) {
     cuerpo.push(new Paragraph({ children: [new TextRun({ text: "No hay entradas registradas para este año.", font: FUENTE, size: 24 })] }));
   } else {

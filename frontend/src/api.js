@@ -115,7 +115,7 @@ export const api = {
   protocoloActualizar: (id, datos) => json("PUT", `/protocol/${id}`, datos),
   protocoloEstado: (id, estado, observaciones) => json("PATCH", `/protocol/${id}/status`, { estado, observaciones }),
   protocoloBorrar: (id) => fetch(`${BASE}/protocol/${id}`, { method: "DELETE" }).then(manejar),
-  protocoloUrlExportar: (anio) => `${BASE}/protocol/${anio}/export`,
+  protocoloUrlExportar: (anio, orden = "numero") => `${BASE}/protocol/${anio}/export${orden === "fecha" ? "?orden=fecha" : ""}`,
 
   // --- certificaciones de firmas ---
   certificacionesListar: (filtros = {}) => { const p = new URLSearchParams(Object.entries(filtros).filter(([, v]) => v)); return fetch(`${BASE}/certifications?${p}`).then(manejar); },

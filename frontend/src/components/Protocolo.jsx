@@ -13,6 +13,7 @@ export default function Protocolo() {
   const [error, setError] = useState(null);
   const [aviso, setAviso] = useState(null);
   const [busqueda, setBusqueda] = useState("");
+  const [orden, setOrden] = useState("numero"); // "numero" | "fecha"
   const [nuevo, setNuevo] = useState(null); // borrador del formulario manual | null
 
   const cargar = async (a) => {
@@ -112,18 +113,28 @@ export default function Protocolo() {
             ))}
           </select>
         </label>
-        <a className="boton" href={api.protocoloUrlExportar(anio)} download><Icono nombre="descargar" tamano={16} /> Exportar índice (.docx)</a>
+        <label className="campo">
+          <span className="campo-titulo">Ordenar por</span>
+          <select value={orden} onChange={(e) => setOrden(e.target.value)}>
+            <option value="numero">N° de orden</option>
+            <option value="fecha">Fecha del acto</option>
+          </select>
+        </label>
+        <a className="boton" href={api.protocoloUrlExportar(anio, orden)} download><Icono nombre="descargar" tamano={16} /> Exportar índice (.docx)</a>
         <button type="button" className="boton primario" onClick={abrirNuevo}><Icono nombre="mas" tamano={16} /> Agregar entrada</button>
       </div>
 
       {(() => {
-        const entradasFiltradas = entradas && busqueda.trim()
-          ? entradas.filter((f) => {
+        const entradasOrdenadas = entradas && orden === "fecha"
+          ? [...entradas].sort((a, b) => String(a.fechaOtorgamiento).localeCompare(String(b.fechaOtorgamiento)) || a.numeroOrden - b.numeroOrden)
+          : entradas;
+        const entradasFiltradas = entradasOrdenadas && busqueda.trim()
+          ? entradasOrdenadas.filter((f) => {
               const b = busqueda.toLowerCase();
               const comps = f.comparecientesLegible ? f.comparecientes.map((c) => c.nombre).join(" ") : "";
               return comps.toLowerCase().includes(b) || (f.tipoActo || "").toLowerCase().includes(b) || (f.observaciones || "").toLowerCase().includes(b) || (f.naturaleza || "").toLowerCase().includes(b) || String(f.numeroOrden).includes(b);
             })
-          : entradas;
+          : entradasOrdenadas;
         return entradas === null ? (
         <p className="vacio">Cargando…</p>
       ) : (
