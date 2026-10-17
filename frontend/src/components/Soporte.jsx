@@ -123,7 +123,7 @@ export default function Soporte() {
       const r = await api.soporteInvitar(alta);
       setInvitaciones(r.invitaciones);
       setAlta({ email: "", nombre: "", escribania: "", diasPrueba: alta.diasPrueba });
-      // Sin SMTP configurado el backend devuelve el enlace para pasarlo a mano.
+      // Si el correo no sale, el backend devuelve el enlace para pasarlo a mano.
       if (r.enviado) setAviso(`Invitación enviada a ${r.email} con ${r.diasPrueba} días de prueba.`);
       else setEnlaceAlta({ email: r.email, enlace: r.enlace });
     } catch (err) {
@@ -391,7 +391,7 @@ export default function Soporte() {
 
         {enlaceAlta && (
           <div className="alerta" role="status">
-            No hay SMTP configurado, así que el correo no salió. Comparta este enlace con <b>{enlaceAlta.email}</b> por un medio seguro:
+            El correo no se pudo enviar. Comparta este enlace con <b>{enlaceAlta.email}</b> por un medio seguro:
             <div style={{ display: "flex", gap: "var(--s2)", alignItems: "center", marginTop: "var(--s2)" }}>
               <code style={{ flex: 1, wordBreak: "break-all", fontSize: "var(--t-xs)" }}>{enlaceAlta.enlace}</code>
               <button type="button" className="boton chico" onClick={() => { navigator.clipboard.writeText(enlaceAlta.enlace).catch(() => {}); }}>Copiar</button>

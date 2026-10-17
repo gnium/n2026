@@ -21,14 +21,10 @@ export const env = {
     codigoRegistro: process.env.CODIGO_REGISTRO || "",
     recuperacionMinutos: num(process.env.RECUPERACION_MINUTOS, 30),
   },
-  smtp: {
-    host: process.env.SMTP_HOST || "",
-    port: num(process.env.SMTP_PORT, 587),
-    user: process.env.SMTP_USER || "",
-    pass: process.env.SMTP_PASS || "",
-    from: process.env.SMTP_FROM || "Doy Fe <no-responder@localhost>",
-    relayUrl: process.env.SMTP_RELAY_URL || "",
-    relayKey: process.env.SMTP_RELAY_KEY || "",
+  correo: {
+    // RESEND_API_KEY; se acepta SMTP_PASS por compatibilidad con la config anterior (SMTP_HOST=smtp.resend.com).
+    resendApiKey: process.env.RESEND_API_KEY || (process.env.SMTP_HOST === "smtp.resend.com" ? process.env.SMTP_PASS || "" : ""),
+    from: process.env.MAIL_FROM || process.env.SMTP_FROM || "Doy Fe <no-responder@doyfegestion.com>",
   },
   // Credenciales del proyecto de Google Cloud (Calendar y Drive). Son de la
   // instalacion, no de cada cuenta. Si estan aca, la app arranca ya configurada;

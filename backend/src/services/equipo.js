@@ -151,7 +151,7 @@ export async function renombrar(usuarioId, nombre) {
   return obtener(usuarioId);
 }
 
-/** Invita por correo. Devuelve el enlace para poder copiarlo si no hay SMTP configurado. */
+/** Invita por correo. Devuelve el enlace para poder copiarlo si no se pudo enviar el correo. */
 export async function invitar(usuarioId, { email, rol }) {
   const ctx = await exigirTitular(usuarioId);
   const destino = String(email || "").trim().toLowerCase();

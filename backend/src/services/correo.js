@@ -1,8 +1,7 @@
 /**
  * Envio de correos (recuperacion de contrasena, invitaciones, avisos de la
- * prueba). Intenta la API HTTP de Resend si el host es smtp.resend.com (los
- * puertos SMTP suelen estar bloqueados en Railway); si no, SMTP directo;
- * como ultimo recurso, el relay HTTP.
+ * prueba) por la API HTTP de Resend. Sin RESEND_API_KEY no se envia nada:
+ * en desarrollo el contenido sale en el log.
  */
 import { env } from "../config/env.js";
 import { logger } from "../utils/logger.js";
@@ -16,17 +15,15 @@ export function escaparHtml(v) {
     .replace(/'/g, "&#39;");
 }
 
-const esResend = env.smtp.host === "smtp.resend.com";
-
-async function enviarPorResendApi({ para, asunto, texto, html }) {
+async function enviarPorResend({ para, asunto, texto, html }) {
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${env.smtp.pass}`,
+      Authorization: `Bearer ${env.correo.resendApiKey}`,
     },
     body: JSON.stringify({
-      from: env.smtp.from,
+      from: env.correo.from,
       to: Array.isArray(para) ? para : [para],
       subject: asunto,
       text: texto,
@@ -41,94 +38,19 @@ async function enviarPorResendApi({ para, asunto, texto, html }) {
   return await res.json();
 }
 
-let transporte = null;
-async function getTransporte() {
-  if (transporte || !env.smtp.host) return transporte;
-  const { default: nodemailer } = await import("nodemailer");
-  transporte = nodemailer.createTransport({
-    host: env.smtp.host,
-    port: env.smtp.port,
-    secure: env.smtp.port === 465,
-    requireTLS: env.smtp.port !== 465,
-    auth: env.smtp.user ? { user: env.smtp.user, pass: env.smtp.pass } : undefined,
-    connectionTimeout: 10000,
-    greetingTimeout: 10000,
-    socketTimeout: 15000,
-  });
-  return transporte;
-}
-
-let relayDispatcher = null;
-async function getRelayDispatcher() {
-  if (relayDispatcher) return relayDispatcher;
-  try {
-    const { Agent } = await import("undici");
-    relayDispatcher = new Agent({ connect: { rejectUnauthorized: false } });
-  } catch {
-    relayDispatcher = undefined;
-  }
-  return relayDispatcher;
-}
-
-async function enviarPorRelay({ para, asunto, texto, html }) {
-  const { relayUrl, relayKey } = env.smtp;
-  if (!relayUrl || !relayKey) return null;
-  const dispatcher = await getRelayDispatcher();
-  const opts = {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${relayKey}`,
-    },
-    body: JSON.stringify({ to: para, subject: asunto, text: texto, html }),
-    signal: AbortSignal.timeout(15000),
-  };
-  if (dispatcher) opts.dispatcher = dispatcher;
-  const res = await fetch(relayUrl, opts);
-  if (!res.ok) {
-    const body = await res.json().catch(() => ({}));
-    throw new Error(body.error || `Relay HTTP ${res.status}`);
-  }
-  return await res.json();
-}
-
 export async function enviarCorreo({ para, asunto, texto, html }) {
-  // Intento 1: API HTTP de Resend (evita bloqueo de puertos SMTP).
-  if (esResend) {
+  if (env.correo.resendApiKey) {
     try {
-      await enviarPorResendApi({ para, asunto, texto, html });
-      return { enviado: true, via: "resend-api" };
+      await enviarPorResend({ para, asunto, texto, html });
+      return { enviado: true, via: "resend" };
     } catch (e) {
-      logger.warn("Resend API falló", { error: e.message });
+      logger.warn("Resend falló", { error: e.message, asunto: String(asunto).slice(0, 60) });
+      return { enviado: false };
     }
   }
 
-  // Intento 2: SMTP directo.
-  const t = await getTransporte();
-  if (t) {
-    try {
-      await t.sendMail({ from: env.smtp.from, to: para, subject: asunto, text: texto, html });
-      return { enviado: true, via: "smtp" };
-    } catch (e) {
-      logger.warn("SMTP falló, intentando relay", { error: e.code || e.message });
-      transporte = null;
-    }
-  }
-
-  // Intento 3: relay HTTP.
-  try {
-    const r = await enviarPorRelay({ para, asunto, texto, html });
-    if (r) {
-      logger.info("Correo enviado vía relay", { para });
-      return { enviado: true, via: "relay" };
-    }
-  } catch (e) {
-    logger.warn("Relay falló", { error: e.message });
-  }
-
-  // Sin opciones.
   if (process.env.NODE_ENV === "production") {
-    logger.warn("No se pudo enviar el correo. Configure SMTP o SMTP_RELAY_URL.", { asunto: String(asunto).slice(0, 60) });
+    logger.warn("No se pudo enviar el correo: falta RESEND_API_KEY.", { asunto: String(asunto).slice(0, 60) });
   } else {
     logger.warn(`Correo NO enviado a ${para}. Contenido:\n${texto}`);
   }
