@@ -122,7 +122,7 @@ export default function Agenda() {
     try {
       const anio = fechaRef.getFullYear();
       const [t, v, f] = await Promise.all([
-        api.turnosListar(toISODate(desde), toISODate(hasta), verEquipo),
+        api.turnosListar(desde.toISOString(), hasta.toISOString(), verEquipo),
         api.vencimientosRango(toISODate(desde), toISODate(hasta)),
         api.feriadosListar(anio),
       ]);
@@ -198,7 +198,7 @@ export default function Agenda() {
       const datos = {
         titulo: formulario.titulo.trim(),
         notas: formulario.notas.trim() || null,
-        fechaHora: `${formulario.fecha}T${formulario.hora}:00`,
+        fechaHora: new Date(`${formulario.fecha}T${formulario.hora}:00`).toISOString(), // hora local del navegador con zona: el servidor corre en UTC
         duracionMin: Number(formulario.duracionMin),
         recordatorioMinutosAntes: Number(formulario.recordatorioMinutosAntes),
         estado: formulario.estado,
