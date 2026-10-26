@@ -109,7 +109,7 @@ CUARTO: TITULO. Corresponde a la PARTE VENDEDORA por compra que efectuo a [[TITU
 
 QUINTO: ASENTIMIENTO CONYUGAL. Presente en este acto {{CONYUGE_VENDEDOR_1}} presta el asentimiento previsto en los articulos 456 y 470 del Codigo Civil y Comercial.
 
-SEXTO: CONSTANCIAS NOTARIALES. HAGO CONSTAR: a) Certificado de dominio {{CERTIFICADO_DOMINIO}} e inhibiciones {{CERTIFICADO_INHIBICIONES}}. b) Certificado catastral {{CERTIFICADO_CATASTRAL}}, valuacion fiscal {{VALUACION_FISCAL}}. c) {{CONSTANCIA_ITI_GANANCIAS}}. d) COTI {{CONSTANCIA_COTI}}. e) Declaracion jurada de licitud de fondos (UIF). f) El inmueble no se encuentra afectado al regimen de vivienda.
+SEXTO: CONSTANCIAS NOTARIALES. HAGO CONSTAR: a) Certificado de dominio {{CERTIFICADO_DOMINIO}} e inhibiciones {{CERTIFICADO_INHIBICIONES}}. b) Certificado catastral {{CERTIFICADO_CATASTRAL}}, valuacion fiscal {{VALUACION_FISCAL}}. c) {{CONSTANCIA_GANANCIAS}}. d) Declaracion jurada de licitud de fondos (UIF). e) El inmueble no se encuentra afectado al regimen de vivienda.
 
 LEIDA Y RATIFICADA, firman los comparecientes ante mi, doy fe.`,
     variables_faltantes: [
@@ -119,7 +119,7 @@ LEIDA Y RATIFICADA, firman los comparecientes ante mi, doy fe.`,
       { placeholder: "{{DOMICILIO_VENDEDOR_1}}", descripcion: "Domicilio real de la parte vendedora (no consta en los antecedentes)" },
       { placeholder: "{{CERTIFICADO_DOMINIO}}", descripcion: "Numero y fecha del certificado de dominio" },
     ],
-    notas_para_escribana: ["Salida generada en MODO SIMULADO: no es una minuta valida.", "Verificar fecha de adquisicion para determinar ITI o Ganancias."],
+    notas_para_escribana: ["Salida generada en MODO SIMULADO: no es una minuta valida.", "Verificar fecha de adquisicion para determinar si corresponde Ganancias cedular."],
   };
 }
 
@@ -129,19 +129,18 @@ function validador() {
       { nombre: "Certificado de dominio", estado: "faltante", detalle: "No consta en la documentacion.", plazo_legal: "15/25/30 dias segun distancia (art. 24 Ley 17.801)" },
       { nombre: "Certificado de inhibiciones", estado: "faltante", detalle: "Solicitar junto con el de dominio.", plazo_legal: "idem" },
       { nombre: "Certificado catastral", estado: "presente_verificar", detalle: "Se menciona; verificar vigencia.", plazo_legal: "segun jurisdiccion" },
-      { nombre: "COTI", estado: "no_aplica", detalle: "Solo si el precio supera el minimo vigente de ARCA.", plazo_legal: null },
     ],
     impuestos_y_tasas: [
       { concepto: "Impuesto de sellos", aplica: "si", jurisdiccion: "Provincia de Buenos Aires", alicuota_o_formula: "alicuota general sobre precio o valuacion fiscal, la mayor", sujeto_obligado: "ambas partes por mitades", observacion: "Verificar exencion vivienda unica." },
-      { concepto: "ITI (Ley 23.905)", aplica: "depende", jurisdiccion: "Nacional", alicuota_o_formula: "1,5% del precio", sujeto_obligado: "vendedor", observacion: "Aplica si el inmueble fue adquirido antes del 1/1/2018; caso contrario Ganancias cedular 15%." },
+      { concepto: "Ganancias cedular", aplica: "depende", jurisdiccion: "Nacional", alicuota_o_formula: "15% de la ganancia", sujeto_obligado: "vendedor", observacion: "Solo si el inmueble fue adquirido desde el 1/1/2018; el ITI esta derogado (Ley 27.743)." },
       { concepto: "Tasa de inscripcion registral", aplica: "si", jurisdiccion: "Provincia de Buenos Aires", alicuota_o_formula: "segun escala del Registro", sujeto_obligado: "comprador", observacion: null },
     ],
-    regimenes_informacion: [{ nombre: "UIF - Resolucion escribanos", aplica: "si", observacion: "Declaracion de licitud y origen de fondos." }, { nombre: "CITI Escribanos", aplica: "si", observacion: "Informacion mensual a ARCA." }],
+    regimenes_informacion: [{ nombre: "UIF - Resolucion escribanos", aplica: "si", observacion: "Declaracion de licitud y origen de fondos." }],
     inconsistencias: [{ severidad: "baja", descripcion: "La minuta cita un certificado de dominio que no consta en los antecedentes.", sugerencia: "Completar con el certificado una vez obtenido." }],
     checklist_previo_firma: [
       { orden: 1, accion: "Solicitar certificados de dominio e inhibiciones", responsable: "escribania" },
       { orden: 2, accion: "Obtener asentimiento conyugal", responsable: "parte vendedora" },
-      { orden: 3, accion: "Verificar fecha de adquisicion para ITI/Ganancias", responsable: "escribania" },
+      { orden: 3, accion: "Verificar fecha de adquisicion para Ganancias cedular", responsable: "escribania" },
       { orden: 4, accion: "Liquidar impuesto de sellos", responsable: "escribania" },
     ],
     apto_para_firma: false,
